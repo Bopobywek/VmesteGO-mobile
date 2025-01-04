@@ -2,9 +2,11 @@ package ru.vmestego
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,6 +65,7 @@ data class Ticket(val name: String, val date: LocalDate = LocalDate.now())
 fun TicketRow(ticket: Ticket) {
     Column(
         modifier = Modifier
+            .clickable { Log.i("Main", "hello") }
             .fillMaxWidth()
             .heightIn(70.dp)
             .padding(20.dp)
@@ -90,17 +93,22 @@ fun TicketRow(ticket: Ticket) {
 
 @Composable
 fun DateHeader(date: LocalDate) {
+    val color = if (isCurrentMonth(date)) Color.Red else Color.Black
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp)
     ) {
-        Text(text = date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH))
+        Text(
+            text = date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+            color = color
+        )
         Spacer(modifier = Modifier.height(10.dp))
-        Divider(color = Color.Black)
+        Divider(color = color)
     }
 }
 
+fun isCurrentMonth(date : LocalDate) : Boolean = date.month == LocalDate.now().month
 
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
 @Composable
