@@ -31,7 +31,12 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun VmesteGOPreview() {
+    val ticketsViewModel = TicketsViewModel()
+    ticketsViewModel.addTicket()
+    ticketsViewModel.addTicket()
+    ticketsViewModel.addTicket()
+    ticketsViewModel.addTicket()
     VmesteGOTheme {
-        TicketsScreen()
+        TicketsScreen(ticketsViewModel)
     }
 }
