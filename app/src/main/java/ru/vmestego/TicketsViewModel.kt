@@ -1,5 +1,7 @@
 package ru.vmestego
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import java.time.LocalDate
@@ -11,13 +13,13 @@ class TicketsViewModel : ViewModel() {
     private val _tickets = mutableStateListOf<Ticket>()
     val tickets: List<Ticket> = _tickets
 
-    fun addTicket() {
+    fun addTicket(uri: Uri) {
         val minDay = LocalDate.of(1970, 1, 1).toEpochDay()
         val maxDay = LocalDate.of(2015, 12, 31).toEpochDay()
         val randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay)
         val randomDate = LocalDate.ofEpochDay(randomDay).withYear(2025)
         _tickets.apply {
-            add(Ticket("1", randomDate))
+            add(Ticket("1", randomDate, uri))
         }
     }
 
