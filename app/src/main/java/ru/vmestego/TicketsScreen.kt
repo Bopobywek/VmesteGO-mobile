@@ -29,13 +29,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
-import java.time.format.TextStyle
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+
 @Composable
-fun TicketRow(ticket: Ticket) {
+fun TicketCard(ticket: Ticket) {
+    val formatter = DateTimeFormatter.ofPattern("EE, dd MMM. yyyy", Locale("ru")) // Russian locale
+    val formattedDate = ticket.date.format(formatter)
     Column(
         modifier = Modifier
             .clickable { Log.i("Main", "hello") }
@@ -54,7 +59,7 @@ fun TicketRow(ticket: Ticket) {
                 Text(text = "Последнее испытание", Modifier.fillMaxWidth(0.5f))
             }
             Column {
-                Text(text = "Сб, 19 окт. 2024 ")
+                Text(text = formattedDate)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -67,13 +72,16 @@ fun TicketRow(ticket: Ticket) {
 @Composable
 fun DateHeader(date: LocalDate) {
     val color = if (isCurrentMonth(date)) Color.Red else Color.Black
+    val monthsTranslations = stringArrayResource(id = R.array.months_ru)
+    val monthName = monthsTranslations[date.month.value - 1]
+    val year = date.year
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp)
     ) {
         Text(
-            text = date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+            text = "$monthName, $year",
             color = color
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -81,25 +89,44 @@ fun DateHeader(date: LocalDate) {
     }
 }
 
-fun isCurrentMonth(date : LocalDate) : Boolean = date.month == LocalDate.now().month
+fun isCurrentMonth(date: LocalDate): Boolean =
+    date.month == LocalDate.now().month && date.year == LocalDate.now().year
+
+fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<Ticket>>): Int {
+    var counter = 0
+    for (pair in grouped) {
+        if (isCurrentMonth(pair.key)) {
+            return counter
+        }
+        counter += pair.value.size + 1
+    }
+
+    return 0
+}
 
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
+// TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
 fun TicketList(tickets: List<Ticket>) {
-    val grouped = tickets.groupBy { it.date }
+    val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
+    val ordered = grouped.toSortedMap()
+
     // https://stackoverflow.com/a/74227507
-    // TODO: нужен оффсет именно хедера
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = tickets.indexOfFirst { t -> t.date.month == LocalDate.now().month })
+    val initialIndex = getCurrentMonthHeaderIndex(ordered)
+    Log.i("Tickets", "current index $initialIndex")
+    val listState =
+        rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     LazyColumn(state = listState) {
-        grouped.forEach { (date, dateTickets) ->
+        ordered.forEach { (date, dateTickets) ->
             // Render header composable using [date]
             item {
                 DateHeader(date)
             }
 
+            val sortedTickets = dateTickets.sortedBy { t -> t.date }
             // Render list of [people] who have the same [date]
-            items(dateTickets) { ticket ->
-                TicketRow(ticket)
+            items(sortedTickets) { ticket ->
+                TicketCard(ticket)
             }
         }
     }
@@ -107,27 +134,18 @@ fun TicketList(tickets: List<Ticket>) {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun TicketsScreen() {
+fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
     Scaffold(
         floatingActionButton = {
             LargeFloatingActionButton(
                 shape = CircleShape,
-                onClick = { /*TODO*/ }) {
+                onClick = { ticketsViewModel.addTicket() }) {
                 Icon(Icons.Filled.Add, "Add")
             }
         },
         floatingActionButtonPosition = FabPosition.End
     )
     {
-        TicketList(
-            listOf(
-                Ticket("1", LocalDate.of(2024, 12, 1)),
-                Ticket("1", LocalDate.of(2024, 2, 1)),
-                Ticket("1", LocalDate.of(2024, 1, 1)),
-                Ticket("1", LocalDate.of(2024, 3, 1)),
-                Ticket("1", LocalDate.of(2024, 4, 1)),
-                Ticket("1", LocalDate.of(2024, 5, 1)),
-            )
-        )
+        TicketList(ticketsViewModel.tickets)
     }
 }
