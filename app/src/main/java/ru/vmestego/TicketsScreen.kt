@@ -1,7 +1,11 @@
 package ru.vmestego
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,8 +31,10 @@ import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,12 +44,22 @@ import java.util.Locale
 
 
 @Composable
-fun TicketCard(ticket: Ticket) {
+fun TicketCard(ticket: TicketUi) {
     val formatter = DateTimeFormatter.ofPattern("EE, dd MMM. yyyy", Locale("ru")) // Russian locale
     val formattedDate = ticket.date.format(formatter)
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
-            .clickable { Log.i("Main", "hello") }
+            .clickable {
+                Log.i("Main", "hello")
+                // https://stackoverflow.com/a/48950071
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(ticket.ticketUri, "application/pdf")
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                context.startActivity(intent)
+            }
             .fillMaxWidth()
             .heightIn(70.dp)
             .padding(20.dp)
@@ -56,7 +72,7 @@ fun TicketCard(ticket: Ticket) {
     ) {
         Row {
             Column {
-                Text(text = "Последнее испытание", Modifier.fillMaxWidth(0.5f))
+                Text(text = ticket.eventName, Modifier.fillMaxWidth(0.5f))
             }
             Column {
                 Text(text = formattedDate)
@@ -64,7 +80,7 @@ fun TicketCard(ticket: Ticket) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Icon(Icons.Filled.Place, "Add")
-            Text(text = "КЗ Измайлово")
+            Text(text = ticket.locationName)
         }
     }
 }
@@ -92,7 +108,7 @@ fun DateHeader(date: LocalDate) {
 fun isCurrentMonth(date: LocalDate): Boolean =
     date.month == LocalDate.now().month && date.year == LocalDate.now().year
 
-fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<Ticket>>): Int {
+fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<TicketUi>>): Int {
     var counter = 0
     for (pair in grouped) {
         if (isCurrentMonth(pair.key)) {
@@ -107,7 +123,7 @@ fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<Ticket>>): Int {
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
 // TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
-fun TicketList(tickets: List<Ticket>) {
+fun TicketList(tickets: List<TicketUi>) {
     val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
@@ -118,13 +134,11 @@ fun TicketList(tickets: List<Ticket>) {
         rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     LazyColumn(state = listState) {
         ordered.forEach { (date, dateTickets) ->
-            // Render header composable using [date]
             item {
                 DateHeader(date)
             }
 
             val sortedTickets = dateTickets.sortedBy { t -> t.date }
-            // Render list of [people] who have the same [date]
             items(sortedTickets) { ticket ->
                 TicketCard(ticket)
             }
@@ -135,17 +149,38 @@ fun TicketList(tickets: List<Ticket>) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
+    // https://commonsware.com/blog/2020/08/08/uri-access-lifetime-still-shorter-than-you-might-think.html
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+        uri: Uri? ->
+        run {
+            Log.i("TicketsScreen", uri?.encodedPath.toString())
+            if (uri != null) {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                ticketsViewModel.addTicket(uri)
+            }
+        }
+    }
+
     Scaffold(
+        Modifier.padding(top=10.dp),
         floatingActionButton = {
             LargeFloatingActionButton(
                 shape = CircleShape,
-                onClick = { ticketsViewModel.addTicket() }) {
+                onClick = {
+                    launcher.launch(arrayOf("application/pdf"))
+                }) {
                 Icon(Icons.Filled.Add, "Add")
             }
         },
         floatingActionButtonPosition = FabPosition.End
     )
     {
+        LaunchedEffect(Unit) {
+            ticketsViewModel.loadDataFromDb()
+        }
         TicketList(ticketsViewModel.tickets)
     }
 }

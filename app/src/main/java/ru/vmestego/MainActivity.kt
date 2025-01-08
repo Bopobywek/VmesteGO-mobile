@@ -6,17 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import ru.vmestego.ui.theme.VmesteGOTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             VmesteGOTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -28,15 +26,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun VmesteGOPreview() {
-    val ticketsViewModel = TicketsViewModel()
-    ticketsViewModel.addTicket()
-    ticketsViewModel.addTicket()
-    ticketsViewModel.addTicket()
-    ticketsViewModel.addTicket()
-    VmesteGOTheme {
-        TicketsScreen(ticketsViewModel)
-    }
-}
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun VmesteGOPreview() {
+//    val ticketsViewModel = TicketsViewModel()
+//    ticketsViewModel.addTicket(Uri.EMPTY)
+//    ticketsViewModel.addTicket(Uri.EMPTY)
+//    ticketsViewModel.addTicket(Uri.EMPTY)
+//    ticketsViewModel.addTicket(Uri.EMPTY)
+//    VmesteGOTheme {
+//        TicketsScreen(ticketsViewModel)
+//    }
+//}
