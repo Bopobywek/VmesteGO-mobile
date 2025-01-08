@@ -1,10 +1,8 @@
-package ru.vmestego
+package ru.vmestego.ui
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,10 +36,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
-import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import java.io.File
+import ru.vmestego.R
+import ru.vmestego.Ticket
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -58,10 +56,10 @@ fun TicketCard(ticket: Ticket) {
             .clickable {
                 Log.i("Main", "hello")
                 // https://stackoverflow.com/a/48950071
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
                 intent.setDataAndType(ticket.ticketUri, "application/pdf")
-                intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 context.startActivity(intent)
             }
             .fillMaxWidth()
@@ -127,7 +125,8 @@ fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<Ticket>>): Int {
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
 // TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
-fun TicketList(tickets: List<Ticket>) {
+fun TicketList(
+    tickets: List<Ticket>) {
     val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
@@ -152,7 +151,7 @@ fun TicketList(tickets: List<Ticket>) {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
+fun TicketsScreen(ticketsViewModel: TicketsViewModel) {
     // https://commonsware.com/blog/2020/08/08/uri-access-lifetime-still-shorter-than-you-might-think.html
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         uri: Uri? ->
@@ -165,6 +164,7 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
     }
 
     Scaffold(
+        Modifier.padding(top = 10.dp),
         floatingActionButton = {
             LargeFloatingActionButton(
                 shape = CircleShape,
