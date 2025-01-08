@@ -2,7 +2,11 @@ package ru.vmestego
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.os.Parcelable
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +35,18 @@ class TicketActivity : ComponentActivity() {
                     TicketSettingsScreen("url")
 
                 }
+            }
+        }
+
+        when {
+            intent?.action == Intent.ACTION_SEND -> {
+                val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as Uri
+                Log.i("TicketActivity", uri.toString())
+                Log.i("TicketActivity", Environment.getExternalStoragePublicDirectory("").path)
+                //contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val stream = contentResolver.openInputStream(uri)
+                Log.i("TicketActivity", stream?.read().toString())
+                stream?.close()
             }
         }
     }
