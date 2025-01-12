@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,7 +32,6 @@ import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -132,7 +132,9 @@ fun TicketList(tickets: List<TicketUi>) {
     Log.i("Tickets", "current index $initialIndex")
     val listState =
         rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
-    LazyColumn(state = listState) {
+    LazyColumn(
+        contentPadding = PaddingValues(vertical = 10.dp),
+        state = listState) {
         ordered.forEach { (date, dateTickets) ->
             item {
                 DateHeader(date)
@@ -151,21 +153,21 @@ fun TicketList(tickets: List<TicketUi>) {
 fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
     // https://commonsware.com/blog/2020/08/08/uri-access-lifetime-still-shorter-than-you-might-think.html
     val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-        uri: Uri? ->
-        run {
-            Log.i("TicketsScreen", uri?.encodedPath.toString())
-            if (uri != null) {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                ticketsViewModel.addTicket(uri)
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            run {
+                Log.i("TicketsScreen", uri?.encodedPath.toString())
+                if (uri != null) {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    ticketsViewModel.addTicket(uri)
+                }
             }
         }
-    }
 
     Scaffold(
-        Modifier.padding(top=10.dp),
         floatingActionButton = {
             LargeFloatingActionButton(
                 shape = CircleShape,
@@ -176,11 +178,7 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
             }
         },
         floatingActionButtonPosition = FabPosition.End
-    )
-    {
-        LaunchedEffect(Unit) {
-            ticketsViewModel.loadDataFromDb()
-        }
+    ) {
         TicketList(ticketsViewModel.tickets)
     }
 }

@@ -25,6 +25,10 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         Log.i("TicketsViewModelInit", "init")
+        viewModelScope.launch(Dispatchers.IO)
+        {
+            loadDataFromDb()
+        }
     }
 
     suspend fun loadDataFromDb() {
