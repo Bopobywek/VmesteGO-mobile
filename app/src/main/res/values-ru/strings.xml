@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="friends_tab_name">Друзья</string>
+    <string name="feed_tab_name">Лента</string>
+    <string name="invitations_tab_name">Приглашения</string>
+</resources>

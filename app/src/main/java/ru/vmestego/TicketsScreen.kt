@@ -108,7 +108,7 @@ fun DateHeader(date: LocalDate) {
 fun isCurrentMonth(date: LocalDate): Boolean =
     date.month == LocalDate.now().month && date.year == LocalDate.now().year
 
-fun getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<TicketUi>>): Int {
+fun <T> getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<T>>): Int {
     var counter = 0
     for (pair in grouped) {
         if (isCurrentMonth(pair.key)) {

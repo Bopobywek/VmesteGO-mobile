@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -30,7 +31,8 @@ data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: Imag
 
 val topLevelRoutes = listOf(
     TopLevelRoute("Search", Search, Icons.Filled.Search),
-    TopLevelRoute("Tickets", Tickets, Icons.Filled.Info)
+    TopLevelRoute("Tickets", Tickets, Icons.Filled.Info),
+    TopLevelRoute("Friends", Friends, Icons.Filled.Person)
 )
 
 @Serializable
@@ -38,6 +40,9 @@ object Tickets
 
 @Serializable
 object Search
+
+@Serializable
+object Friends
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -83,6 +88,7 @@ fun AppScreen() {
         NavHost(navController, startDestination = Tickets, Modifier.padding(innerPadding)) {
             composable<Search> { SearchScreen() }
             composable<Tickets> { TicketsScreen() }
+            composable<Friends> { FriendsScreen() }
         }
     }
 }
