@@ -74,10 +74,6 @@ fun FeedTabScreen() {
             EventUi("test", "test", LocalDate.now(), listOf()),
             EventUi("test", "test", LocalDate.now(), listOf()),
             EventUi("test", "test", LocalDate.now(), listOf()),
-//            EventUi("test", "test", LocalDate.now()),
-//            EventUi("test", "test", LocalDate.now()),
-//            EventUi("test", "test", LocalDate.now()),
-//            EventUi("test", "test", LocalDate.now())
         )
     )
 }

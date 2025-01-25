@@ -46,8 +46,6 @@ val friendsPageRoutes = listOf(
     SecondaryLevelRoute("InvitationsTab", InvitationsTab, R.string.invitations_tab_name)
 )
 
-
-
 @Composable
 fun FriendsTabScreen() {
     Text("Friends")
