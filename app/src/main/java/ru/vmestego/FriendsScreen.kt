@@ -24,12 +24,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 
-data class SecondaryLevelRoute<T : Any>(
-    val name: String,
-    val route: T,
-    val localizedNameResourceId: Int
-)
-
 @Serializable
 object FeedTab
 
