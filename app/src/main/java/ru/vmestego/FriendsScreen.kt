@@ -1,6 +1,5 @@
 package ru.vmestego
 
-import FeedTabScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

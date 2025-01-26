@@ -13,6 +13,7 @@ lifecycleViewmodelCompose = "2.8.7"
 appcompat = "1.6.1"
 material = "1.12.0"
 activity = "1.8.0"
+material3 = "1.3.1"
 roomRuntime = "2.6.0"
 navigationCompose = "2.8.5"
 
@@ -40,6 +41,7 @@ lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]

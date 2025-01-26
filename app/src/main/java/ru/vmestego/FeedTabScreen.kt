@@ -1,3 +1,5 @@
+package ru.vmestego
+
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -44,9 +46,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ru.vmestego.DateHeader
-import ru.vmestego.R
-import ru.vmestego.getCurrentMonthHeaderIndex
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -57,12 +56,13 @@ import kotlin.random.Random
 fun FeedTabScreen() {
     FeedEventsList(
         listOf(
-            EventUi("test", "test", LocalDate.now(), listOf(
+            FeedEventUi("test", "test", LocalDate.parse("2024-05-01"), listOf()),
+            FeedEventUi("test", "test", LocalDate.now(), listOf(
                 EventFriendsUi("Golubex", generateWarmSoftColor()),
                 EventFriendsUi("Битман", generateWarmSoftColor()),
                 EventFriendsUi("Четкий", generateWarmSoftColor()),
             )),
-            EventUi("test", "test", LocalDate.now(), listOf(
+            FeedEventUi("test", "test", LocalDate.now(), listOf(
                 EventFriendsUi("Golubex", generateWarmSoftColor()),
                 EventFriendsUi("Битман", generateWarmSoftColor()),
                 EventFriendsUi("Битман", generateWarmSoftColor()),
@@ -71,15 +71,15 @@ fun FeedTabScreen() {
                 EventFriendsUi("Битман", generateWarmSoftColor()),
                 EventFriendsUi("Четкий", generateWarmSoftColor()),
             )),
-            EventUi("test", "test", LocalDate.now(), listOf()),
-            EventUi("test", "test", LocalDate.now(), listOf()),
-            EventUi("test", "test", LocalDate.now(), listOf()),
+            FeedEventUi("test", "test", LocalDate.now(), listOf()),
+            FeedEventUi("test", "test", LocalDate.now(), listOf()),
+            FeedEventUi("test", "test", LocalDate.now(), listOf()),
         )
     )
 }
 
 @Composable
-fun FeedEventsList(events: List<EventUi>) {
+fun FeedEventsList(events: List<FeedEventUi>) {
     val grouped = events.groupBy { it.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
@@ -99,7 +99,7 @@ fun FeedEventsList(events: List<EventUi>) {
 
             val sortedEvents = dateEvents.sortedBy { t -> t.date }
             items(sortedEvents) { event ->
-                EventCard(event)
+                FeedEventCard(event)
             }
         }
     }
@@ -108,7 +108,7 @@ fun FeedEventsList(events: List<EventUi>) {
 // https://stackoverflow.com/a/78475807
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventCard(event: EventUi) {
+fun FeedEventCard(event: FeedEventUi) {
     val profileImageSize = 24
     val boxContentPadding = 15
 
@@ -246,7 +246,7 @@ fun generateWarmSoftColor(): Color {
     return Color(red, green, blue, 1f) // Full opacity
 }
 
-data class EventUi(
+data class FeedEventUi(
     val eventName: String,
     val locationName: String,
     val date: LocalDate = LocalDate.now(),
