@@ -3,6 +3,7 @@ package ru.vmestego
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -54,10 +56,7 @@ fun TicketCard(ticket: TicketUi) {
             .clickable {
                 Log.i("Main", "hello")
                 // https://stackoverflow.com/a/48950071
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.setDataAndType(ticket.ticketUri, "application/pdf")
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val intent = IntentHelper.createOpenPdfIntent(ticket.ticketUri)
                 context.startActivity(intent)
             }
             .fillMaxWidth()
@@ -163,6 +162,12 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                     ticketsViewModel.addTicket(uri)
+
+                    val intent = Intent(context, TicketActivity::class.java)
+                    intent.setAction(Intent.ACTION_SEND)
+                    intent.setType("application/pdf")
+                    intent.putExtra(Intent.EXTRA_STREAM, uri)
+                    context.startActivity(intent)
                 }
             }
         }

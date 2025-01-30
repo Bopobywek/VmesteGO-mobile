@@ -57,8 +57,8 @@ fun AppScreen() {
         bottomBar = {
             NavigationBar(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .clip(RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp))
+                    .fillMaxWidth()
             ) {
                 topLevelRoutes.forEachIndexed { index, topLevelRoute ->
                     NavigationBarItem(
