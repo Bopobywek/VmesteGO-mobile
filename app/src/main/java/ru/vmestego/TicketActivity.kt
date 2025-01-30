@@ -88,21 +88,8 @@ class TicketActivity : ComponentActivity() {
                     } else {
                         intent.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri
                     }
-                    // TODO: https://stackoverflow.com/a/69699089
-                    // I need to save file to another place and take persistable permission
-//                    if (uri != null) {
-//                        contentResolver.takePersistableUriPermission(
-//                            uri,
-//                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-//                        )
-//                    }
                 }
             }
-
-//            // TODO: вынести в константы
-//            intent?.action == "createTicket" -> {
-//
-//            }
         }
 
         if (uri == null) {
