@@ -62,7 +62,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import ru.vmestego.ui.TicketParametersViewModel
+import ru.vmestego.ui.models.EventDto
 import ru.vmestego.ui.theme.VmesteGOTheme
 import java.io.File
 import java.io.FileInputStream
@@ -70,6 +73,7 @@ import java.io.InputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
@@ -123,7 +127,7 @@ object TicketParameters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 // https://stackoverflow.com/a/67133534
-fun EventParametersScreen(navigateToTicketParams: (Int?) -> Unit) {
+fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
     val isUserSearching = remember { mutableStateOf(false) }
     val searchText = remember { mutableStateOf("") }
     Scaffold(
@@ -144,7 +148,7 @@ fun EventParametersScreen(navigateToTicketParams: (Int?) -> Unit) {
                         expanded = false, // whether the user is searching or not
                         onExpandedChange = {},
                         enabled = true,
-                        placeholder = { Text("Search...") },
+                        placeholder = { Text("Поиск") },
                         leadingIcon = null,
                         trailingIcon = null,
                         interactionSource = null,
@@ -282,7 +286,11 @@ fun EventParametersScreen(navigateToTicketParams: (Int?) -> Unit) {
 
                         Button(onClick = {
                             showBottomSheet = false
-                            navigateToTicketParams(12)
+                            navigateToTicketParams(EventDto(
+                                title,
+                                location,
+                                LocalDateTime.of(date, time)
+                            ))
                         }) {
                             Text("Сохранить")
                         }
@@ -306,7 +314,7 @@ fun EventParametersScreen(navigateToTicketParams: (Int?) -> Unit) {
 @Composable
 fun TicketParametersScreen(
     ticketUri: Uri,
-    eventId: Int?,
+    eventDto: EventDto?,
     navigateToEventParams: () -> Unit,
     viewModel: TicketParametersViewModel = viewModel()
 ) {
@@ -334,7 +342,7 @@ fun TicketParametersScreen(
                         viewModel.addTicket(newUri)
                     }
                 },
-                enabled = eventId != null,
+                enabled = eventDto != null,
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -380,10 +388,10 @@ fun TicketParametersScreen(
                             .fillMaxWidth()
                             .fillMaxHeight()
                     ) {
-                        if (eventId == null) {
+                        if (eventDto == null) {
                             Text("Выберите мероприятие")
                         } else {
-                            Text(eventId.toString())
+                            Text(eventDto.name)
                         }
                     }
                 }
@@ -396,14 +404,16 @@ fun TicketParametersScreen(
 @Composable
 fun TicketSettingsScreen(uri: Uri) {
     val navController = rememberNavController()
+    val eventParamName = "event_dto"
     NavHost(
         navController,
         startDestination = TicketParameters,
         // https://stackoverflow.com/a/78741718
     ) {
         composable<TicketParameters> { entry ->
-            val eventId = entry.savedStateHandle.get<Int?>("event_id")
-            TicketParametersScreen(uri, eventId, {
+            val serialized = entry.savedStateHandle.get<String>(eventParamName)
+            val eventDto = if (serialized == null) null else Json.decodeFromString<EventDto?>(serialized)
+            TicketParametersScreen(uri, eventDto, {
                 navController.navigate(
                     EventParameters
                 )
@@ -413,7 +423,7 @@ fun TicketSettingsScreen(uri: Uri) {
             EventParametersScreen {
                 navController.previousBackStackEntry
                     ?.savedStateHandle
-                    ?.set("event_id", it)
+                    ?.set(eventParamName, Json.encodeToString(it))
                 navController.popBackStack()
             }
         }
