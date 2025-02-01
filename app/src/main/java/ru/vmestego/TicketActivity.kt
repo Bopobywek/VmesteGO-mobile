@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,21 +52,40 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ru.vmestego.data.EventDataDto
+import ru.vmestego.ui.EventParametersViewModel
 import ru.vmestego.ui.TicketParametersViewModel
 import ru.vmestego.ui.models.EventDto
 import ru.vmestego.ui.theme.VmesteGOTheme
@@ -76,7 +98,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 
 class TicketActivity : ComponentActivity() {
@@ -95,7 +119,6 @@ class TicketActivity : ComponentActivity() {
                 }
             }
         }
-
         if (uri == null) {
             Log.w("TicketsActivity", "No uri provided for ticket, can't open activity")
             finish()
@@ -127,7 +150,11 @@ object TicketParameters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 // https://stackoverflow.com/a/67133534
-fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
+fun EventParametersScreen(
+    navigateToTicketParams: (EventDto?) -> Unit,
+    scope: CoroutineScope,
+    viewModel: EventParametersViewModel = viewModel()
+) {
     val isUserSearching = remember { mutableStateOf(false) }
     val searchText = remember { mutableStateOf("") }
     Scaffold(
@@ -216,6 +243,7 @@ fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
                             })
                     }
 
+                    val focusManager = LocalFocusManager.current
                     Column(
                         modifier = Modifier
                             .padding(16.dp)
@@ -226,6 +254,7 @@ fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
                             placeholder = { Text("Название") },
                             onValueChange = { title = it },
                             label = { Text("Название") },
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                             modifier = Modifier.fillMaxWidth(),
                         )
 
@@ -234,6 +263,7 @@ fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
                         OutlinedTextField(
                             value = location,
                             onValueChange = { location = it },
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                             label = { Text("Место проведения") },
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -262,8 +292,10 @@ fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        val timeFormatter =
+                            DateTimeFormatter.ofPattern("hh:mm", Locale("ru")) // Russian locale
                         OutlinedTextField(
-                            value = time.toString(),
+                            value = time.format(timeFormatter),
                             onValueChange = {
                             },
                             readOnly = true,
@@ -286,11 +318,19 @@ fun EventParametersScreen(navigateToTicketParams: (EventDto?) -> Unit) {
 
                         Button(onClick = {
                             showBottomSheet = false
-                            navigateToTicketParams(EventDto(
-                                title,
-                                location,
-                                LocalDateTime.of(date, time)
-                            ))
+                            scope.launch(Dispatchers.Main) {
+                                val receivedId = viewModel.addEvent(
+                                    EventDataDto(title, location, LocalDateTime.of(date, time))
+                                )
+                                navigateToTicketParams(
+                                    EventDto(
+                                        receivedId,
+                                        title,
+                                        location,
+                                        LocalDateTime.of(date, time)
+                                    )
+                                )
+                            }
                         }) {
                             Text("Сохранить")
                         }
@@ -338,9 +378,10 @@ fun TicketParametersScreen(
                         activity,
                         ticketUri
                     )
-                    if (newUri != null) {
-                        viewModel.addTicket(newUri)
+                    if (newUri != null && eventDto != null) {
+                        viewModel.addTicket(newUri, eventDto.uid)
                     }
+                    activity.finish()
                 },
                 enabled = eventDto != null,
                 shape = RoundedCornerShape(15.dp),
@@ -382,17 +423,26 @@ fun TicketParametersScreen(
                         .padding(5.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                    ) {
-                        if (eventDto == null) {
+                    if (eventDto == null) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                        ) {
+
                             Text("Выберите мероприятие")
-                        } else {
-                            Text(eventDto.name)
                         }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                        ) {
+
+                            Text(eventDto.uid.toString())
+                        }
+
                     }
                 }
             }
@@ -400,11 +450,13 @@ fun TicketParametersScreen(
     }
 }
 
+
 // https://stackoverflow.com/a/79047721
 @Composable
 fun TicketSettingsScreen(uri: Uri) {
     val navController = rememberNavController()
     val eventParamName = "event_dto"
+    val scope = rememberCoroutineScope()
     NavHost(
         navController,
         startDestination = TicketParameters,
@@ -412,7 +464,8 @@ fun TicketSettingsScreen(uri: Uri) {
     ) {
         composable<TicketParameters> { entry ->
             val serialized = entry.savedStateHandle.get<String>(eventParamName)
-            val eventDto = if (serialized == null) null else Json.decodeFromString<EventDto?>(serialized)
+            val eventDto =
+                if (serialized == null) null else Json.decodeFromString<EventDto?>(serialized)
             TicketParametersScreen(uri, eventDto, {
                 navController.navigate(
                     EventParameters
@@ -420,12 +473,15 @@ fun TicketSettingsScreen(uri: Uri) {
             })
         }
         composable<EventParameters> {
-            EventParametersScreen {
-                navController.previousBackStackEntry
-                    ?.savedStateHandle
-                    ?.set(eventParamName, Json.encodeToString(it))
-                navController.popBackStack()
-            }
+            EventParametersScreen(
+                {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(eventParamName, Json.encodeToString(it))
+                    navController.popBackStack()
+                },
+                scope
+            )
         }
     }
 }

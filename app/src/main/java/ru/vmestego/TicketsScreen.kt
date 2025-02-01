@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,12 +28,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -51,35 +54,38 @@ fun TicketCard(ticket: TicketUi) {
     val formattedDate = ticket.date.format(formatter)
     val context = LocalContext.current
 
-    Column(
+    Box(
+        Modifier.padding(20.dp)
+    ) {
+    ElevatedCard(
         modifier = Modifier
+            .heightIn(min = 100.dp)
+            .fillMaxWidth()
             .clickable {
                 Log.i("Main", "hello")
                 // https://stackoverflow.com/a/48950071
                 val intent = IntentHelper.createOpenPdfIntent(ticket.ticketUri)
                 context.startActivity(intent)
+            }) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp)) {
+                Row {
+                    Column {
+                        Text(text = ticket.eventName, Modifier.fillMaxWidth(0.5f))
+                    }
+                    Column {
+                        Text(text = formattedDate)
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Icon(Icons.Filled.Place, "Add")
+                    Text(text = ticket.locationName)
+                }
             }
-            .fillMaxWidth()
-            .heightIn(70.dp)
-            .padding(20.dp)
-            .background(
-                Color.LightGray,
-                shape = RoundedCornerShape(20)
-            )
-            .padding(30.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        Row {
-            Column {
-                Text(text = ticket.eventName, Modifier.fillMaxWidth(0.5f))
-            }
-            Column {
-                Text(text = formattedDate)
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Icon(Icons.Filled.Place, "Add")
-            Text(text = ticket.locationName)
         }
     }
 }
@@ -133,7 +139,8 @@ fun TicketList(tickets: List<TicketUi>) {
         rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     LazyColumn(
         contentPadding = PaddingValues(vertical = 10.dp),
-        state = listState) {
+        state = listState
+    ) {
         ordered.forEach { (date, dateTickets) ->
             item {
                 DateHeader(date)
@@ -161,7 +168,6 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
                         uri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
-                    ticketsViewModel.addTicket(uri)
 
                     val intent = Intent(context, TicketActivity::class.java)
                     intent.setAction(Intent.ACTION_SEND)

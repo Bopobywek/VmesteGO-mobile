@@ -23,6 +23,7 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
 
     private val _ticketsRepository : TicketsRepository = TicketsRepositoryImpl(AppDatabase.getDatabase(application).ticketDao())
 
+    // TODO: может ли быть такая ситуация, что мы в UI уже забрали список, который не успел прогрузиться в init
     init {
         Log.i("TicketsViewModelInit", "init")
         viewModelScope.launch(Dispatchers.IO)
@@ -32,35 +33,36 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
     }
 
     suspend fun loadDataFromDb() {
-        val ticketsDal = _ticketsRepository.getAllTicketsStream()
+        val ticketsDal = _ticketsRepository.getAllTicketsWithEvents()
         ticketsDal.forEach {
                 ticketDal ->
             _tickets.apply {
                 add(
                     TicketUi(
-                        ticketDal.eventName,
-                        ticketDal.locationName,
-                        ticketDal.eventDate,
-                        Uri.parse(ticketDal.uri)))
+                        ticketDal.event.title,
+                        ticketDal.event.location,
+                        ticketDal.event.startAt.toLocalDate(),
+                        Uri.parse(ticketDal.ticket.uri)))
             }
         }
     }
 
-    fun addTicket(uri: Uri) {
-        val minDay = LocalDate.of(1970, 1, 1).toEpochDay()
-        val maxDay = LocalDate.of(2015, 12, 31).toEpochDay()
-        val randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay)
-        val randomDate = LocalDate.ofEpochDay(randomDay).withYear(2025)
+    fun addTicket(uri: Uri, eventId: Long) {
+//        val minDay = LocalDate.of(1970, 1, 1).toEpochDay()
+//        val maxDay = LocalDate.of(2015, 12, 31).toEpochDay()
+//        val randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay)
+//        val randomDate = LocalDate.ofEpochDay(randomDay).withYear(2025)
         viewModelScope.launch(Dispatchers.IO) {
-            _ticketsRepository.insert(
+            val id = _ticketsRepository.insert(
                 Ticket(
-                    eventName = "Последнее испытание",
-                    locationName = "КЗ Измайлово",
-                    eventDate = randomDate,
+                    eventId = eventId,
                     uri = uri.toString()))
-        }
-        _tickets.apply {
-            add(TicketUi("Последнее испытание", "КЗ Измайлово", randomDate, uri))
+
+            val ticket = _ticketsRepository.getTicketWithEvent(id)
+
+            _tickets.apply {
+                add(TicketUi(ticket.event.title, ticket.event.location, ticket.event.startAt.toLocalDate(), uri))
+            }
         }
     }
 
