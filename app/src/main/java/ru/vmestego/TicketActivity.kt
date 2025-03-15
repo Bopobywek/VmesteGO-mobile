@@ -331,7 +331,7 @@ fun EventParametersScreen(
                                     )
                                 )
                             }
-                        }) {
+                        }, Modifier.padding(horizontal = 15.dp).fillMaxWidth()) {
                             Text("Сохранить")
                         }
                     }
@@ -437,10 +437,11 @@ fun TicketParametersScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight()
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center
                         ) {
 
-                            Text(eventDto.uid.toString())
+                            Text(eventDto.name)
                         }
 
                     }
