@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
@@ -110,7 +111,7 @@ fun DateHeader(date: LocalDate) {
             color = color
         )
         Spacer(modifier = Modifier.height(10.dp))
-        Divider(color = color)
+        HorizontalDivider(color = color)
     }
 }
 
