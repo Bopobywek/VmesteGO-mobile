@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -19,7 +20,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -27,12 +27,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 
-data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
-
-val topLevelRoutes = listOf(
-    TopLevelRoute("Search", Search, Icons.Filled.Search),
-    TopLevelRoute("Tickets", Tickets, Icons.Filled.Info),
-    TopLevelRoute("Friends", Friends, Icons.Filled.Person)
+val iconizedRoutes = listOf(
+    IconizedRoute("Search", Search, Icons.Filled.Search),
+    IconizedRoute("Tickets", Tickets, Icons.Filled.Info),
+    IconizedRoute("Friends", Friends, Icons.Filled.Favorite),
+    IconizedRoute("Profile", Profile, Icons.Filled.Person)
 )
 
 @Serializable
@@ -43,6 +42,9 @@ object Search
 
 @Serializable
 object Friends
+
+@Serializable
+object Profile
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -60,7 +62,7 @@ fun AppScreen() {
                     .clip(RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp))
                     .fillMaxWidth()
             ) {
-                topLevelRoutes.forEachIndexed { index, topLevelRoute ->
+                iconizedRoutes.forEachIndexed { index, topLevelRoute ->
                     NavigationBarItem(
                         icon = {
                             Icon(
@@ -89,6 +91,7 @@ fun AppScreen() {
             composable<Search> { SearchScreen() }
             composable<Tickets> { TicketsScreen() }
             composable<Friends> { FriendsScreen() }
+            composable<Profile> { ProfileScreen() }
         }
     }
 }
