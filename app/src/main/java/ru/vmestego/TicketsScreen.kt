@@ -3,8 +3,8 @@ package ru.vmestego
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -15,39 +15,43 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Divider
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -59,10 +63,7 @@ fun TicketCard(ticket: TicketUi) {
     val formattedDate = ticket.date.format(formatter)
     val context = LocalContext.current
 
-    Box(
-        Modifier.padding(20.dp)
-    ) {
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .heightIn(min = 100.dp)
             .fillMaxWidth()
@@ -92,7 +93,6 @@ fun TicketCard(ticket: TicketUi) {
                 }
             }
         }
-    }
 }
 
 @Composable
@@ -130,12 +130,35 @@ fun <T> getCurrentMonthHeaderIndex(grouped: Map<LocalDate, List<T>>): Int {
     return 0
 }
 
+@Composable
+fun ActionIcon(
+    onClick: () -> Unit,
+    backgroundColor: Color,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    tint: Color = Color.White
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .background(backgroundColor)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = tint
+        )
+    }
+}
+
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
 // TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
 fun TicketList(tickets: List<TicketUi>) {
     val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
+    val context = LocalContext.current
 
     // https://stackoverflow.com/a/74227507
     val initialIndex = getCurrentMonthHeaderIndex(ordered)
@@ -151,9 +174,52 @@ fun TicketList(tickets: List<TicketUi>) {
                 DateHeader(date)
             }
 
-            val sortedTickets = dateTickets.sortedBy { t -> t.date }
-            items(sortedTickets) { ticket ->
-                TicketCard(ticket)
+            val sortedTickets = dateTickets.sortedBy { t -> t.date }.toMutableList()
+            itemsIndexed(sortedTickets) { index, ticket ->
+                Box(
+                    Modifier.padding(20.dp)
+                        .background(Color.Transparent, RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(20.dp)),
+                ) {
+                    var showMenu by remember {
+                        mutableStateOf(false)
+                    }
+                    SwipeableItemWithActions(
+                        actions = {
+                            ActionIcon(
+                                onClick = {
+                                    Toast.makeText(
+                                        context,
+                                        "ticket was deleted.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    showMenu = false
+                                },
+                                backgroundColor = Color.Gray,
+                                icon = Icons.Default.Edit,
+                                modifier = Modifier.fillMaxHeight()
+                            )
+                            ActionIcon(
+                                onClick = {
+                                    showMenu = false
+                                    Toast.makeText(
+                                        context,
+                                        "Ticket was deleted.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                backgroundColor = Color.Red,
+                                icon = Icons.Default.Delete,
+                                modifier = Modifier.fillMaxHeight()
+                            )
+                        },
+                        isRevealed = showMenu,
+                        onExpanded = { showMenu = true },
+                        onCollapsed = { showMenu = false }
+                    ) {
+                        TicketCard(ticket)
+                    }
+                }
             }
         }
     }

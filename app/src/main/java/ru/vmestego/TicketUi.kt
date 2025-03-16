@@ -7,5 +7,6 @@ data class TicketUi(
     val eventName: String,
     val locationName: String,
     val date: LocalDate = LocalDate.now(),
-    val ticketUri : Uri)
+    val ticketUri : Uri,
+    var isOptionsRevealed: Boolean = false)
 
