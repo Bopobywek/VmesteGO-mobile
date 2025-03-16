@@ -1,5 +1,7 @@
 package ru.vmestego
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,14 +27,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.vmestego.auth.AuthActivity
 
 @Composable
 fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
+    val activity = LocalContext.current as Activity
+
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
@@ -44,7 +50,10 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
             IconButton(onClick = { /* TODO: Handle notification click */ }) {
                 Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications")
             }
-            IconButton(onClick = viewModel::logout) {
+            IconButton(onClick = {
+                viewModel.logout()
+                activity.startActivity(Intent(activity, AuthActivity::class.java))
+            }) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign Out")
             }
         }
@@ -56,7 +65,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
                 painter = painterResource(id = R.drawable.ic_launcher_background),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(150.dp)
                     .clip(CircleShape)
             )
         }
@@ -65,29 +74,37 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
         Text(
             text = "Вася Пупкин",
-            fontSize = 20.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        HorizontalDivider()
-
         Text(
-            text = "Статистика",
+            text = "Хочу пойти",
             fontSize = 16.sp,
             modifier = Modifier.padding(16.dp, 8.dp)
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Друзья",
+            text = "Иду",
             fontSize = 16.sp,
             modifier = Modifier.padding(16.dp, 8.dp)
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Не иду",
+            fontSize = 16.sp,
+            modifier = Modifier.padding(16.dp, 8.dp)
+        )
+
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
     }
 }

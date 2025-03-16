@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -56,21 +57,21 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Create Account",
+                text = "Новый аккаунт",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 13.dp)
             )
 
             OutlinedTextField(
                 value = viewModel.login,
                 onValueChange = { viewModel.updateLogin(it) },
-                label = { Text("Login") },
+                label = { Text("Логин") },
                 modifier = Modifier.fillMaxWidth(),
                 isError = viewModel.loginHasErrors,
                 supportingText = {
                     if (viewModel.loginHasErrors) {
-                        Text("Empty login.")
+                        Text("Поле должно быть заполнено")
                     }
                 }
             )
@@ -95,13 +96,13 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
             OutlinedTextField(
                 value = viewModel.password,
                 onValueChange = { viewModel.updatePassword(it) },
-                label = { Text("Password") },
+                label = { Text("Пароль") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 isError = viewModel.passwordHasErrors,
                 supportingText = {
                     if (viewModel.passwordHasErrors) {
-                        Text("Weak password.")
+                        Text("Слабый пароль")
                     }
                 }
             )
@@ -119,7 +120,7 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
                         .height(50.dp),
                     enabled = !viewModel.hasValidationErrors
                 ) {
-                    Text(text = "Register", fontWeight = FontWeight.Bold)
+                    Text(text = "Зарегистрироваться", fontWeight = FontWeight.Bold)
                 }
             }
         }

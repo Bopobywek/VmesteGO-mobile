@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
@@ -178,7 +179,6 @@ fun TicketList(tickets: List<TicketUi>) {
             itemsIndexed(sortedTickets) { index, ticket ->
                 Box(
                     Modifier.padding(20.dp)
-                        .background(Color.Transparent, RoundedCornerShape(20.dp))
                         .clip(RoundedCornerShape(20.dp)),
                 ) {
                     var showMenu by remember {
@@ -188,11 +188,6 @@ fun TicketList(tickets: List<TicketUi>) {
                         actions = {
                             ActionIcon(
                                 onClick = {
-                                    Toast.makeText(
-                                        context,
-                                        "ticket was deleted.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
                                     showMenu = false
                                 },
                                 backgroundColor = Color.Gray,
@@ -202,11 +197,14 @@ fun TicketList(tickets: List<TicketUi>) {
                             ActionIcon(
                                 onClick = {
                                     showMenu = false
-                                    Toast.makeText(
-                                        context,
-                                        "Ticket was deleted.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                },
+                                backgroundColor = Color.Blue,
+                                icon = Icons.Filled.DateRange,
+                                modifier = Modifier.fillMaxHeight()
+                            )
+                            ActionIcon(
+                                onClick = {
+                                    showMenu = false
                                 },
                                 backgroundColor = Color.Red,
                                 icon = Icons.Default.Delete,

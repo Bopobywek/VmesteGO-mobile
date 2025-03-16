@@ -41,24 +41,27 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
     var isLoading by mutableStateOf(false)
         private set
 
-    val emailHasErrors by derivedStateOf {
-        if (email.isNotEmpty()) {
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        } else if (email.isEmpty())
-        {
-            true
-        } else {
-            false
-        }
+    private val emailHasFormatError by derivedStateOf {
+        email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
+
+    val emailHasErrors by derivedStateOf {
+        emailHasFormatError
+    }
+    var emailError by mutableStateOf("")
+        private set
 
     val loginHasErrors by derivedStateOf {
         login.isEmpty()
     }
+    var loginError by mutableStateOf("")
+        private set
 
     val passwordHasErrors by derivedStateOf {
         !PasswordValidator.isValidPassword(password)
     }
+    var passwordError by mutableStateOf("")
+        private set
 
     val hasValidationErrors by derivedStateOf {
         loginHasErrors && emailHasErrors && passwordHasErrors

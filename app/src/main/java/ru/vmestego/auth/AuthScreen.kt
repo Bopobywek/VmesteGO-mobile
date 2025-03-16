@@ -50,16 +50,16 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Welcome Back!",
+                text = "Вход",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 13.dp)
             )
 
             OutlinedTextField(
                 value = viewModel.login,
                 onValueChange = { viewModel.updateLogin(it) },
-                label = { Text("Email/Login") },
+                label = { Text("Логин или email") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -68,7 +68,7 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
             OutlinedTextField(
                 value = viewModel.password,
                 onValueChange = { viewModel.updatePassword(it) },
-                label = { Text("Password") },
+                label = { Text("Пароль") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -81,14 +81,14 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(text = "Sign In", fontWeight = FontWeight.Bold)
+                Text(text = "Войти", fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = onRegistrationClick) {
                 Text(
-                    text = "Don't have an account? Register",
+                    text = "Ещё нет аккаунта? Зарегистрируйтесь",
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
