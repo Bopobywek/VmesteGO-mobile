@@ -1,6 +1,7 @@
 package ru.vmestego
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,7 +26,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import ru.vmestego.event.EventScreenWrapper
+import ru.vmestego.event.EventUi
+import java.time.LocalDate
 
 val iconizedRoutes = listOf(
     IconizedRoute("Search", Search, Icons.Filled.Search),
@@ -45,6 +50,11 @@ object Friends
 
 @Serializable
 object Profile
+
+@Serializable
+data class Event(
+    val id: Int
+)
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -88,10 +98,22 @@ fun AppScreen() {
         }
     ) { innerPadding ->
         NavHost(navController, startDestination = Tickets, Modifier.padding(innerPadding)) {
-            composable<Search> { SearchScreen() }
+            composable<Search> { SearchScreen() {
+                navController.navigate(Event(12))
+            } }
             composable<Tickets> { TicketsScreen() }
             composable<Friends> { FriendsScreen() }
             composable<Profile> { ProfileScreen() }
+            composable<Event> {
+                backStackEntry ->
+                var route = backStackEntry.toRoute<Event>()
+                Log.i("1", route.id.toString())
+                EventScreenWrapper(EventUi(
+                    eventName = "Икар",
+                    locationName = "КЗ Измайлово",
+                    date = LocalDate.now(),
+                    description = "В мире «Икара» около 50 лет назад произошла глобальная война. Применялось биологическое оружие, которое уничтожило взрослое население, и в живых остались только дети и подростки. При этом они частично потеряли память. События происходят в период, когда на руинах цивилизации поднялся Полис — город, возведенный на основе секретной военной базы. Он закрыт защитным Куполом и концентрирует в себе все ресурсы и технологии, собранные из разрушенного мира. Полис процветает. Все, кто вне Полиса — с трудом выживают..."
+                ), { navController.popBackStack() }) }
         }
     }
 }

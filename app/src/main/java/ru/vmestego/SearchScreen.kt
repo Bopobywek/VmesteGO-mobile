@@ -2,6 +2,7 @@ package ru.vmestego
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,10 +54,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Preview
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen() {
+fun SearchScreen(goToEvent: () -> Unit) {
     val isUserSearching = remember { mutableStateOf(false) }
     val isUserSelectDate = remember { mutableStateOf(false) }
     val searchText = remember { mutableStateOf("") }
@@ -165,14 +166,14 @@ fun SearchScreen() {
                 }
             }
             Spacer(Modifier.size(16.dp))
-            EventsList()
+            EventsList(goToEvent)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsList() {
+fun EventsList(goToEvent: () -> Unit) {
     val state = rememberPullToRefreshState()
     val isRefreshing = remember { mutableStateOf(false) }
     PullToRefreshBox(
@@ -185,7 +186,7 @@ fun EventsList() {
         ) {
             for (i in 1..10) {
                 item {
-                    EventCard()
+                    EventCard(goToEvent)
                 }
             }
         }
@@ -193,11 +194,14 @@ fun EventsList() {
 }
 
 @Composable
-fun EventCard() {
+fun EventCard(goToEvent: () -> Unit) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 150.dp)
+            .clickable {
+                goToEvent()
+            }
     ) {
         Image(
             painter = painterResource(R.drawable.ic_launcher_background),
