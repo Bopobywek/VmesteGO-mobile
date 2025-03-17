@@ -159,9 +159,8 @@ fun InvitationsList() {
 }
 
 // https://stackoverflow.com/a/70303650
-@Preview(showBackground = true)
 @Composable
-fun FriendsScreen() {
+fun FriendsScreen(goToUserScreen: (Int) -> Unit) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -175,7 +174,7 @@ fun FriendsScreen() {
                 Modifier.padding(paddingValues)
             ) {
                 composable<FeedTab> { FeedTabScreen() }
-                composable<FriendsTab> { FriendsTabScreen() }
+                composable<FriendsTab> { FriendsTabScreen(goToUserScreen) }
                 composable<InvitationsTab> { InvitationsTabScreen() }
             }
         }

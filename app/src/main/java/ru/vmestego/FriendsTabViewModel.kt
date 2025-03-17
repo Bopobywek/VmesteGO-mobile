@@ -21,6 +21,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ru.vmestego.data.SecureStorage
@@ -31,6 +32,9 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _users = mutableStateListOf<UserUi>()
     val users: List<UserUi> = _users
+
+    var isLoading by mutableStateOf(false)
+        private set
 
     private val secureStorage = SecureStorage.getStorageInstance(application)
 
@@ -53,6 +57,7 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun setAllFriends() {
+        isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             val response: HttpResponse = client.get("http://10.0.2.2:8080/friends") {
                 contentType(ContentType.Application.Json)
@@ -62,8 +67,12 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             _users.clear()
             responseData.users.forEach {
                 _users.apply {
-                    add(UserUi(it.imageUrl, it.name))
+                    add(UserUi(it.imageUrl, it.name, it.id))
                 }
+            }
+
+            withContext(Dispatchers.Main) {
+                isLoading = false
             }
         }
     }
@@ -74,6 +83,7 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
+        isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             val response: HttpResponse = client.get("http://10.0.2.2:8080/users/search") {
                 url {
@@ -88,8 +98,12 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             _users.clear()
             responseData.users.forEach {
                 _users.apply {
-                    add(UserUi(it.imageUrl, it.name))
+                    add(UserUi(it.imageUrl, it.name, it.id))
                 }
+            }
+
+            withContext(Dispatchers.Main) {
+                isLoading = false
             }
         }
     }
@@ -103,10 +117,12 @@ data class UsersSearchResponse(
 @Serializable
 data class UserResponse(
     val imageUrl: String,
-    val name: String
+    val name: String,
+    val id: Int
 )
 
 data class UserUi(
     val imageUrl: String,
-    val name: String
+    val name: String,
+    val id: Int
 )

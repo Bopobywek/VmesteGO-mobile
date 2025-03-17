@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,39 +20,45 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlin.math.max
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsTabScreen(viewModel: FriendsTabViewModel = viewModel()) {
+fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewModel = viewModel()) {
     val showBottomSheet = remember { mutableStateOf(false) }
 
     Column {
@@ -122,14 +129,20 @@ fun FriendsTabScreen(viewModel: FriendsTabViewModel = viewModel()) {
 
         Spacer(Modifier.height(10.dp))
 
-        FriendsList(viewModel.users)
+        if (viewModel.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else {
+            FriendsList(goToUserScreen, viewModel.users)
+        }
     }
 
     FriendsRequestsModalSheet(showBottomSheet)
 }
 
 @Composable
-fun FriendsList(users: List<UserUi>) {
+fun FriendsList(goToUserScreen: (Int) -> Unit, users: List<UserUi>) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -139,6 +152,9 @@ fun FriendsList(users: List<UserUi>) {
                     .padding(horizontal = 20.dp)
                     .background(Color.LightGray, shape = RoundedCornerShape(15.dp))
                     .padding(vertical = 10.dp)
+                    .clickable {
+                        goToUserScreen(user.id)
+                    }
             ) {
                 Row(
                     modifier = Modifier
@@ -166,6 +182,27 @@ fun FriendsList(users: List<UserUi>) {
     }
 }
 
+
+@Serializable
+object IncomingFriendsRequests
+
+@Serializable
+object OutcomingFriendsRequests
+
+val friendsRequestsRoutes = listOf(
+    SecondaryLevelRoute(
+        "IncomingFriendsRequests",
+        IncomingFriendsRequests,
+        R.string.incoming_friends_requests_tab_name
+    ),
+    SecondaryLevelRoute(
+        "OutcomingFriendsRequests",
+        OutcomingFriendsRequests,
+        R.string.outcoming_friends_requests_tab_name
+    ),
+)
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsRequestsModalSheet(showBottomSheet: MutableState<Boolean>) {
@@ -178,38 +215,147 @@ fun FriendsRequestsModalSheet(showBottomSheet: MutableState<Boolean>) {
             },
             sheetState = sheetState
         ) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = 15.dp)
-                            .fillMaxWidth()
+            val navController = rememberNavController()
+
+            Scaffold(
+                topBar = {
+                    FriendsRequestsTopBar(navController)
+                },
+                content = { paddingValues ->
+                    NavHost(
+                        navController,
+                        startDestination = IncomingFriendsRequests,
+                        Modifier.padding(paddingValues)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_launcher_background),
-                            contentDescription = "",
-                            colorFilter = ColorFilter.tint(generateWarmSoftColor()),
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(
-                            text = "test",
-                            fontWeight = FontWeight.W400,
-                            fontSize = 20.sp,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Icon(
-                            rememberVectorPainter(image = Icons.Filled.Done),
-                            contentDescription = "Localized description",
-                            modifier = Modifier
-                                .size(32.dp),
-                            tint = { Color.Green })
+                        composable<IncomingFriendsRequests> { FriendsIncomingRequestsScreen() }
+                        composable<OutcomingFriendsRequests> { FriendsOutcomingRequestsScreen() }
                     }
-                Spacer(modifier = Modifier.height(20.dp))
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun FriendsIncomingRequestsScreen() {
+    Column(
+        modifier = Modifier
+            .padding(top = 15.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_background),
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(
+                    text = "test",
+                    fontWeight = FontWeight.W400,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(15.dp))
+
+        Row(Modifier.padding(horizontal = 15.dp)) {
+            Button(onClick = {}, Modifier.weight(0.5f).fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                Text("Принять")
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(onClick = {}, Modifier.weight(0.5f).fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                Text("Отклонить")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+    }
+}
+
+@Composable
+fun FriendsOutcomingRequestsScreen() {
+    Column(
+        modifier = Modifier
+            .padding(top = 15.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_background),
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(
+                    text = "test",
+                    fontWeight = FontWeight.W400,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(15.dp))
+
+        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+    }
+}
+
+@Composable
+fun FriendsRequestsTopBar(navController: NavHostController) {
+    val tabIndex = remember { mutableIntStateOf(0) }
+    Column {
+        TabRow(
+            selectedTabIndex = tabIndex.intValue,
+        ) {
+            friendsRequestsRoutes.forEachIndexed { index, route ->
+                Tab(
+                    selected = tabIndex.intValue == index,
+                    onClick = {
+                        tabIndex.intValue = index
+                        navController.navigate(route.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = false
+                            }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(route.localizedNameResourceId),
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                )
             }
         }
     }

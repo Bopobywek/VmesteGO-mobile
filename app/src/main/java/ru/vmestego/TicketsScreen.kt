@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -164,8 +165,7 @@ fun TicketList(tickets: List<TicketUi>) {
     // https://stackoverflow.com/a/74227507
     val initialIndex = getCurrentMonthHeaderIndex(ordered)
     Log.i("Tickets", "current index $initialIndex")
-    val listState =
-        rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val listState = LazyListState(initialIndex)
     LazyColumn(
         contentPadding = PaddingValues(vertical = 10.dp),
         state = listState

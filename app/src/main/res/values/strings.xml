@@ -17,4 +17,7 @@
     <string name="friends_tab_name">Friends</string>
     <string name="feed_tab_name">Feed</string>
     <string name="invitations_tab_name">Invitations</string>
+    <string name="incoming_friends_requests_tab_name">Incoming</string>
+    <string name="outcoming_friends_requests_tab_name">Outcoming</string>
+    <string name="requests">Requests</string>
 </resources>
