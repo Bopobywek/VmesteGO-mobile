@@ -184,7 +184,7 @@ fun EventsList(goToEvent: () -> Unit) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            for (i in 1..10) {
+            for (i in 1..1) {
                 item {
                     EventCard(goToEvent)
                 }

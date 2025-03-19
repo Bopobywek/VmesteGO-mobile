@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -36,10 +38,10 @@ import ru.vmestego.event.EventUi
 import java.time.LocalDate
 
 val iconizedRoutes = listOf(
-    IconizedRoute("Search", Search, Icons.Filled.Search),
-    IconizedRoute("Tickets", Tickets, Icons.Filled.Info),
-    IconizedRoute("Friends", Friends, Icons.Filled.Favorite),
-    IconizedRoute("Profile", Profile, Icons.Filled.Person)
+    IconizedRoute("Поиск", Search, Icons.Filled.Search),
+    IconizedRoute("Билеты", Tickets, Icons.Filled.LocalActivity),
+    IconizedRoute("Друзья", Friends, Icons.Filled.Group),
+    IconizedRoute("Профиль", Profile, Icons.Filled.Person)
 )
 
 @Serializable
@@ -128,12 +130,16 @@ fun AppScreen() {
                     description = "В мире «Икара» около 50 лет назад произошла глобальная война. Применялось биологическое оружие, которое уничтожило взрослое население, и в живых остались только дети и подростки. При этом они частично потеряли память. События происходят в период, когда на руинах цивилизации поднялся Полис — город, возведенный на основе секретной военной базы. Он закрыт защитным Куполом и концентрирует в себе все ресурсы и технологии, собранные из разрушенного мира. Полис процветает. Все, кто вне Полиса — с трудом выживают..."
                 ), { navController.popBackStack() })
             }
-            composable<User> {
-                backStackEntry ->
+            composable<User> { backStackEntry ->
                 val route = backStackEntry.toRoute<User>()
                 Log.i("UserRedirect", route.id.toString())
                 val viewModel: OtherUserProfileViewModel =
-                    viewModel(factory = OtherUserProfileViewModelFactory(LocalContext.current.applicationContext as Application, route.id))
+                    viewModel(
+                        factory = OtherUserProfileViewModelFactory(
+                            LocalContext.current.applicationContext as Application,
+                            route.id
+                        )
+                    )
                 OtherUserProfileScreenWrapper(viewModel)
             }
         }

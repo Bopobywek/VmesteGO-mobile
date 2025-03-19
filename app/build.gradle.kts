@@ -88,4 +88,5 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.security.crypto.ktx)
+    implementation(libs.androidx.material.icons.extended)
 }

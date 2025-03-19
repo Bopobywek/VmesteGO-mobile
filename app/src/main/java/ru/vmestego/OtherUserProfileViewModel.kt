@@ -33,6 +33,9 @@ class OtherUserProfileViewModel(application: Application, userId: Int) : Android
     var requestStatus by mutableStateOf(RequestStatus.NONE)
         private set
 
+    var username by mutableStateOf("")
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -68,8 +71,24 @@ class OtherUserProfileViewModel(application: Application, userId: Int) : Android
         } else if (requestStatus == RequestStatus.PENDING) {
             // TODO: может быть кейс, когда не обновилось, но данные на сервере поменялись
             viewModelScope.launch(Dispatchers.IO) {
+                // requests/${currentUserId} -- удалить запрос на дружбу к пользователю, чья страничка
                 val response: HttpResponse =
                     client.delete("http://10.0.2.2:8080/requests/${currentUserId}") {
+                        contentType(ContentType.Application.Json)
+                    }
+
+                if (response.status != HttpStatusCode.OK) {
+                    return@launch
+                }
+
+                withContext(Dispatchers.Main) {
+                    requestStatus = RequestStatus.NONE
+                }
+            }
+        } else {
+            viewModelScope.launch(Dispatchers.IO) {
+                val response: HttpResponse =
+                    client.delete("http://10.0.2.2:8080/friends/${currentUserId}") {
                         contentType(ContentType.Application.Json)
                     }
 
@@ -87,12 +106,18 @@ class OtherUserProfileViewModel(application: Application, userId: Int) : Android
     fun getRequestStatus() {
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
+            val userResponse: HttpResponse = client.get("http://10.0.2.2:8080/users/${currentUserId}") {
+                contentType(ContentType.Application.Json)
+            }
+            val userData = userResponse.body<UserResponse>()
+
             val response: HttpResponse = client.get("http://10.0.2.2:8080/requests/${currentUserId}") {
                 contentType(ContentType.Application.Json)
             }
 
             val responseData = response.body<RequestStatusResponse>()
             withContext(Dispatchers.Main) {
+                username = userData.name
                 when {
                     responseData.status.lowercase() == "done" -> {
                         requestStatus = RequestStatus.DONE

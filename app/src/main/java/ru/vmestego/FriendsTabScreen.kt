@@ -138,7 +138,7 @@ fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewMod
         }
     }
 
-    FriendsRequestsModalSheet(showBottomSheet)
+    FriendsRequestsModalSheet(showBottomSheet, viewModel, goToUserScreen)
 }
 
 @Composable
@@ -205,7 +205,11 @@ val friendsRequestsRoutes = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsRequestsModalSheet(showBottomSheet: MutableState<Boolean>) {
+fun FriendsRequestsModalSheet(
+    showBottomSheet: MutableState<Boolean>,
+    viewModel: FriendsTabViewModel,
+    goToUserScreen: (Int) -> Unit
+) {
     val sheetState = rememberModalBottomSheetState()
 
     if (showBottomSheet.value) {
@@ -227,8 +231,18 @@ fun FriendsRequestsModalSheet(showBottomSheet: MutableState<Boolean>) {
                         startDestination = IncomingFriendsRequests,
                         Modifier.padding(paddingValues)
                     ) {
-                        composable<IncomingFriendsRequests> { FriendsIncomingRequestsScreen() }
-                        composable<OutcomingFriendsRequests> { FriendsOutcomingRequestsScreen() }
+                        composable<IncomingFriendsRequests> {
+                            FriendsIncomingRequestsScreen(
+                                viewModel,
+                                goToUserScreen
+                            )
+                        }
+                        composable<OutcomingFriendsRequests> {
+                            FriendsOutcomingRequestsScreen(
+                                viewModel,
+                                goToUserScreen
+                            )
+                        }
                     }
                 }
             )
@@ -237,17 +251,17 @@ fun FriendsRequestsModalSheet(showBottomSheet: MutableState<Boolean>) {
 }
 
 @Composable
-fun FriendsIncomingRequestsScreen() {
-    Column(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        Column {
+fun FriendsIncomingRequestsScreen(
+    viewModel: FriendsTabViewModel,
+    goToUserScreen: (Int) -> Unit
+) {
+    LazyColumn(Modifier.padding(top = 15.dp)) {
+        items(viewModel.incomingFriendsRequests) { request ->
             Row(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .clickable { goToUserScreen(request.from.id) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -260,46 +274,63 @@ fun FriendsIncomingRequestsScreen() {
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "test",
+                    text = request.from.name,
                     fontWeight = FontWeight.W400,
                     fontSize = 20.sp,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
-        }
-        Spacer(modifier = Modifier.height(15.dp))
 
-        Row(Modifier.padding(horizontal = 15.dp)) {
-            Button(onClick = {}, Modifier.weight(0.5f).fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                Text("Принять")
+            Spacer(modifier = Modifier.height(15.dp))
+
+            Row(Modifier.padding(horizontal = 15.dp)) {
+                Button(
+                    onClick = { viewModel.acceptFriendRequest(request) },
+                    Modifier
+                        .weight(0.5f)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Принять")
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Button(
+                    onClick = { viewModel.declineFriendRequest(request) },
+                    Modifier
+                        .weight(0.5f)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Отклонить")
+                }
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            Button(onClick = {}, Modifier.weight(0.5f).fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                Text("Отклонить")
-            }
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
+
+            Spacer(modifier = Modifier.height(15.dp))
         }
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
-
-        Spacer(modifier = Modifier.height(15.dp))
-
     }
 }
 
 @Composable
-fun FriendsOutcomingRequestsScreen() {
-    Column(
+fun FriendsOutcomingRequestsScreen(
+    viewModel: FriendsTabViewModel,
+    goToUserScreen: (Int) -> Unit
+) {
+    LazyColumn(
         modifier = Modifier
             .padding(top = 15.dp)
-            .verticalScroll(rememberScrollState())
     ) {
-        Column {
+        items(viewModel.outcomingFriendsRequests) { request ->
             Row(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .clickable {
+                        goToUserScreen(request.to.id)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -312,19 +343,28 @@ fun FriendsOutcomingRequestsScreen() {
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "test",
+                    text = request.to.name,
                     fontWeight = FontWeight.W400,
                     fontSize = 20.sp,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
+                Spacer(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+                Button(onClick = {
+                    viewModel.cancelFriendRequest(request)
+                }, shape = RoundedCornerShape(10.dp)) {
+                    Text("Отменить")
+                }
             }
+            Spacer(modifier = Modifier.height(15.dp))
+
+            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
+
+            Spacer(modifier = Modifier.height(15.dp))
         }
-        Spacer(modifier = Modifier.height(15.dp))
-
-        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 15.dp))
-
-        Spacer(modifier = Modifier.height(15.dp))
-
     }
 }
 

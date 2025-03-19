@@ -73,7 +73,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Вася Пупкин",
+            text = "andrey",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.CenterHorizontally)

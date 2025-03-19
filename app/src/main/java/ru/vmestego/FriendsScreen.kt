@@ -188,14 +188,7 @@ fun TopBar(navController: NavHostController) {
     Column {
         TabRow(
             selectedTabIndex = tabIndex.intValue,
-            modifier = Modifier
-                .clip(shape = shape)
-                .padding(20.dp)
-                .background(Color.LightGray, shape)
-                .padding(10.dp),
-            // https://stackoverflow.com/a/73448228
-            divider = {},
-            indicator = {},
+            Modifier.padding(bottom = 15.dp)
         ) {
             friendsPageRoutes.forEachIndexed { index, route ->
                 Tab(
@@ -216,9 +209,7 @@ fun TopBar(navController: NavHostController) {
                             maxLines = 1,
                             softWrap = false
                         )
-                    },
-                    selectedContentColor = Color.Black,
-                    unselectedContentColor = Color.Black
+                    }
                 )
             }
         }

@@ -3,6 +3,7 @@ package ru.vmestego.auth
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,8 @@ import ru.vmestego.utils.PasswordValidator
 class RegistrationViewModel(application: Application) : AndroidViewModel(application) {
     var login by mutableStateOf("")
         private set
+
+    private val _application = application
 
     var email by mutableStateOf("")
         private set
@@ -116,6 +119,7 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
             }
 
             withContext(Dispatchers.Main) {
+                Toast.makeText(_application, "Вы успешно зарегистрировались", Toast.LENGTH_SHORT).show()
                 successCallback()
             }
         }
