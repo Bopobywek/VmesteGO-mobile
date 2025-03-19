@@ -11,8 +11,17 @@ interface TicketDao {
     @Query("SELECT * FROM tickets")
     suspend fun getAll(): List<Ticket>
 
+    @Query("SELECT * FROM tickets")
+    suspend fun getAllWithEvents(): List<TicketWithEvent>
+
+    @Query("SELECT * FROM tickets WHERE uid = :id")
+    suspend fun getWithEvent(id: Long): TicketWithEvent
+
     @Insert
     suspend fun insertAll(vararg ticket: Ticket)
+
+    @Insert
+    suspend fun insert(ticket: Ticket): Long
 
     @Delete
     suspend fun delete(ticket: Ticket)

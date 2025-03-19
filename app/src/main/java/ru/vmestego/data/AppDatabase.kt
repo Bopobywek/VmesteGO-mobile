@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [Ticket::class], version = 1, exportSchema = false)
+@Database(entities = [Ticket::class, Event::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun ticketDao(): TicketDao
+    abstract fun eventDao(): EventDao
 
     companion object {
         @Volatile
@@ -17,8 +18,8 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return Instance ?: synchronized(this) {
-//                context.deleteDatabase("item_database")
-                Room.databaseBuilder(context, AppDatabase::class.java, "item_database")
+//                context.deleteDatabase("vmestego")
+                Room.databaseBuilder(context, AppDatabase::class.java, "vmestego")
                     .build()
                     .also { Instance = it }
             }

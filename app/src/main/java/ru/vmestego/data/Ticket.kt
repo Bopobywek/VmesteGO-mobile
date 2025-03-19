@@ -7,9 +7,7 @@ import java.time.LocalDate
 
 @Entity(tableName = "tickets")
 data class Ticket(
-    @PrimaryKey(autoGenerate = true) val uid: Int = 0,
-    @ColumnInfo(name = "event_name") val eventName: String,
-    @ColumnInfo(name = "location_name") val locationName: String,
-    @ColumnInfo(name = "event_date") val eventDate: LocalDate,
-    @ColumnInfo(name = "uri") val uri: String
+    @PrimaryKey(autoGenerate = true) val uid: Long = 0,
+    @ColumnInfo(name = "event_id") val eventId: Long,
+    @ColumnInfo(name = "file_uri") val uri: String
 )

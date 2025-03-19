@@ -1,50 +1,33 @@
-package ru.vmestego
+package ru.vmestego.auth
 
-import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import ru.vmestego.auth.AuthActivity
-import ru.vmestego.data.SecureStorage
+import ru.vmestego.TicketSettingsScreen
 import ru.vmestego.ui.theme.VmesteGOTheme
 
-class MainActivity : ComponentActivity() {
-    private lateinit var secureStorage: SecureStorage
-
+class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        secureStorage = SecureStorage.getStorageInstance(this)
-
-        if (secureStorage.getToken().isNullOrEmpty()) {
-            startActivity(Intent(this, AuthActivity::class.java))
-        }
 
         setContent {
             VmesteGOTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
-                ) {
-                    AppScreen()
+                )
+                {
+                    AuthNavScreen()
                 }
             }
         }
-    }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun VmesteGOPreview() {
-    VmesteGOTheme {
-        AppScreen()
     }
 }

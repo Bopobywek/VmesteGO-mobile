@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">VmesteGO</string>
+    <string name="app_name" translatable="false">VmesteGO</string>
     <string-array name="months_ru">
         <item>Январь</item>
         <item>Февраль</item>
@@ -14,4 +14,10 @@
         <item>Ноябрь</item>
         <item>Декабрь</item>
     </string-array>
+    <string name="friends_tab_name">Friends</string>
+    <string name="feed_tab_name">Feed</string>
+    <string name="invitations_tab_name">Invitations</string>
+    <string name="incoming_friends_requests_tab_name">Incoming</string>
+    <string name="outcoming_friends_requests_tab_name">Outcoming</string>
+    <string name="requests">Requests</string>
 </resources>
