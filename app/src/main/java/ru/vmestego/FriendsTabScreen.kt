@@ -90,7 +90,7 @@ fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewMod
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = "2",
+                        text = viewModel.incomingFriendsRequests.size.toString(),
                         fontSize = 14.sp,
                         // 696969
                         color = Color(0.4117647058823529f, 0.4117647058823529f, 0.4117647058823529f)

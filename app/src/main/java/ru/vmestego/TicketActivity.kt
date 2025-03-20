@@ -153,29 +153,23 @@ object TicketParameters
 fun EventParametersScreen(
     navigateToTicketParams: (EventDto?) -> Unit,
     scope: CoroutineScope,
-    viewModel: EventParametersViewModel = viewModel()
+    viewModel: EventParametersViewModel = viewModel(),
+    searchViewModel: SearchViewModel = viewModel()
 ) {
-    val isUserSearching = remember { mutableStateOf(false) }
-    val searchText = remember { mutableStateOf("") }
     Scaffold(
         // https://composables.com/material3/searchbar
         topBar = {
-            val onActiveChange = {
-                isUserSearching.value = !isUserSearching.value
-            } //the callback to be invoked when this search bar's active state is changed
             val colors1 = SearchBarDefaults.colors()
             SearchBar(
                 inputField = {
                     SearchBarDefaults.InputField(
-                        query = searchText.value,//text showed on SearchBar
-                        onQueryChange = { newQuery ->
-                            searchText.value = newQuery
-                        }, //update the value of searchText
-                        onSearch = { query -> "" }, //the callback to be invoked when the input service triggers the ImeAction.Search action
-                        expanded = false, // whether the user is searching or not
+                        query = searchViewModel.searchText,
+                        onQueryChange = searchViewModel::onQueryChanged,
+                        onSearch = searchViewModel::onSearch,
+                        expanded = false,
                         onExpandedChange = {},
                         enabled = true,
-                        placeholder = { Text("Поиск") },
+                        placeholder = { Text("Поиск...") },
                         leadingIcon = null,
                         trailingIcon = null,
                         interactionSource = null,

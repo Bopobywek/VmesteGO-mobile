@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -53,20 +54,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.vmestego.event.EventUi
+import ru.vmestego.utils.LocalDateFormatters
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(goToEvent: () -> Unit) {
+fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) -> Unit) {
     val isUserSearching = remember { mutableStateOf(false) }
     val isUserSelectDate = remember { mutableStateOf(false) }
-    val searchText = remember { mutableStateOf("") }
     Scaffold(
         // https://composables.com/material3/searchbar
         topBar = {
-            val onActiveChange = {
-                isUserSearching.value = !isUserSearching.value
-            } //the callback to be invoked when this search bar's active state is changed
             val colors1 = SearchBarDefaults.colors()
             Row(
                 modifier = Modifier
@@ -77,12 +77,10 @@ fun SearchScreen(goToEvent: () -> Unit) {
                 SearchBar(
                     inputField = {
                         SearchBarDefaults.InputField(
-                            query = searchText.value,//text showed on SearchBar
-                            onQueryChange = { newQuery ->
-                                searchText.value = newQuery
-                            }, //update the value of searchText
-                            onSearch = { query -> "" }, //the callback to be invoked when the input service triggers the ImeAction.Search action
-                            expanded = false, // whether the user is searching or not
+                            query = viewModel.searchText,
+                            onQueryChange = viewModel::onQueryChanged,
+                            onSearch = viewModel::onSearch,
+                            expanded = false,
                             onExpandedChange = {},
                             enabled = true,
                             placeholder = { Text("Поиск...") },
@@ -129,9 +127,11 @@ fun SearchScreen(goToEvent: () -> Unit) {
                 DateRangePickerModal({}, { isUserSelectDate.value = false })
             }
             val scrollState = rememberScrollState()
-            Row(Modifier
-                .padding()
-                .horizontalScroll(scrollState)) {
+            Row(
+                Modifier
+                    .padding()
+                    .horizontalScroll(scrollState)
+            ) {
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         Color.LightGray,
@@ -166,41 +166,39 @@ fun SearchScreen(goToEvent: () -> Unit) {
                 }
             }
             Spacer(Modifier.size(16.dp))
-            EventsList(goToEvent)
+            EventsList(viewModel, goToEvent)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsList(goToEvent: () -> Unit) {
+fun EventsList(viewModel: SearchViewModel, goToEvent: (EventUi) -> Unit) {
     val state = rememberPullToRefreshState()
     val isRefreshing = remember { mutableStateOf(false) }
     PullToRefreshBox(
-        isRefreshing = isRefreshing.value,
-        onRefresh = { isRefreshing.value = false },
+        isRefreshing = viewModel.isLoading,
+        onRefresh = viewModel::update,
         state = state
     ) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            for (i in 1..1) {
-                item {
-                    EventCard(goToEvent)
-                }
+            items(viewModel.events) {
+                EventCard(it, goToEvent)
             }
         }
     }
 }
 
 @Composable
-fun EventCard(goToEvent: () -> Unit) {
+fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 150.dp)
             .clickable {
-                goToEvent()
+                goToEvent(eventUi)
             }
     ) {
         Image(
@@ -215,9 +213,9 @@ fun EventCard(goToEvent: () -> Unit) {
         )
         Box(Modifier.padding(10.dp)) {
             Column {
-                Text("Икар", fontSize = 20.sp)
-                Text("КЗ Измайлово", fontSize = 16.sp)
-                Text("19:00", fontSize = 16.sp)
+                Text(eventUi.eventName, fontSize = 20.sp)
+                Text(eventUi.locationName, fontSize = 16.sp)
+                Text(LocalDateFormatters.formatByDefault(eventUi.date), fontSize = 16.sp)
             }
         }
     }

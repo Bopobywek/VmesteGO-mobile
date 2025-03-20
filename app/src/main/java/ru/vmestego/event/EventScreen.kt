@@ -1,8 +1,10 @@
 package ru.vmestego.event
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -13,27 +15,41 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,10 +62,14 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.material.textfield.TextInputEditText
 import ru.vmestego.R
 import ru.vmestego.generateWarmSoftColor
 import ru.vmestego.utils.LocalDateFormatters
@@ -58,7 +78,7 @@ import java.time.LocalDate
 @Composable
 fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
     val showBottomSheet = remember { mutableStateOf(false) }
-
+    var comments = remember { mutableStateOf(listOf<Pair<String, String>>()) }
     Scaffold(bottomBar = {
         Button(
             onClick = {
@@ -85,7 +105,7 @@ fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = "2",
+                        text = comments.value.size.toString(),
                         fontSize = 14.sp,
                         // 696969
                         color = Color(0.4117647058823529f, 0.4117647058823529f, 0.4117647058823529f)
@@ -94,17 +114,19 @@ fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
             }
         }
     }) { innerPadding ->
-        EventScreen(eventUi, innerPadding, goBackToSearch, showBottomSheet)
+        EventScreen(eventUi, innerPadding, goBackToSearch, showBottomSheet, comments)
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventScreen(
     eventUi: EventUi,
     innerPadding: PaddingValues,
     goBackToSearch: () -> Unit,
-    showBottomSheet: MutableState<Boolean>
+    showBottomSheet: MutableState<Boolean>,
+    comments: MutableState<List<Pair<String, String>>>
 ) {
     Column(
         modifier = Modifier
@@ -131,14 +153,26 @@ fun EventScreen(
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.25f))
             )
-            Text(
-                eventUi.eventName,
+
+            Box(
                 Modifier
-                    .align(Alignment.BottomStart)
+                    .fillMaxSize()
                     .padding(start = 10.dp, bottom = 5.dp),
-                color = Color.White,
-                fontSize = 36.sp
-            )
+                contentAlignment = Alignment.BottomStart
+            ) {
+
+                Text(
+                    eventUi.eventName,
+                    Modifier
+
+                        .fillMaxWidth(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Clip
+                )
+            }
 
             Icon(
                 rememberVectorPainter(image = Icons.Filled.Close),
@@ -171,6 +205,10 @@ fun EventScreen(
 
             Spacer(Modifier.height(20.dp))
 
+            SingleChoiceSegmentedButton(Modifier.fillMaxWidth(), eventUi)
+
+            Spacer(Modifier.height(20.dp))
+
             Text("О мероприятии", fontSize = 20.sp)
             Spacer(Modifier.height(2.dp))
             HorizontalDivider(thickness = 2.dp)
@@ -178,7 +216,6 @@ fun EventScreen(
             Text(eventUi.description, lineHeight = 18.sp)
         }
     }
-
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     if (showBottomSheet.value) {
@@ -188,22 +225,98 @@ fun EventScreen(
             },
             sheetState = sheetState
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+            Box(
+                Modifier.fillMaxSize()
             ) {
-                Text("Hello")
+                var inputText by remember { mutableStateOf(TextFieldValue()) }
+                Column(modifier = Modifier.imePadding()) {
+                    comments.value.forEach { (user, text) ->
+                        CommentItem(username = user, text = text)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(horizontalArrangement = Arrangement.Center) {
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { inputText = it },
+                            placeholder = { Text("Комментарий") },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.7f)
+                                .padding(8.dp)
+                        )
+                        IconButton(
+                            onClick = {
+                                if (inputText.text.isNotBlank()) {
+                                    comments.value += ("andrey" to inputText.text)
+                                    inputText = TextFieldValue()
+                                }
+                            },
+                            modifier = Modifier
+                                .background(Color.Transparent, RoundedCornerShape(10.dp))
+                                .padding(top = 10.dp)
+                        ) {
+                            Icon(
+                                rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Send),
+                                contentDescription = "Localized description",
+                                tint = { Color.Black })
+                        }
+                    }
+                }
             }
+
         }
     }
 }
+
+@Composable
+fun SingleChoiceSegmentedButton(
+    modifier: Modifier = Modifier,
+    eventUi: EventUi,
+    viewModel: EventViewModel = viewModel()
+) {
+    var selectedIndex by remember { mutableIntStateOf(2) }
+    val options = listOf("Хочу пойти", "Иду", "Не иду")
+
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        options.forEachIndexed { index, label ->
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = options.size
+                ),
+                onClick = {
+                    selectedIndex = index
+                    viewModel.changeEventStatus(eventUi.id, index)
+                },
+                selected = index == selectedIndex,
+                label = { Text(label) }
+            )
+        }
+    }
+}
+
+@Composable
+fun CommentItem(username: String, text: String) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+        Text(text = "@$username", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(text = text, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 10.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+    }
+}
+
 
 @Preview
 @Composable
 fun EventScreenPreview() {
     EventScreenWrapper(
         EventUi(
+            id = 1,
             eventName = "Икар",
             locationName = "КЗ Измайлово",
             date = LocalDate.now(),

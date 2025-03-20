@@ -11,5 +11,10 @@ class LocalDateFormatters {
             val formatter = DateTimeFormatter.ofPattern("EE, dd MMM yyyy", Locale("ru")) // Russian locale
             return date.format(formatter)
         }
+
+
+        fun parseByDefault(date: String): LocalDate {
+            return LocalDate.parse(date)
+        }
     }
 }

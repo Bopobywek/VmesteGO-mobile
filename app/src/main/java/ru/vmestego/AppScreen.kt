@@ -32,10 +32,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import ru.vmestego.event.EventScreenWrapper
 import ru.vmestego.event.EventUi
+import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateSerializer
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 val iconizedRoutes = listOf(
     IconizedRoute("Поиск", Search, Icons.Filled.Search),
@@ -58,7 +63,11 @@ object Profile
 
 @Serializable
 data class Event(
-    val id: Int
+    val id: Long,
+    val eventName: String,
+    val locationName: String,
+    val date: Long,
+    val description: String
 )
 
 @Serializable
@@ -110,7 +119,9 @@ fun AppScreen() {
         NavHost(navController, startDestination = Tickets, Modifier.padding(innerPadding)) {
             composable<Search> {
                 SearchScreen() {
-                    navController.navigate(Event(12))
+                    val zoneId = ZoneId.systemDefault();
+                    val epoch = it.date.atStartOfDay(zoneId).toEpochSecond()
+                    navController.navigate(Event(it.id, it.eventName, it.locationName, epoch, it.description))
                 }
             }
             composable<Tickets> { TicketsScreen() }
@@ -122,12 +133,14 @@ fun AppScreen() {
             composable<Profile> { ProfileScreen() }
             composable<Event> { backStackEntry ->
                 val route = backStackEntry.toRoute<Event>()
-                Log.i("EventRedirect", route.id.toString())
-                EventScreenWrapper(EventUi(
-                    eventName = "Икар",
-                    locationName = "КЗ Измайлово",
-                    date = LocalDate.now(),
-                    description = "В мире «Икара» около 50 лет назад произошла глобальная война. Применялось биологическое оружие, которое уничтожило взрослое население, и в живых остались только дети и подростки. При этом они частично потеряли память. События происходят в период, когда на руинах цивилизации поднялся Полис — город, возведенный на основе секретной военной базы. Он закрыт защитным Куполом и концентрирует в себе все ресурсы и технологии, собранные из разрушенного мира. Полис процветает. Все, кто вне Полиса — с трудом выживают..."
+                val dt = Instant.ofEpochSecond(route.date).atZone(ZoneId.systemDefault()).toLocalDate()
+                EventScreenWrapper(
+                    EventUi(
+                    route.id,
+                    route.eventName,
+                    route.locationName,
+                    dt,
+                    route.description
                 ), { navController.popBackStack() })
             }
             composable<User> { backStackEntry ->

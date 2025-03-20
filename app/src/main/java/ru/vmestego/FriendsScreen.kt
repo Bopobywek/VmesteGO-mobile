@@ -170,7 +170,7 @@ fun FriendsScreen(goToUserScreen: (Int) -> Unit) {
         content = { paddingValues ->
             NavHost(
                 navController,
-                startDestination = InvitationsTab,
+                startDestination = FeedTab,
                 Modifier.padding(paddingValues)
             ) {
                 composable<FeedTab> { FeedTabScreen() }
