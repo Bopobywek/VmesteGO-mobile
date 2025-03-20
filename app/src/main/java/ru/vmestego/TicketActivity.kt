@@ -331,14 +331,26 @@ fun EventParametersScreen(
                     }
                 }
             }
-
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Не нашли мероприятие?")
-                Button(onClick = { showBottomSheet = true }) {
-                    Text("Создайте его")
+            if (searchViewModel.searchText.isEmpty()) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Не нашли мероприятие?")
+                    Button(onClick = { showBottomSheet = true }) {
+                        Text("Создайте его")
+                    }
+                }
+            } else {
+                Box(Modifier.padding(20.dp).fillMaxSize()) {
+                    EventsList(searchViewModel, {}, { navigateToTicketParams(
+                        EventDto(
+                            it.id,
+                            it.eventName,
+                            it.locationName,
+                            LocalDateTime.of(it.date, LocalTime.MIDNIGHT)
+                        )
+                    )})
                 }
             }
         }

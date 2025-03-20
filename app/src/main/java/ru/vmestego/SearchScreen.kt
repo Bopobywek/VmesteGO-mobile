@@ -166,14 +166,14 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) 
                 }
             }
             Spacer(Modifier.size(16.dp))
-            EventsList(viewModel, goToEvent)
+            EventsList(viewModel, goToEvent, {})
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsList(viewModel: SearchViewModel, goToEvent: (EventUi) -> Unit) {
+fun EventsList(viewModel: SearchViewModel, goToEvent: (EventUi) -> Unit, onEventClick: (EventUi) -> Unit) {
     val state = rememberPullToRefreshState()
     val isRefreshing = remember { mutableStateOf(false) }
     PullToRefreshBox(
@@ -185,19 +185,20 @@ fun EventsList(viewModel: SearchViewModel, goToEvent: (EventUi) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(viewModel.events) {
-                EventCard(it, goToEvent)
+                EventCard(it, goToEvent, onEventClick)
             }
         }
     }
 }
 
 @Composable
-fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit) {
+fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (EventUi) -> Unit) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 150.dp)
             .clickable {
+                onEventClick(eventUi)
                 goToEvent(eventUi)
             }
     ) {

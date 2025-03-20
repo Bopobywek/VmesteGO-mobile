@@ -159,7 +159,7 @@ fun FeedEventCard(event: FeedEventUi) {
         }
     }
 
-    val formatter = DateTimeFormatter.ofPattern("EE, dd MMM. yyyy", Locale("ru")) // Russian locale
+    val formatter = DateTimeFormatter.ofPattern("EE, dd MMM yyyy", Locale("ru")) // Russian locale
     val formattedDate = LocalDate.now().format(formatter)
     // https://stackoverflow.com/a/69688759
     Box(
