@@ -5,12 +5,13 @@ class TicketsRepositoryImpl(private val ticketDao: TicketDao) : TicketsRepositor
         return ticketDao.insert(ticket)
     }
 
-    override suspend fun getAllTicketsWithEvents(): List<TicketWithEvent> {
-        return ticketDao.getAllWithEvents()
-    }
+    override fun getAllTicketsWithEvents() = ticketDao.getAllWithEvents()
 
-    override suspend fun getAllTicketsStream(): List<Ticket> = ticketDao.getAll()
+    override fun getAllTicketsStream() = ticketDao.getAll()
+
     override suspend fun getTicketWithEvent(id: Long): TicketWithEvent {
         return ticketDao.getWithEvent(id)
     }
+
+    override suspend fun deleteTicketById(id: Long) = ticketDao.delete(id)
 }

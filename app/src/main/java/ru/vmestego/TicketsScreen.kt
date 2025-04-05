@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,6 +39,7 @@ import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -157,7 +155,8 @@ fun ActionIcon(
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
 // TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
-fun TicketList(tickets: List<TicketUi>) {
+fun TicketList(ticketsViewModel: TicketsViewModel) {
+    val tickets = ticketsViewModel.tickets.collectAsState().value
     val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
     val context = LocalContext.current
@@ -204,6 +203,7 @@ fun TicketList(tickets: List<TicketUi>) {
                             )
                             ActionIcon(
                                 onClick = {
+                                    ticketsViewModel.removeTicket(ticket)
                                     showMenu = false
                                 },
                                 backgroundColor = Color.Red,
@@ -260,6 +260,6 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
         },
         floatingActionButtonPosition = FabPosition.End
     ) {
-        TicketList(ticketsViewModel.tickets)
+        TicketList(ticketsViewModel)
     }
 }
