@@ -1,7 +1,6 @@
 package ru.vmestego
 
 import android.app.Application
-import android.content.Intent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,9 +15,8 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import ru.vmestego.auth.AuthActivity
+import ru.vmestego.bll.services.search.models.SearchEventsResponse
 import ru.vmestego.data.SecureStorage
 import ru.vmestego.event.EventUi
 import java.time.Instant

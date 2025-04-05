@@ -217,7 +217,8 @@ fun FriendsRequestsModalSheet(
             onDismissRequest = {
                 showBottomSheet.value = false
             },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = Color.White
         ) {
             val navController = rememberNavController()
 

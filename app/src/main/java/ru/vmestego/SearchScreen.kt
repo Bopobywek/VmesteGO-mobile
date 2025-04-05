@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ElevatedCard
@@ -62,7 +63,6 @@ import ru.vmestego.utils.LocalDateFormatters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) -> Unit) {
-    val isUserSearching = remember { mutableStateOf(false) }
     val isUserSelectDate = remember { mutableStateOf(false) }
     Scaffold(
         // https://composables.com/material3/searchbar
@@ -103,11 +103,11 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) 
                 ) {}
 
                 Spacer(modifier = Modifier.width(5.dp))
-
                 IconButton(
                     onClick = {},
                     modifier = Modifier
                         .fillMaxHeight()
+                        .padding(top = 7.dp)
                         .background(Color.Transparent, RoundedCornerShape(10.dp))
                 ) {
                     Icon(
@@ -166,6 +166,23 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) 
                 }
             }
             Spacer(Modifier.size(16.dp))
+
+            if (viewModel.isLoading) {
+                Box(Modifier.height(24.dp), contentAlignment = Alignment.CenterStart) {
+                    Row {
+                        Text("Загружаем события", color = Color.DarkGray)
+                        Spacer(Modifier.width(10.dp))
+                        Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.then(Modifier.size(16.dp))
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.size(16.dp))
+            }
+
             EventsList(viewModel, goToEvent, {})
         }
     }
@@ -173,12 +190,17 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsList(viewModel: SearchViewModel, goToEvent: (EventUi) -> Unit, onEventClick: (EventUi) -> Unit) {
+fun EventsList(
+    viewModel: SearchViewModel,
+    goToEvent: (EventUi) -> Unit,
+    onEventClick: (EventUi) -> Unit
+) {
     val state = rememberPullToRefreshState()
-    val isRefreshing = remember { mutableStateOf(false) }
     PullToRefreshBox(
-        isRefreshing = viewModel.isLoading,
-        onRefresh = viewModel::update,
+        isRefreshing = viewModel.isRefreshing,
+        onRefresh = {
+            viewModel.update()
+        },
         state = state
     ) {
         LazyColumn(
