@@ -30,15 +30,12 @@ class TicketParametersViewModel(application: Application) : AndroidViewModel(app
 
     fun addTicket(uri: Uri, eventId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val id = _ticketsRepository.insert(
+            _ticketsRepository.insert(
                 Ticket(
                     eventId = eventId,
                     uri = uri.toString()
                 )
             )
-            // TODO: нужно обновлять коллекцию в другой модельке ещё
         }
     }
-
-
 }

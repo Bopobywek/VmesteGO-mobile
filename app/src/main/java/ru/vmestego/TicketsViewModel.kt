@@ -50,26 +50,7 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun addTicket(uri: Uri, eventId: Long) {
-//        val minDay = LocalDate.of(1970, 1, 1).toEpochDay()
-//        val maxDay = LocalDate.of(2015, 12, 31).toEpochDay()
-//        val randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay)
-//        val randomDate = LocalDate.ofEpochDay(randomDay).withYear(2025)
-        viewModelScope.launch(Dispatchers.IO) {
-            _ticketsRepository.insert(
-                Ticket(
-                    eventId = eventId,
-                    uri = uri.toString()
-                )
-            )
-        }
-    }
-
     fun removeTicket(ticket: TicketUi) {
-//        val minDay = LocalDate.of(1970, 1, 1).toEpochDay()
-//        val maxDay = LocalDate.of(2015, 12, 31).toEpochDay()
-//        val randomDay = ThreadLocalRandom.current().nextLong(minDay, maxDay)
-//        val randomDate = LocalDate.ofEpochDay(randomDay).withYear(2025)
         viewModelScope.launch(Dispatchers.IO) {
             _ticketsRepository.deleteTicketById(ticket.id)
         }

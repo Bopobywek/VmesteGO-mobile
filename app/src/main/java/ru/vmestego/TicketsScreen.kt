@@ -176,6 +176,7 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
 
             val sortedTickets = dateTickets.sortedBy { t -> t.date }.toMutableList()
             itemsIndexed(sortedTickets) { index, ticket ->
+                val confirmTicketDeleteDialogOpen = remember { mutableStateOf(false) }
                 Box(
                     Modifier.padding(20.dp)
                         .clip(RoundedCornerShape(20.dp)),
@@ -203,7 +204,7 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                             )
                             ActionIcon(
                                 onClick = {
-                                    ticketsViewModel.removeTicket(ticket)
+                                    confirmTicketDeleteDialogOpen.value = true
                                     showMenu = false
                                 },
                                 backgroundColor = Color.Red,
@@ -216,6 +217,12 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                         onCollapsed = { showMenu = false }
                     ) {
                         TicketCard(ticket)
+                        if (confirmTicketDeleteDialogOpen.value) {
+                            YesNoDialog(
+                                confirmTicketDeleteDialogOpen,
+                                { ticketsViewModel.removeTicket(ticket) },
+                                {})
+                        }
                     }
                 }
             }

@@ -58,7 +58,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             _events.clear()
             localEvents.forEach {
                 _events.apply {
-                    add(EventUi(it.uid.toLong() + 1500, it.title, it.location, it.startAt.toLocalDate(), ""))
+                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
                 }
             }
 
@@ -96,7 +96,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             _events.clear()
             localEvents.forEach {
                 _events.apply {
-                    add(EventUi(it.uid.toLong() + 1500, it.title, it.location, it.startAt.toLocalDate(), ""))
+                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
                 }
             }
             withContext(Dispatchers.Main) {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -199,7 +202,7 @@ fun FeedEventCard(event: FeedEventUi) {
                 .align(Alignment.BottomStart)
                 // https://stackoverflow.com/questions/66820206/ripple-with-rounded-corners-jetpack-compose
                 // TODO: fix ripple width
-                .clip(MaterialTheme.shapes.medium)
+                .clip(RoundedCornerShape(30.dp))
                 .clickable {
                     showBottomSheet = true
                 }
