@@ -27,7 +27,7 @@
         </provider>
 
         <activity
-            android:name=".TicketActivity"
+            android:name=".ui.ticketActivity.TicketActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -36,11 +36,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".auth.AuthActivity"
+            android:name=".ui.authActivity.AuthActivity"
             android:exported="false">
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.mainActivity.MainActivity"
             android:exported="true"
             android:theme="@style/AppTheme">
             <intent-filter>
