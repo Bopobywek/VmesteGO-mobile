@@ -2,7 +2,13 @@ package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +27,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,25 +63,54 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         ) {
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { /* TODO: Handle notification click */ }) {
-                Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications")
+                BadgedBox(
+                    badge = {
+                        Badge()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notifications"
+                    )
+                }
             }
             IconButton(onClick = {
                 viewModel.logout()
                 activity.startActivity(Intent(activity, AuthActivity::class.java))
             }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign Out")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Sign Out"
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val photoUri = remember { mutableStateOf<Uri?>(null) }
+        val pickMedia =
+            rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+                if (uri != null) {
+                    photoUri.value = uri
+                    Log.d("PhotoPicker", "Selected URI: $uri")
+                } else {
+                    Log.d("PhotoPicker", "No media selected")
+                }
+            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_background),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(150.dp)
                     .clip(CircleShape)
+                    .clickable {
+                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
             )
         }
 

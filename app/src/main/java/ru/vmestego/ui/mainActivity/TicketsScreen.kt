@@ -1,8 +1,10 @@
 package ru.vmestego.ui.mainActivity
 
 import android.annotation.SuppressLint
+import android.content.ContentUris
 import android.content.Intent
 import android.net.Uri
+import android.provider.CalendarContract
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,14 +53,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
-import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.ui.dialogs.YesNoDialog
+import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Locale
 
 
@@ -183,7 +187,8 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
             itemsIndexed(sortedTickets) { index, ticket ->
                 val confirmTicketDeleteDialogOpen = remember { mutableStateOf(false) }
                 Box(
-                    Modifier.padding(20.dp)
+                    Modifier
+                        .padding(20.dp)
                         .clip(RoundedCornerShape(20.dp)),
                 ) {
                     var showMenu by remember {
@@ -201,6 +206,15 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                             )
                             ActionIcon(
                                 onClick = {
+                                    val builder = CalendarContract.CONTENT_URI.buildUpon()
+                                    builder.appendPath("time")
+                                    ContentUris.appendId(
+                                        builder,
+                                        Calendar.getInstance().timeInMillis
+                                    )
+                                    val intent = Intent(Intent.ACTION_VIEW)
+                                        .setData(builder.build())
+                                    context.startActivity(intent)
                                     showMenu = false
                                 },
                                 backgroundColor = Color.Blue,
