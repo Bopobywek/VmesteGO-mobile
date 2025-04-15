@@ -60,7 +60,7 @@ import ru.vmestego.utils.LocalDateFormatters
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) -> Unit) {
+fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) -> Unit, createEvent: () -> Unit) {
     val isUserSelectDate = remember { mutableStateOf(false) }
     Scaffold(
         // https://composables.com/material3/searchbar
@@ -102,7 +102,7 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) 
 
                 Spacer(modifier = Modifier.width(5.dp))
                 IconButton(
-                    onClick = {},
+                    onClick = { createEvent() },
                     modifier = Modifier
                         .fillMaxHeight()
                         .padding(top = 7.dp)

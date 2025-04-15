@@ -137,7 +137,7 @@ data class EventDto(val title: String, val location: String, val date: LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventPage(onSave: (EventDto) -> Unit) {
+fun EventCreationScreen(onSave: (EventDto) -> Unit) {
     // TODO: autocomplete https://stackoverflow.com/a/72586090
     var title by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
@@ -311,7 +311,7 @@ fun EventParametersScreen(
                     },
                     sheetState = sheetState
                 ) {
-                    EventPage {
+                    EventCreationScreen {
                         showBottomSheet = false
                         scope.launch(Dispatchers.Main) {
                             val receivedId =

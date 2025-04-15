@@ -19,22 +19,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asIntState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import ru.vmestego.data.EventDataDto
 import ru.vmestego.event.EventScreenWrapper
 import ru.vmestego.event.EventUi
 import ru.vmestego.routing.IconizedRoute
+import ru.vmestego.ui.ticketActivity.EventCreationScreen
+import ru.vmestego.ui.ticketActivity.EventParametersViewModel
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 val iconizedRoutes = listOf(
@@ -55,6 +64,9 @@ object Friends
 
 @Serializable
 object Profile
+
+@Serializable
+object CustomEvent
 
 @Serializable
 data class Event(
@@ -78,6 +90,7 @@ fun AppScreen() {
     // https://developer.android.com/develop/ui/compose/navigation
     val navController = rememberNavController()
     val selectedIndex = rememberSaveable { mutableIntStateOf(1) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         bottomBar = {
@@ -111,13 +124,26 @@ fun AppScreen() {
             }
         }
     ) { innerPadding ->
+        val context = LocalContext.current
         NavHost(navController, startDestination = Tickets, Modifier.padding(innerPadding)) {
             composable<Search> {
-                SearchScreen() {
-                    val zoneId = ZoneId.systemDefault();
-                    val epoch = it.date.atStartOfDay(zoneId).toEpochSecond()
-                    navController.navigate(Event(it.id, it.eventName, it.locationName, epoch, it.description))
-                }
+                SearchScreen(
+                    goToEvent = {
+                        val zoneId = ZoneId.systemDefault();
+                        val epoch = it.date.atStartOfDay(zoneId).toEpochSecond()
+                        navController.navigate(
+                            Event(
+                                it.id,
+                                it.eventName,
+                                it.locationName,
+                                epoch,
+                                it.description
+                            )
+                        )
+                    },
+                    createEvent = {
+                        navController.navigate(CustomEvent)
+                    })
             }
             composable<Tickets> { TicketsScreen() }
             composable<Friends> {
@@ -126,17 +152,32 @@ fun AppScreen() {
                 })
             }
             composable<Profile> { ProfileScreen() }
+            composable<CustomEvent> { EventCreationScreen({
+                val viewModel = EventParametersViewModel(context.applicationContext as Application)
+                scope.launch(Dispatchers.IO) {
+                    viewModel.addEvent(EventDataDto(
+                        it.title,
+                        it.location,
+                        LocalDateTime.of(it.date, it.time)
+                    ))
+
+                    withContext(Dispatchers.Main) {
+                        navController.popBackStack()
+                    }
+                }
+            }) }
             composable<Event> { backStackEntry ->
                 val route = backStackEntry.toRoute<Event>()
-                val dt = Instant.ofEpochSecond(route.date).atZone(ZoneId.systemDefault()).toLocalDate()
+                val dt =
+                    Instant.ofEpochSecond(route.date).atZone(ZoneId.systemDefault()).toLocalDate()
                 EventScreenWrapper(
                     EventUi(
-                    route.id,
-                    route.eventName,
-                    route.locationName,
-                    dt,
-                    route.description
-                ), { navController.popBackStack() })
+                        route.id,
+                        route.eventName,
+                        route.locationName,
+                        dt,
+                        route.description
+                    ), { navController.popBackStack() })
             }
             composable<User> { backStackEntry ->
                 val route = backStackEntry.toRoute<User>()
