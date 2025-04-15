@@ -74,7 +74,7 @@ import ru.vmestego.data.EventDataDto
 import ru.vmestego.ui.mainActivity.EventsList
 import ru.vmestego.ui.mainActivity.MainActivity
 import ru.vmestego.ui.mainActivity.SearchViewModel
-import ru.vmestego.ui.ticketActivity.models.EventDto
+import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.ui.theme.VmesteGOTheme
 import ru.vmestego.utils.IntentHelper
 import java.io.File
@@ -133,12 +133,127 @@ object EventParameters
 @Serializable
 object TicketParameters
 
+data class EventDto(val title: String, val location: String, val date: LocalDate, val time: LocalTime)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventPage(onSave: (EventDto) -> Unit) {
+    // TODO: autocomplete https://stackoverflow.com/a/72586090
+    var title by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf(LocalDate.now()) }
+    var time by remember { mutableStateOf(LocalTime.now()) }
+    var showDateInput by remember { mutableStateOf(false) }
+    var showTimeInput by remember { mutableStateOf(false) }
+
+    if (showDateInput) {
+        DatePickerModalInput(
+            onDismiss = { showDateInput = false },
+            onDateSelected = {
+                date = Instant.ofEpochMilli(it!!).atZone(
+                    ZoneId.systemDefault()
+                ).toLocalDate()
+                showDateInput = false
+            })
+    }
+
+    if (showTimeInput) {
+        TimePickerModalInput(
+            onDismiss = { showTimeInput = false },
+            onConfirm = {
+                time = it
+                showTimeInput = false
+            })
+    }
+
+    val focusManager = LocalFocusManager.current
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxHeight()
+    ) {
+        OutlinedTextField(
+            value = title,
+            placeholder = { Text("Название") },
+            onValueChange = { title = it },
+            label = { Text("Название") },
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = location,
+            onValueChange = { location = it },
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            label = { Text("Место проведения") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = date.toString(),
+            onValueChange = {
+            },
+            readOnly = true,
+            label = { Text("Дата проведения") },
+            modifier = Modifier
+                .fillMaxWidth(),
+            interactionSource = remember { MutableInteractionSource() }
+                .also { interactionSource ->
+                    LaunchedEffect(interactionSource) {
+                        interactionSource.interactions.collect {
+                            if (it is PressInteraction.Release) {
+                                showDateInput = true
+                            }
+                        }
+                    }
+                }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val timeFormatter =
+            DateTimeFormatter.ofPattern("hh:mm", Locale("ru")) // Russian locale
+        OutlinedTextField(
+            value = time.format(timeFormatter),
+            onValueChange = {
+            },
+            readOnly = true,
+            label = { Text("Время проведения") },
+            modifier = Modifier
+                .fillMaxWidth(),
+            interactionSource = remember { MutableInteractionSource() }
+                .also { interactionSource ->
+                    LaunchedEffect(interactionSource) {
+                        interactionSource.interactions.collect {
+                            if (it is PressInteraction.Release) {
+                                showTimeInput = true
+                            }
+                        }
+                    }
+                }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { onSave(EventDto(title, location, date, time)) }, modifier = Modifier
+                .padding(horizontal = 15.dp)
+                .fillMaxWidth()
+        ) {
+            Text("Сохранить")
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 // https://stackoverflow.com/a/67133534
 fun EventParametersScreen(
-    navigateToTicketParams: (EventDto?) -> Unit,
+    navigateToTicketParams: (EventRouteDto?) -> Unit,
     scope: CoroutineScope,
     viewModel: EventParametersViewModel = viewModel(),
     searchViewModel: SearchViewModel = viewModel()
@@ -196,124 +311,21 @@ fun EventParametersScreen(
                     },
                     sheetState = sheetState
                 ) {
-                    // TODO: autocomplete https://stackoverflow.com/a/72586090
-                    var title by remember { mutableStateOf("") }
-                    var location by remember { mutableStateOf("") }
-                    var date by remember { mutableStateOf(LocalDate.now()) }
-                    var time by remember { mutableStateOf(LocalTime.now()) }
-                    var showDateInput by remember { mutableStateOf(false) }
-                    var showTimeInput by remember { mutableStateOf(false) }
-
-                    if (showDateInput) {
-                        DatePickerModalInput(
-                            onDismiss = { showDateInput = false },
-                            onDateSelected = {
-                                date = Instant.ofEpochMilli(it!!).atZone(
-                                    ZoneId.systemDefault()
-                                ).toLocalDate()
-                                showDateInput = false
-                            })
-                    }
-
-                    if (showTimeInput) {
-                        TimePickerModalInput(
-                            onDismiss = { showTimeInput = false },
-                            onConfirm = {
-                                time = it
-                                showTimeInput = false
-                            })
-                    }
-
-                    val focusManager = LocalFocusManager.current
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxHeight()
-                    ) {
-                        OutlinedTextField(
-                            value = title,
-                            placeholder = { Text("Название") },
-                            onValueChange = { title = it },
-                            label = { Text("Название") },
-                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = location,
-                            onValueChange = { location = it },
-                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                            label = { Text("Место проведения") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = date.toString(),
-                            onValueChange = {
-                            },
-                            readOnly = true,
-                            label = { Text("Дата проведения") },
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            interactionSource = remember { MutableInteractionSource() }
-                                .also { interactionSource ->
-                                    LaunchedEffect(interactionSource) {
-                                        interactionSource.interactions.collect {
-                                            if (it is PressInteraction.Release) {
-                                                showDateInput = true
-                                            }
-                                        }
-                                    }
-                                }
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        val timeFormatter =
-                            DateTimeFormatter.ofPattern("hh:mm", Locale("ru")) // Russian locale
-                        OutlinedTextField(
-                            value = time.format(timeFormatter),
-                            onValueChange = {
-                            },
-                            readOnly = true,
-                            label = { Text("Время проведения") },
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            interactionSource = remember { MutableInteractionSource() }
-                                .also { interactionSource ->
-                                    LaunchedEffect(interactionSource) {
-                                        interactionSource.interactions.collect {
-                                            if (it is PressInteraction.Release) {
-                                                showTimeInput = true
-                                            }
-                                        }
-                                    }
-                                }
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(onClick = {
-                            showBottomSheet = false
-                            scope.launch(Dispatchers.Main) {
-                                val receivedId = viewModel.addEvent(
-                                    EventDataDto(title, location, LocalDateTime.of(date, time))
+                    EventPage {
+                        showBottomSheet = false
+                        scope.launch(Dispatchers.Main) {
+                            val receivedId =
+                                viewModel.addEvent(
+                                    EventDataDto(it.title, it.location, LocalDateTime.of(it.date, it.time))
                                 )
-                                navigateToTicketParams(
-                                    EventDto(
-                                        receivedId,
-                                        title,
-                                        location,
-                                        LocalDateTime.of(date, time)
-                                    )
+                            navigateToTicketParams(
+                                EventRouteDto(
+                                    receivedId,
+                                    it.title,
+                                    it.location,
+                                    LocalDateTime.of(it.date, it.time)
                                 )
-                            }
-                        }, Modifier.padding(horizontal = 15.dp).fillMaxWidth()) {
-                            Text("Сохранить")
+                            )
                         }
                     }
                 }
@@ -329,15 +341,21 @@ fun EventParametersScreen(
                     }
                 }
             } else {
-                Box(Modifier.padding(20.dp).fillMaxSize()) {
-                    EventsList(searchViewModel, {}, { navigateToTicketParams(
-                        EventDto(
-                            it.id,
-                            it.eventName,
-                            it.locationName,
-                            LocalDateTime.of(it.date, LocalTime.MIDNIGHT)
+                Box(
+                    Modifier
+                        .padding(20.dp)
+                        .fillMaxSize()
+                ) {
+                    EventsList(searchViewModel, {}, {
+                        navigateToTicketParams(
+                            EventRouteDto(
+                                it.id,
+                                it.eventName,
+                                it.locationName,
+                                LocalDateTime.of(it.date, LocalTime.MIDNIGHT)
+                            )
                         )
-                    )})
+                    })
                 }
             }
         }
@@ -347,7 +365,7 @@ fun EventParametersScreen(
 @Composable
 fun TicketParametersScreen(
     ticketUri: Uri,
-    eventDto: EventDto?,
+    eventRouteDto: EventRouteDto?,
     navigateToEventParams: () -> Unit,
     viewModel: TicketParametersViewModel = viewModel()
 ) {
@@ -371,12 +389,12 @@ fun TicketParametersScreen(
                         activity,
                         ticketUri
                     )
-                    if (newUri != null && eventDto != null) {
-                        viewModel.addTicket(newUri, eventDto.uid)
+                    if (newUri != null && eventRouteDto != null) {
+                        viewModel.addTicket(newUri, eventRouteDto.uid)
                     }
                     activity.finish()
                 },
-                enabled = eventDto != null,
+                enabled = eventRouteDto != null,
                 shape = RoundedCornerShape(15.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -416,7 +434,7 @@ fun TicketParametersScreen(
                         .padding(5.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    if (eventDto == null) {
+                    if (eventRouteDto == null) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
@@ -434,7 +452,7 @@ fun TicketParametersScreen(
                             contentAlignment = Alignment.Center
                         ) {
 
-                            Text(eventDto.name)
+                            Text(eventRouteDto.name)
                         }
 
                     }
@@ -458,9 +476,9 @@ fun TicketSettingsScreen(uri: Uri) {
     ) {
         composable<TicketParameters> { entry ->
             val serialized = entry.savedStateHandle.get<String>(eventParamName)
-            val eventDto =
-                if (serialized == null) null else Json.decodeFromString<EventDto?>(serialized)
-            TicketParametersScreen(uri, eventDto, {
+            val eventRouteDto =
+                if (serialized == null) null else Json.decodeFromString<EventRouteDto?>(serialized)
+            TicketParametersScreen(uri, eventRouteDto, {
                 navController.navigate(
                     EventParameters
                 )

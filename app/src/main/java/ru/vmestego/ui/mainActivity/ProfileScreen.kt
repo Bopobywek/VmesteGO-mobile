@@ -46,6 +46,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.util.DebugLogger
 import ru.vmestego.R
 import ru.vmestego.ui.authActivity.AuthActivity
 import ru.vmestego.utils.LocalDateFormatters
@@ -87,23 +91,34 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        val photoUri = remember { mutableStateOf<Uri?>(null) }
+        val context = LocalContext.current
+        val photoUri = remember { mutableStateOf<Uri?>(Uri.parse("https://images.techinsider.ru/upload/img_cache/b76/b76137ebad1c1cee0359a993137c28a7_cropped_510x491.webp")) }
         val pickMedia =
             rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                 if (uri != null) {
                     photoUri.value = uri
                     Log.d("PhotoPicker", "Selected URI: $uri")
+                    context.contentResolver.takePersistableUriPermission(photoUri.value!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 } else {
                     Log.d("PhotoPicker", "No media selected")
                 }
             }
+        val imageLoader = LocalContext.current.imageLoader.newBuilder()
+            .logger(DebugLogger())
+            .build()
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(photoUri)
+                    .crossfade(true)
+                    .build(),
+                imageLoader = imageLoader,
+                error = painterResource(id = R.drawable.ic_launcher_background),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(150.dp)

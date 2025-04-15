@@ -89,4 +89,6 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.security.crypto.ktx)
     implementation(libs.androidx.material.icons.extended)
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }

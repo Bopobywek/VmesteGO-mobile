@@ -5,7 +5,7 @@ import ru.vmestego.utils.LocalDateTimeSerializer
 import java.time.LocalDateTime
 
 @Serializable
-data class EventDto (
+data class EventRouteDto (
     val uid: Long,
     val name: String,
     val location: String,
