@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.services.auth.AuthService
 import ru.vmestego.ui.authActivity.models.RegisterRequest
 import ru.vmestego.ui.authActivity.models.RegisterResponse
 import ru.vmestego.data.SecureStorage
@@ -80,6 +81,7 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private val secureStorage = SecureStorage.getStorageInstance(application)
+    private val authService = AuthService()
 
     fun updateLogin(newLogin: String) {
         login = newLogin
@@ -97,22 +99,19 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch(Dispatchers.IO) {
             isLoading = true
             val registerRequest = RegisterRequest(
-                login = login,
-                email = email,
+                username = login,
                 password = password
             )
             try {
 //                https://stackoverflow.com/questions/5528850/how-do-you-connect-localhost-in-the-android-emulator
-                val response: HttpResponse = client.post("http://10.0.2.2:8080/register") {
-                    contentType(ContentType.Application.Json)
-                    setBody(registerRequest)
-                }
 
-                val responseBody: RegisterResponse = response.body()
-                Log.i("Token", responseBody.token)
-                secureStorage.saveToken(responseBody.token)
-                Log.e("Registartion", "Registration response: ${response.status}")
+                val response = authService.registerUser(registerRequest)
+                Log.i("Token", response.token)
+                secureStorage.saveToken(response.token)
             } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(_application, "Произошла ошибка", Toast.LENGTH_SHORT).show()
+                }
                 Log.e("Registartion","Registration failed: ${e.message}")
             } finally {
                 isLoading = false

@@ -2,12 +2,13 @@ package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,29 +30,34 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import aws.smithy.kotlin.runtime.content.asByteStream
 import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
-import coil.util.DebugLogger
+import coil.compose.SubcomposeAsyncImage
 import ru.vmestego.R
 import ru.vmestego.ui.authActivity.AuthActivity
+import ru.vmestego.ui.theme.PurpleGrey40
 import ru.vmestego.utils.LocalDateFormatters
 
 @Composable
@@ -92,51 +98,65 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(20.dp))
 
         val context = LocalContext.current
-        val photoUri = remember { mutableStateOf<Uri?>(Uri.parse("https://images.techinsider.ru/upload/img_cache/b76/b76137ebad1c1cee0359a993137c28a7_cropped_510x491.webp")) }
+        val photoUri =
+            remember { mutableStateOf<String>("https://storage.yandexcloud.net/vmestego/photo_1_2025-04-08_01-10-21.jpg") }
         val pickMedia =
             rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                 if (uri != null) {
-                    photoUri.value = uri
+                    photoUri.value = uri.encodedPath!!
                     Log.d("PhotoPicker", "Selected URI: $uri")
-                    context.contentResolver.takePersistableUriPermission(photoUri.value!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                    val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
+                    viewModel.updateImage(bytes)
                 } else {
                     Log.d("PhotoPicker", "No media selected")
                 }
             }
-        val imageLoader = LocalContext.current.imageLoader.newBuilder()
-            .logger(DebugLogger())
-            .build()
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(photoUri)
-                    .crossfade(true)
-                    .build(),
-                imageLoader = imageLoader,
-                error = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = "Profile Picture",
+        val userInfo by viewModel.userInfo.collectAsState()
+        if (userInfo == null) {
+            Box(
                 modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+
+            Spacer(modifier = Modifier.height(36.dp))
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = userInfo!!.imageUrl,
+                    error = painterResource(id = R.drawable.ic_launcher_background),
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(CircleShape)
+                        .border(BorderStroke(2.dp, Color.DarkGray), CircleShape)
+                        .clickable {
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = userInfo!!.name,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "andrey",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

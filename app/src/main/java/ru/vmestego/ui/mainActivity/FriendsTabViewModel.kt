@@ -48,8 +48,8 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
                 _outcomingFriendsRequests.clear()
                 responseData.requests.forEach { fr ->
                     val uiModel = FriendRequestUi(
-                        from = UserUi(imageUrl = fr.from.imageUrl, name = fr.from.name, fr.from.id),
-                        to = UserUi(imageUrl = fr.to.imageUrl, name = fr.to.name, fr.to.id),
+                        from = UserUi(imageUrl = fr.from.imageUrl!!, name = fr.from.username, fr.from.id),  // TODO: add fallback
+                        to = UserUi(imageUrl = fr.to.imageUrl!!, name = fr.to.username, fr.to.id),  // TODO: add fallback
                         id = fr.id,
                         status = fr.status
                     )
@@ -112,7 +112,7 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             _users.clear()
             responseData.users.forEach {
                 _users.apply {
-                    add(UserUi(it.imageUrl, it.name, it.id))
+                    add(UserUi(it.imageUrl!!, it.username, it.id)) // TODO: add fallback
                 }
             }
 
@@ -136,7 +136,7 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             _users.clear()
             responseData.users.forEach {
                 _users.apply {
-                    add(UserUi(it.imageUrl, it.name, it.id))
+                    add(UserUi(it.imageUrl!!, it.username, it.id)) // TODO: add fallback
                 }
             }
 

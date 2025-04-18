@@ -117,7 +117,7 @@ class OtherUserProfileViewModel(application: Application, userId: Int) : Android
 
             val responseData = response.body<RequestStatusResponse>()
             withContext(Dispatchers.Main) {
-                username = userData.name
+                username = userData.username
                 when {
                     responseData.status.lowercase() == "done" -> {
                         requestStatus = RequestStatus.DONE

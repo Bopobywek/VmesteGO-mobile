@@ -23,6 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.services.auth.AuthService
+import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.ui.authActivity.models.LoginRequest
 import ru.vmestego.ui.authActivity.models.LoginResponse
 import ru.vmestego.data.SecureStorage
@@ -56,14 +58,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val secureStorage = SecureStorage.getStorageInstance(application)
 
-    private val client = HttpClient(Android) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-            })
-        }
-    }
+    private val authService = AuthService()
 
     fun updateLogin(newLogin: String) {
         login = newLogin
@@ -76,21 +71,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun authorizeUser(successCallback: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading = true
-            val loginRequest = LoginRequest(username = login, password = password)
             var isSuccess = false
             try {
-                val response: HttpResponse = client.post("http://10.0.2.2:8080/login") {
-                    contentType(ContentType.Application.Json)
-                    setBody(loginRequest)
-                }
-                val responseBody: LoginResponse = response.body()
-                if (response.status != HttpStatusCode.OK) {
-                    throw DataFormatException()
-                }
+                val loginRequest = LoginRequest(username = login, password = password)
+                val response = authService.authorizeUser(loginRequest)
                 isSuccess = true
-                Log.i("Token", responseBody.token)
-                secureStorage.saveToken(responseBody.token)
-                Log.e("Login", "Registration response: ${response.status}")
+                Log.i("Token", response.token)
+                secureStorage.saveToken(response.token)
             } catch (e: Exception) {
                 authorizeError = "Не удалось войти, попробуйте ещё раз"
                 Log.e("Login","Registration failed: ${e.message}")
