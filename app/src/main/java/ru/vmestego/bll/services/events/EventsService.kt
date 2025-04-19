@@ -1,4 +1,4 @@
-package ru.vmestego.bll.services.notifications
+package ru.vmestego.bll.services.events
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -7,16 +7,18 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.post
+import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.services.events.models.EventResponse
 import ru.vmestego.bll.services.notifications.models.NotificationResponse
 import ru.vmestego.bll.services.notifications.models.NotificationsResponse
+import ru.vmestego.core.EventStatus
 
-class NotificationService {
+class EventsService {
     private val client = HttpClient(Android) {
         install(ContentNegotiation) {
             json(Json {
@@ -28,35 +30,21 @@ class NotificationService {
 
     private val retryNumber = 3;
 
-    suspend fun getAllNotifications(token: String): NotificationsResponse {
+    suspend fun getEventsByStatus(userId: String?, eventStatus: EventStatus?) : List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/notifications") {
+            response = client.get("http://10.0.2.2:8080/events") {
                 contentType(ContentType.Application.Json)
-                bearerAuth(token)
+                parameter("userId", userId)
+                parameter("eventStatus", eventStatus)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
         } catch (_: Exception) {
-            return NotificationsResponse(listOf())
+            return listOf()
         }
 
-        val list = response.body<List<NotificationResponse>>()
-        return NotificationsResponse(list)
-    }
-
-    suspend fun markAsRead(token: String, id: Long) {
-        val response: HttpResponse
-        try {
-            response = client.post("http://10.0.2.2:8080/notifications/${id}/read") {
-                contentType(ContentType.Application.Json)
-                bearerAuth(token)
-                retry {
-                    retryOnExceptionOrServerErrors(retryNumber)
-                }
-            }
-        } catch (_: Exception) {
-        }
+        return response.body<List<EventResponse>>()
     }
 }

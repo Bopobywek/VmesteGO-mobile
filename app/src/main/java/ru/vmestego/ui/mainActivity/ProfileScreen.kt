@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
@@ -45,7 +47,9 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -65,8 +69,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.imageLoader
 import ru.vmestego.R
+import ru.vmestego.event.EventUi
 import ru.vmestego.ui.authActivity.AuthActivity
 import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
 
 
 @Composable
@@ -183,68 +189,67 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Хочу пойти",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+        val wantToGoEvents by viewModel.goingToEvents.collectAsState()
+        EventSection("Хочу пойти", wantToGoEvents)
+
         Spacer(modifier = Modifier.height(8.dp))
 
-        LazyColumn {
-            items(viewModel.events) {
-                Box(
-                    Modifier.padding(horizontal = 20.dp)
+        val goingEvents by viewModel.goingToEvents.collectAsState()
+        EventSection("Иду", goingEvents)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val notGoingEvents by viewModel.goingToEvents.collectAsState()
+        EventSection("Не пойду", notGoingEvents)
+
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun EventSection(title: String, events: List<EventUi>) {
+    Text(
+        text = title,
+        fontSize = 16.sp,
+        modifier = Modifier.padding(16.dp, 8.dp)
+    )
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+    Spacer(modifier = Modifier.height(8.dp))
+
+    LazyColumn {
+        items(events) {
+            Box(
+                Modifier.padding(horizontal = 20.dp)
+            ) {
+                ElevatedCard(
+                    modifier = Modifier
+                        .heightIn(min = 100.dp)
+                        .fillMaxWidth()
                 ) {
-                    ElevatedCard(
+                    Column(
                         modifier = Modifier
-                            .heightIn(min = 100.dp)
                             .fillMaxWidth()
+                            .padding(15.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(15.dp)
-                        ) {
-                            Row {
-                                Column {
-                                    Text(text = it.eventName, Modifier.fillMaxWidth(0.5f))
-                                }
-                                Column {
-                                    Text(text = LocalDateFormatters.formatByDefault(it.date))
-                                }
+                        Row {
+                            Column {
+                                Text(text = it.eventName, Modifier.fillMaxWidth(0.5f))
                             }
-
-                            Spacer(Modifier.height(20.dp))
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                Icon(Icons.Filled.Place, "Add")
-                                Text(text = it.locationName)
+                            Column {
+                                Text(text = LocalDateFormatters.formatByDefault(it.date))
                             }
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Icon(Icons.Filled.Place, "Add")
+                            Text(text = it.locationName)
                         }
                     }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Иду",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
-
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Не иду",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
-
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
     }
 }
 
@@ -263,29 +268,60 @@ fun NotificationsModalBottomSheet(
         Box(Modifier.fillMaxSize()) {
             val listState = rememberLazyListState()
             val notifications by viewModel.notifications.collectAsState()
+
             if (notifications.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Нет новых уведомлений", color = Color.LightGray)
                 }
             }
+
+            val visibleItemIds by remember {
+                derivedStateOf {
+                    val layoutInfo = listState.layoutInfo
+                    val visibleItemsInfo = layoutInfo.visibleItemsInfo
+                    if (visibleItemsInfo.isEmpty()) {
+                        emptyList()
+                    } else {
+                        visibleItemsInfo.map { it.index }
+                    }
+                }
+            }
+            LaunchedEffect(visibleItemIds) {
+                viewModel.markNotificationsAsRead(visibleItemIds)
+            }
+
             LazyColumn(
-                contentPadding = PaddingValues(vertical = 10.dp),
+                contentPadding = PaddingValues(vertical = 10.dp, horizontal = 20.dp),
                 state = listState
             ) {
                 itemsIndexed(notifications) { index, notification ->
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = 15.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = notification.text,
-                            fontWeight = FontWeight.W400,
-                            fontSize = 20.sp,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(LocalDateTimeFormatters.formatByDefault(notification.createdAt))
+                            if (!notification.isRead) {
+                                Spacer(Modifier.weight(1f))
+                                Badge()
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 15.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = notification.text,
+                                fontWeight = FontWeight.W400,
+                                fontSize = 20.sp,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        thickness = 2.dp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
         }

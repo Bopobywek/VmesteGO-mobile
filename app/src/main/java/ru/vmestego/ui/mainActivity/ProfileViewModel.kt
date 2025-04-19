@@ -1,7 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
 import android.app.Application
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -9,8 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.notifications.NotificationService
 import ru.vmestego.bll.services.users.UsersService
+import ru.vmestego.core.EventStatus
 import ru.vmestego.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 import java.util.UUID
@@ -30,8 +31,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _imageState = MutableStateFlow<UUID>(UUID.randomUUID())
     val imageState = _imageState.asStateFlow()
 
-    private val _events = mutableStateListOf<EventUi>()
-    val events: List<EventUi> = _events
+    private val _wantToGoEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val wantToGoEvents = _wantToGoEvents.asStateFlow()
+
+    private val _goingToEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val goingToEvents = _goingToEvents.asStateFlow()
+
+
+    private val _notGoingToEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val notGoingToEvents = _notGoingToEvents.asStateFlow()
 
     fun logout() {
         tokenDataProvider.removeToken()
@@ -39,6 +47,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val _usersService = UsersService()
     private val _notificationsService = NotificationService()
+    private val _eventsService = EventsService()
 
     init {
         getUserInfo()
@@ -66,9 +75,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 notificationsUi
             }
 
-            if (notificationsUi.any { !it.isRead }) {
-                _hasUnreadNotifications.update { true }
-            }
+            _hasUnreadNotifications.update { notificationsUi.any { !it.isRead } }
         }
     }
 
@@ -116,23 +123,37 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun getAllEvents() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val response: HttpResponse = client.get("http://10.0.2.2:8080/events/want") {
-//                contentType(ContentType.Application.Json)
-//            }
-//
-//            val responseData = response.body<SearchEventsResponse>()
-//
-//            _events.clear()
-//            responseData.events.forEach {
-//                val date: LocalDate =
-//                    Instant.ofEpochSecond(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
-//                _events.apply {
-//                    add(EventUi(it.id, it.title, it.location, date, it.description))
-//                }
-//            }
-//        }
+    fun markNotificationsAsRead(ids: List<Int>) {
+        val token = tokenDataProvider.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // TODO
+        }
     }
 
+    private fun getAllEvents() {
+        val userId = tokenDataProvider.getUserIdFromToken()
+        viewModelScope.launch(Dispatchers.IO) {
+            var events = _eventsService.getEventsByStatus(userId, EventStatus.WantToGo)
+            _wantToGoEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+
+            events = _eventsService.getEventsByStatus(userId, EventStatus.Going)
+            _goingToEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+
+            events = _eventsService.getEventsByStatus(userId, EventStatus.NotGoing)
+            _notGoingToEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+        }
+    }
 }
