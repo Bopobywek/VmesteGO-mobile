@@ -3,6 +3,8 @@ package ru.vmestego.ui.mainActivity
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,15 +21,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asIntState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,13 +44,12 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import ru.vmestego.data.EventDataDto
 import ru.vmestego.event.EventScreenWrapper
-import ru.vmestego.event.EventUi
+import ru.vmestego.event.EventViewModel
+import ru.vmestego.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
 import ru.vmestego.ui.ticketActivity.EventCreationScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 val iconizedRoutes = listOf(
     IconizedRoute("Поиск", Search, Icons.Filled.Search),
@@ -70,11 +75,7 @@ object CustomEvent
 
 @Serializable
 data class Event(
-    val id: Long,
-    val eventName: String,
-    val locationName: String,
-    val date: Long,
-    val description: String
+    val id: Long
 )
 
 @Serializable
@@ -129,17 +130,7 @@ fun AppScreen() {
             composable<Search> {
                 SearchScreen(
                     goToEvent = {
-                        val zoneId = ZoneId.systemDefault();
-                        val epoch = it.date.atStartOfDay(zoneId).toEpochSecond()
-                        navController.navigate(
-                            Event(
-                                it.id,
-                                it.eventName,
-                                it.locationName,
-                                epoch,
-                                it.description
-                            )
-                        )
+                        navController.navigate(Event(it.id))
                     },
                     createEvent = {
                         navController.navigate(CustomEvent)
@@ -147,37 +138,46 @@ fun AppScreen() {
             }
             composable<Tickets> { TicketsScreen() }
             composable<Friends> {
-                FriendsScreen({
+                FriendsScreen {
                     navController.navigate(User(it))
-                })
+                }
             }
             composable<Profile> { ProfileScreen() }
-            composable<CustomEvent> { EventCreationScreen({
-                val viewModel = EventParametersViewModel(context.applicationContext as Application)
-                scope.launch(Dispatchers.IO) {
-                    viewModel.addEvent(EventDataDto(
-                        it.title,
-                        it.location,
-                        LocalDateTime.of(it.date, it.time)
-                    ))
+            composable<CustomEvent> {
+                EventCreationScreen {
+                    val viewModel =
+                        EventParametersViewModel(context.applicationContext as Application)
+                    scope.launch(Dispatchers.IO) {
+                        viewModel.addEvent(
+                            EventDataDto(
+                                it.title,
+                                it.location,
+                                LocalDateTime.of(it.date, it.time)
+                            )
+                        )
 
-                    withContext(Dispatchers.Main) {
-                        navController.popBackStack()
+                        withContext(Dispatchers.Main) {
+                            navController.popBackStack()
+                        }
                     }
                 }
-            }) }
+            }
             composable<Event> { backStackEntry ->
-                val route = backStackEntry.toRoute<Event>()
-                val dt =
-                    Instant.ofEpochSecond(route.date).atZone(ZoneId.systemDefault()).toLocalDate()
-                EventScreenWrapper(
-                    EventUi(
-                        route.id,
-                        route.eventName,
-                        route.locationName,
-                        dt,
-                        route.description
-                    ), { navController.popBackStack() })
+                if (backStackEntry.lifecycleIsResumed()) {
+                    val route = backStackEntry.toRoute<Event>()
+                    val viewModel: EventViewModel =
+                        viewModel(
+                            factory = EventViewModelFactory(
+                                LocalContext.current.applicationContext as Application,
+                                route.id
+                            )
+                        )
+                    EventScreenWrapper(viewModel) { navController.popBackStack() }
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
             composable<User> { backStackEntry ->
                 val route = backStackEntry.toRoute<User>()
@@ -194,3 +194,7 @@ fun AppScreen() {
         }
     }
 }
+
+// https://www.reddit.com/r/androiddev/comments/13xyei9/comment/jmndzbw/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+private fun NavBackStackEntry.lifecycleIsResumed() =
+    this.lifecycle.currentState == Lifecycle.State.RESUMED

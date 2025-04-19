@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class EventStatus {
-    NotGoing,
+    WantToGo,
     Going,
-    WantToGo
+    NotGoing
 }

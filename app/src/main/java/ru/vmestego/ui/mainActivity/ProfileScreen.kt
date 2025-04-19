@@ -189,7 +189,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val wantToGoEvents by viewModel.goingToEvents.collectAsState()
+        val wantToGoEvents by viewModel.wantToGoEvents.collectAsState()
         EventSection("Хочу пойти", wantToGoEvents)
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -199,7 +199,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        val notGoingEvents by viewModel.goingToEvents.collectAsState()
+        val notGoingEvents by viewModel.notGoingToEvents.collectAsState()
         EventSection("Не пойду", notGoingEvents)
 
         Spacer(modifier = Modifier.height(8.dp))

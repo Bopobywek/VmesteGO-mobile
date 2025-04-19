@@ -13,7 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import ru.vmestego.bll.services.search.models.SearchEventsResponse
+import ru.vmestego.bll.services.shared.models.EventResponse
 
 class SearchService {
     private val client = HttpClient(Android) {
@@ -27,26 +27,26 @@ class SearchService {
 
     private val retryNumber = 3;
 
-    suspend fun searchEvents(query: String): SearchEventsResponse {
-        val response: HttpResponse
-        try {
-            response = client.get("http://10.0.2.2:8080/search") {
-                url {
-                    parameters["q"] = query
-                }
-                contentType(ContentType.Application.Json)
-                retry {
-                    retryOnExceptionOrServerErrors(retryNumber)
-                }
-            }
-        } catch (_: Exception) {
-            return SearchEventsResponse(listOf())
-        }
+//    suspend fun searchEvents(query: String): SearchEventsResponse {
+//        val response: HttpResponse
+//        try {
+//            response = client.get("http://10.0.2.2:8080/search") {
+//                url {
+//                    parameters["q"] = query
+//                }
+//                contentType(ContentType.Application.Json)
+//                retry {
+//                    retryOnExceptionOrServerErrors(retryNumber)
+//                }
+//            }
+//        } catch (_: Exception) {
+//            return SearchEventsResponse(listOf())
+//        }
+//
+//        return response.body<SearchEventsResponse>()
+//    }
 
-        return response.body<SearchEventsResponse>()
-    }
-
-    suspend fun getAllEvents(): SearchEventsResponse {
+    suspend fun getAllEvents(): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events") {
@@ -56,9 +56,9 @@ class SearchService {
                 }
             }
         } catch (_: Exception) {
-            return SearchEventsResponse(listOf())
+            return listOf()
         }
 
-        return response.body<SearchEventsResponse>()
+        return response.body<List<EventResponse>>()
     }
 }

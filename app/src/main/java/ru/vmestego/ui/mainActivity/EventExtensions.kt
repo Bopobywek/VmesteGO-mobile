@@ -1,6 +1,7 @@
 package ru.vmestego.ui.mainActivity
 
-import ru.vmestego.bll.services.events.models.EventResponse
+import ru.vmestego.bll.services.shared.models.EventResponse
+import ru.vmestego.core.EventStatus
 import ru.vmestego.event.EventUi
 
 fun EventResponse.toEventUi(): EventUi {
@@ -9,6 +10,7 @@ fun EventResponse.toEventUi(): EventUi {
         eventName = this.title,
         locationName = this.location,
         date = this.dates.toLocalDate(),
-        description = this.description
+        description = this.description,
+        eventStatus = this.eventStatus ?: EventStatus.NotGoing
     )
 }

@@ -18,13 +18,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,10 +43,16 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,21 +65,26 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import aws.smithy.kotlin.runtime.util.toNumber
 import ru.vmestego.R
+import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.mainActivity.generateWarmSoftColor
 import ru.vmestego.utils.LocalDateFormatters
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
+fun EventScreenWrapper(viewModel: EventViewModel, goBackToSearch: () -> Unit) {
     val showBottomSheet = remember { mutableStateOf(false) }
-    var comments = remember { mutableStateOf(listOf<Pair<String, String>>()) }
     Scaffold(bottomBar = {
         Button(
             onClick = {
@@ -94,7 +111,7 @@ fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = comments.value.size.toString(),
+                        text = viewModel.comments.collectAsState().value.size.toString(),
                         fontSize = 14.sp,
                         // 696969
                         color = Color(0.4117647058823529f, 0.4117647058823529f, 0.4117647058823529f)
@@ -103,7 +120,14 @@ fun EventScreenWrapper(eventUi: EventUi, goBackToSearch: () -> Unit) {
             }
         }
     }) { innerPadding ->
-        EventScreen(eventUi, innerPadding, goBackToSearch, showBottomSheet, comments)
+        val event by viewModel.event.collectAsState()
+        if (event == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            EventScreen(event!!, innerPadding, goBackToSearch, showBottomSheet, viewModel)
+        }
     }
 }
 
@@ -115,7 +139,7 @@ fun EventScreen(
     innerPadding: PaddingValues,
     goBackToSearch: () -> Unit,
     showBottomSheet: MutableState<Boolean>,
-    comments: MutableState<List<Pair<String, String>>>
+    viewModel: EventViewModel
 ) {
     Column(
         modifier = Modifier
@@ -194,7 +218,11 @@ fun EventScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            SingleChoiceSegmentedButton(Modifier.fillMaxWidth(), eventUi)
+            SingleChoiceSegmentedButton(
+                Modifier.fillMaxWidth(),
+                eventUi.eventStatus,
+                viewModel::changeEventStatus
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -205,7 +233,7 @@ fun EventScreen(
             Text(eventUi.description, lineHeight = 18.sp)
         }
     }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     if (showBottomSheet.value) {
         ModalBottomSheet(
@@ -214,58 +242,83 @@ fun EventScreen(
             },
             sheetState = sheetState
         ) {
-            Box(
-                Modifier.fillMaxSize()
-            ) {
-                var inputText by remember { mutableStateOf(TextFieldValue()) }
-                Column(modifier = Modifier.imePadding()) {
-                    comments.value.forEach { (user, text) ->
-                        CommentItem(username = user, text = text)
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+            val comments by viewModel.comments.collectAsState()
+            var inputText by remember { mutableStateOf("") }
 
-                    Row(horizontalArrangement = Arrangement.Center) {
-                        OutlinedTextField(
-                            value = inputText,
-                            onValueChange = { inputText = it },
-                            placeholder = { Text("Комментарий") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(0.7f)
-                                .padding(8.dp)
-                        )
-                        IconButton(
-                            onClick = {
-                                if (inputText.text.isNotBlank()) {
-                                    comments.value += ("andrey" to inputText.text)
-                                    inputText = TextFieldValue()
-                                }
-                            },
-                            modifier = Modifier
-                                .background(Color.Transparent, RoundedCornerShape(10.dp))
-                                .padding(top = 10.dp)
-                        ) {
-                            Icon(
-                                rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Send),
-                                contentDescription = "Localized description",
-                                tint = { Color.Black })
+            Scaffold(
+                bottomBar = {
+                    MessageInputField(inputText, { inputText = it }) {
+                        if (inputText.isNotBlank()) {
+                            viewModel.addComment(inputText)
+                            inputText = ""
                         }
                     }
                 }
+            ) {
+                LazyColumn(Modifier.padding(it)) {
+                    items(comments) {
+                        CommentItem(it)
+                    }
+                }
             }
-
         }
     }
 }
 
 @Composable
+fun MessageInputField(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onSendClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(start = 12.dp, end = 24.dp)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextField(
+            value = text,
+            onValueChange = onTextChange,
+            placeholder = { Text("Комментарий...") },
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp),
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        IconButton(
+            onClick = onSendClick,
+            modifier = Modifier
+                .size(28.dp)
+                .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.Send,
+                contentDescription = "Send",
+                tint = Color.White
+            )
+        }
+    }
+}
+
+
+@Composable
 fun SingleChoiceSegmentedButton(
     modifier: Modifier = Modifier,
-    eventUi: EventUi,
-    viewModel: EventViewModel = viewModel()
+    status: EventStatus,
+    changeStatus: (EventStatus) -> Unit
 ) {
-    var selectedIndex by remember { mutableIntStateOf(2) }
     val options = listOf("Хочу пойти", "Иду", "Не иду")
 
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
@@ -276,43 +329,69 @@ fun SingleChoiceSegmentedButton(
                     count = options.size
                 ),
                 onClick = {
-                    selectedIndex = index
-                    viewModel.changeEventStatus(eventUi.id, index)
+                    changeStatus(index.toEventStatus())
                 },
-                selected = index == selectedIndex,
+                selected = index == status.ordinal,
                 label = { Text(label) }
             )
         }
     }
 }
 
-@Composable
-fun CommentItem(username: String, text: String) {
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        Text(text = "@$username", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(text = text, style = MaterialTheme.typography.bodyLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(horizontal = 10.dp))
-        Spacer(modifier = Modifier.height(16.dp))
+fun Int.toEventStatus(): EventStatus {
+    if (this == 0) {
+        return EventStatus.WantToGo
+    }
+    if (this == 1) {
+        return EventStatus.Going
+    }
+    return EventStatus.NotGoing
+}
 
+
+@Composable
+fun CommentItem(
+    commentUi: CommentUi
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = commentUi.username,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = commentUi.createdAt.formatPrettyTime(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = commentUi.text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
+fun LocalDateTime.formatPrettyTime(): String {
+    val now = LocalDateTime.now()
+    val duration = Duration.between(this, now)
 
-@Preview
-@Composable
-fun EventScreenPreview() {
-    EventScreenWrapper(
-        EventUi(
-            id = 1,
-            eventName = "Икар",
-            locationName = "КЗ Измайлово",
-            date = LocalDate.now(),
-            description = "В мире «Икара» около 50 лет назад произошла глобальная война. Применялось биологическое оружие, которое уничтожило взрослое население, и в живых остались только дети и подростки. При этом они частично потеряли память. События происходят в период, когда на руинах цивилизации поднялся Полис — город, возведенный на основе секретной военной базы. Он закрыт защитным Куполом и концентрирует в себе все ресурсы и технологии, собранные из разрушенного мира. Полис процветает. Все, кто вне Полиса — с трудом выживают..."
-        ),
-        {}
-    )
+    return when {
+        duration.toMinutes() < 1 -> "Только что"
+        duration.toMinutes() < 60 -> "${duration.toMinutes()} мин. назад"
+        duration.toHours() < 24 -> "${duration.toHours()} ч. назад"
+        duration.toDays() == 1L -> "Вчера"
+        duration.toDays() < 7 -> "${duration.toDays()} д. назад"
+        else -> this.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+    }
 }
-
-

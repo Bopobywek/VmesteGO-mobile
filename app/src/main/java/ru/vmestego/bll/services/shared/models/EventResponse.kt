@@ -1,4 +1,4 @@
-package ru.vmestego.bll.services.events.models
+package ru.vmestego.bll.services.shared.models
 
 import kotlinx.serialization.Serializable
 import ru.vmestego.core.EventStatus
@@ -21,6 +21,5 @@ data class EventResponse(
     val creatorUsername: String,
     val categories: List<String>,
     val images: List<String>,
-    val eventStatus: EventStatus,
+    val eventStatus: EventStatus?,
 )
-

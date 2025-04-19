@@ -8,6 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.vmestego.bll.services.search.SearchService
@@ -25,8 +28,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     var searchText by mutableStateOf("")
         private set
 
-    private val _events = mutableStateListOf<EventUi>()
-    val events: List<EventUi> = _events
+    private val _events = MutableStateFlow<List<EventUi>>(listOf())
+    val events = _events.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         private set
@@ -51,31 +54,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun getAllEvents() {
         viewModelScope.launch(Dispatchers.IO) {
-            val localEvents = _eventsRepository.getAllEvents()
-
-            _events.clear()
-            localEvents.forEach {
-                _events.apply {
-                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
+            val response = searchService.getAllEvents()
+            _events.update {
+                response.map {
+                    it.toEventUi()
                 }
-            }
-
-            withContext(Dispatchers.Main) {
-                isLoading = true
-            }
-
-            val responseData = searchService.getAllEvents()
-
-            responseData.events.forEach {
-                val date: LocalDate =
-                    Instant.ofEpochSecond(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
-                _events.apply {
-                    add(EventUi(it.id, it.title, it.location, date, it.description))
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                isLoading = false
             }
         }
     }
@@ -87,33 +70,33 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val localEvents = _eventsRepository.getAllEvents().filter {
-                it.title.startsWith(query)
-            }
-
-            _events.clear()
-            localEvents.forEach {
-                _events.apply {
-                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
-                }
-            }
-            withContext(Dispatchers.Main) {
-                isLoading = true
-            }
-
-            val responseData = searchService.searchEvents(query)
-
-            responseData.events.forEach {
-                val date: LocalDate =
-                Instant.ofEpochSecond(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
-                _events.apply {
-                    add(EventUi(it.id, it.title, it.location, date, it.description))
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                isLoading = false
-            }
+//            val localEvents = _eventsRepository.getAllEvents().filter {
+//                it.title.startsWith(query)
+//            }
+//
+//            _events.clear()
+//            localEvents.forEach {
+//                _events.apply {
+//                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
+//                }
+//            }
+//            withContext(Dispatchers.Main) {
+//                isLoading = true
+//            }
+//
+//            val responseData = searchService.searchEvents(query)
+//
+//            responseData.events.forEach {
+//                val date: LocalDate =
+//                Instant.ofEpochSecond(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
+//                _events.apply {
+//                    add(EventUi(it.id, it.title, it.location, date, it.description))
+//                }
+//            }
+//
+//            withContext(Dispatchers.Main) {
+//                isLoading = false
+//            }
         }
     }
 }

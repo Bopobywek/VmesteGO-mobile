@@ -1,4 +1,4 @@
-package ru.vmestego.bll.services.events
+package ru.vmestego.bll.services.comments
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -7,7 +7,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -15,12 +14,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.bll.services.notifications.models.NotificationResponse
-import ru.vmestego.bll.services.notifications.models.NotificationsResponse
-import ru.vmestego.core.EventStatus
+import ru.vmestego.bll.services.comments.models.CommentResponse
+import ru.vmestego.bll.services.comments.models.PostCommentRequest
 
-class EventsService {
+class CommentsService {
     private val client = HttpClient(Android) {
         install(ContentNegotiation) {
             json(Json {
@@ -32,13 +29,12 @@ class EventsService {
 
     private val retryNumber = 3;
 
-    suspend fun getEventsByStatus(userId: String?, eventStatus: EventStatus?) : List<EventResponse> {
+    suspend fun getAllComments(token: String, eventId: Long) : List<CommentResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events") {
+            response = client.get("http://10.0.2.2:8080/comments/${eventId}") {
                 contentType(ContentType.Application.Json)
-                parameter("userId", userId)
-                parameter("eventStatus", eventStatus)
+                bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
@@ -47,35 +43,24 @@ class EventsService {
             return listOf()
         }
 
-        return response.body<List<EventResponse>>()
+        return response.body<List<CommentResponse>>()
     }
 
-    suspend fun changeEventStatus(token: String, eventId: Long, eventStatus: EventStatus?) {
-        val response: HttpResponse
-        try {
-            response = client.post("http://10.0.2.2:8080/events/${eventId}/status") {
-                contentType(ContentType.Application.Json)
-                setBody(eventStatus)
-                bearerAuth(token)
-            }
-        } catch (_: Exception) {
-        }
-    }
+    suspend fun postComment(token: String, eventId: Long, text: String) {
+        val request = PostCommentRequest(eventId, text)
 
-    suspend fun getEventById(token: String, eventId: Long) : EventResponse? {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/${eventId}") {
+            response = client.post("http://10.0.2.2:8080/comments") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
+                setBody(request)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
         } catch (_: Exception) {
-            return null
         }
-
-        return response.body<EventResponse>()
     }
 }
+

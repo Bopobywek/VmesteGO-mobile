@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -41,8 +42,10 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,7 +63,11 @@ import ru.vmestego.utils.LocalDateFormatters
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(viewModel: SearchViewModel = viewModel(), goToEvent: (EventUi) -> Unit, createEvent: () -> Unit) {
+fun SearchScreen(
+    viewModel: SearchViewModel = viewModel(),
+    goToEvent: (EventUi) -> Unit,
+    createEvent: () -> Unit
+) {
     val isUserSelectDate = remember { mutableStateOf(false) }
     Scaffold(
         // https://composables.com/material3/searchbar
@@ -201,10 +208,19 @@ fun EventsList(
         },
         state = state
     ) {
+        val events by viewModel.events.collectAsState()
+        if (events.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Не удалось найти мероприятия", color = Color.LightGray)
+            }
+        }
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            items(viewModel.events) {
+            items(events) {
                 EventCard(it, goToEvent, onEventClick)
             }
         }
@@ -225,7 +241,7 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
         Image(
             painter = painterResource(R.drawable.ic_launcher_background),
             contentDescription = "",
-            colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+            colorFilter = ColorFilter.tint(Color.LightGray),
             // https://developer.android.com/develop/ui/compose/graphics/images/customize
             contentScale = ContentScale.Crop,
             modifier = Modifier
