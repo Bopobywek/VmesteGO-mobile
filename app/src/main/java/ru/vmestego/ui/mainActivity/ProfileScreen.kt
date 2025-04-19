@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
@@ -7,12 +9,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +25,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -32,15 +36,21 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,17 +62,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import aws.smithy.kotlin.runtime.content.asByteStream
 import coil.compose.AsyncImage
-import coil.compose.SubcomposeAsyncImage
+import coil.imageLoader
 import ru.vmestego.R
 import ru.vmestego.ui.authActivity.AuthActivity
-import ru.vmestego.ui.theme.PurpleGrey40
 import ru.vmestego.utils.LocalDateFormatters
+
 
 @Composable
 fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
     val activity = LocalContext.current as Activity
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        NotificationsModalBottomSheet(
+            viewModel, sheetState
+        ) { showBottomSheet = false }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -72,10 +89,12 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { /* TODO: Handle notification click */ }) {
+            IconButton(onClick = { showBottomSheet = true }) {
                 BadgedBox(
                     badge = {
-                        Badge()
+                        if (viewModel.hasUnreadNotifications.collectAsState().value) {
+                            Badge()
+                        }
                     }
                 ) {
                     Icon(
@@ -111,6 +130,8 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
                     )
                     val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
                     viewModel.updateImage(bytes)
+                    context.imageLoader.diskCache?.clear()
+                    context.imageLoader.memoryCache?.clear()
                 } else {
                     Log.d("PhotoPicker", "No media selected")
                 }
@@ -128,24 +149,26 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
 
             Spacer(modifier = Modifier.height(36.dp))
         } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = userInfo!!.imageUrl,
-                    error = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop,
+            key(viewModel.imageState.collectAsState().value) {
+                Box(
                     modifier = Modifier
-                        .size(150.dp)
-                        .clip(CircleShape)
-                        .border(BorderStroke(2.dp, Color.DarkGray), CircleShape)
-                        .clickable {
-                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        }
-                )
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = userInfo!!.imageUrl,
+                        error = painterResource(id = R.drawable.ic_launcher_background),
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
+                            .border(BorderStroke(2.dp, Color.DarkGray), CircleShape)
+                            .clickable {
+                                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -222,5 +245,49 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         )
 
         HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+    }
+}
+
+@Composable
+fun NotificationsModalBottomSheet(
+    viewModel: ProfileViewModel,
+    sheetState: SheetState,
+    closeSheet: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = {
+            closeSheet()
+        },
+        sheetState = sheetState
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            val listState = rememberLazyListState()
+            val notifications by viewModel.notifications.collectAsState()
+            if (notifications.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Нет новых уведомлений", color = Color.LightGray)
+                }
+            }
+            LazyColumn(
+                contentPadding = PaddingValues(vertical = 10.dp),
+                state = listState
+            ) {
+                itemsIndexed(notifications) { index, notification ->
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 15.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = notification.text,
+                            fontWeight = FontWeight.W400,
+                            fontSize = 20.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+            }
+        }
     }
 }

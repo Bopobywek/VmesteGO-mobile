@@ -4,49 +4,77 @@ import android.app.Application
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.vmestego.bll.services.notifications.NotificationService
 import ru.vmestego.bll.services.users.UsersService
-import ru.vmestego.data.SecureStorage
 import ru.vmestego.event.EventUi
-import ru.vmestego.utils.JwtUtil
+import ru.vmestego.utils.TokenDataProvider
 import java.util.UUID
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
-    private val secureStorage = SecureStorage.getStorageInstance(application)
-    private val applicationContext = application
+    private val tokenDataProvider = TokenDataProvider(application)
 
     private val _userInfo = MutableStateFlow<UserUi?>(null)
     val userInfo = _userInfo.asStateFlow()
+
+    private val _notifications = MutableStateFlow<List<NotificationUi>>(listOf())
+    val notifications = _notifications.asStateFlow()
+
+    private val _hasUnreadNotifications = MutableStateFlow<Boolean>(false)
+    val hasUnreadNotifications = _hasUnreadNotifications.asStateFlow()
+
+    private val _imageState = MutableStateFlow<UUID>(UUID.randomUUID())
+    val imageState = _imageState.asStateFlow()
 
     private val _events = mutableStateListOf<EventUi>()
     val events: List<EventUi> = _events
 
     fun logout() {
-        secureStorage.removeToken()
+        tokenDataProvider.removeToken()
     }
 
     private val _usersService = UsersService()
+    private val _notificationsService = NotificationService()
 
     init {
         getUserInfo()
+        getAllNotifications()
         getAllEvents()
     }
 
-    private val client = HttpClient(Android) {
-        install(ContentNegotiation) {
+
+    private fun getAllNotifications() {
+        val token = tokenDataProvider.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = _notificationsService.getAllNotifications(token)
+
+            val notificationsUi = response.notifications.map {
+                NotificationUi(
+                    it.id,
+                    it.text,
+                    it.createdAt,
+                    it.isRead
+                )
+            }
+
+            _notifications.update {
+                notificationsUi
+            }
+
+            if (notificationsUi.any { !it.isRead }) {
+                _hasUnreadNotifications.update { true }
+            }
         }
     }
 
     private fun getUserInfo() {
-        val token = secureStorage.getToken()
-        val userId = JwtUtil.getUserIdFromToken(token!!)
+        val userId = tokenDataProvider.getUserIdFromToken()
+        val token = tokenDataProvider.getToken()!!
 
         if (userId == null) {
             return
@@ -66,8 +94,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updateImage(imageBytes: ByteArray) {
-        val token = secureStorage.getToken()
-        val userId = JwtUtil.getUserIdFromToken(token!!)
+        val userId = tokenDataProvider.getUserIdFromToken()
+        val token = tokenDataProvider.getToken()!!
 
         if (userId == null) {
             return
@@ -81,9 +109,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 UserUi(
                     name = userInfoResponse.username,
                     id = userInfoResponse.id,
-                    imageUrl = userInfoResponse.imageUrl + "?${UUID.randomUUID()}" // for force recomposition
+                    imageUrl = userInfoResponse.imageUrl
                 )
             }
+            _imageState.update { UUID.randomUUID() }
         }
     }
 
