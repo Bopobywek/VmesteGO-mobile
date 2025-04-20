@@ -12,5 +12,5 @@ data class EventUi(
     val locationName: String,
     @Contextual val date: LocalDate = LocalDate.now(),
     val description: String,
-    val eventStatus: EventStatus
+    val eventStatus: EventStatus?
 )

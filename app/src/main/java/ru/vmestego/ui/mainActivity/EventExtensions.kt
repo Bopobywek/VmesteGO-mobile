@@ -11,6 +11,6 @@ fun EventResponse.toEventUi(): EventUi {
         locationName = this.location,
         date = this.dates.toLocalDate(),
         description = this.description,
-        eventStatus = this.eventStatus ?: EventStatus.NotGoing
+        eventStatus = this.eventStatus
     )
 }

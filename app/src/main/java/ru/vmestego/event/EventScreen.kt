@@ -302,7 +302,7 @@ fun MessageInputField(
 @Composable
 fun SingleChoiceSegmentedButton(
     modifier: Modifier = Modifier,
-    status: EventStatus,
+    status: EventStatus?,
     changeStatus: (EventStatus) -> Unit
 ) {
     val options = listOf("Хочу пойти", "Иду", "Не иду")
@@ -317,7 +317,7 @@ fun SingleChoiceSegmentedButton(
                 onClick = {
                     changeStatus(index.toEventStatus())
                 },
-                selected = index == status.ordinal,
+                selected = index == status?.ordinal,
                 label = { Text(label) }
             )
         }

@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
+import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -143,8 +145,6 @@ fun FeedEventCard(event: FeedEventUi) {
         }
     }
 
-    val formatter = DateTimeFormatter.ofPattern("EE, dd MMM yyyy", Locale("ru")) // Russian locale
-    val formattedDate = LocalDate.now().format(formatter)
     // https://stackoverflow.com/a/69688759
     Box(
         Modifier.padding(15.dp)
@@ -164,7 +164,10 @@ fun FeedEventCard(event: FeedEventUi) {
                         Text(text = event.event.eventName, Modifier.fillMaxWidth(0.5f))
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(text = formattedDate, modifier = Modifier.align(Alignment.End))
+                        Text(
+                            text = LocalDateFormatters.formatByDefault(event.event.date),
+                            modifier = Modifier.align(Alignment.End)
+                        )
                     }
                 }
                 Spacer(Modifier.height(20.dp))
