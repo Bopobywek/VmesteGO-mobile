@@ -1,7 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +32,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,11 +41,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import ru.vmestego.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -54,34 +56,14 @@ import kotlin.math.min
 import kotlin.random.Random
 
 @Composable
-fun FeedTabScreen() {
-    FeedEventsList(
-        listOf(
-            FeedEventUi("test", "test", LocalDate.parse("2024-05-01"), listOf()),
-            FeedEventUi("test", "test", LocalDate.now(), listOf(
-                EventFriendsUi("Golubex", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Четкий", generateWarmSoftColor()),
-            )),
-            FeedEventUi("test", "test", LocalDate.now(), listOf(
-                EventFriendsUi("Golubex", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Битман", generateWarmSoftColor()),
-                EventFriendsUi("Четкий", generateWarmSoftColor()),
-            )),
-            FeedEventUi("test", "test", LocalDate.now(), listOf()),
-            FeedEventUi("test", "test", LocalDate.now(), listOf()),
-            FeedEventUi("test", "test", LocalDate.now(), listOf()),
-        )
-    )
+fun FeedTabScreen(viewModel: FeedTabViewModel = viewModel()) {
+    val events by viewModel.feedEvents.collectAsState()
+    FeedEventsList(events)
 }
 
 @Composable
 fun FeedEventsList(events: List<FeedEventUi>) {
-    val grouped = events.groupBy { it.date.withDayOfMonth(1) }
+    val grouped = events.groupBy { it.event.date.withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
     // https://stackoverflow.com/a/74227507
@@ -98,7 +80,7 @@ fun FeedEventsList(events: List<FeedEventUi>) {
                 DateHeader(date)
             }
 
-            val sortedEvents = dateEvents.sortedBy { t -> t.date }
+            val sortedEvents = dateEvents.sortedBy { t -> t.event.date }
             items(sortedEvents) { event ->
                 FeedEventCard(event)
             }
@@ -131,17 +113,18 @@ fun FeedEventCard(event: FeedEventUi) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                for (friend in event.friends) {
+                for (friend in event.users) {
                     // content
                     Row(
                         modifier = Modifier
                             .padding(horizontal = 15.dp)
                             .fillMaxWidth()
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_launcher_background),
+                        AsyncImage(
+                            model = friend.imageUrl,
+                            error = painterResource(R.drawable.ic_launcher_background),
                             contentDescription = "",
-                            colorFilter = ColorFilter.tint(friend.color),
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
@@ -178,7 +161,7 @@ fun FeedEventCard(event: FeedEventUi) {
             ) {
                 Row {
                     Column {
-                        Text(text = "Последнее испытание", Modifier.fillMaxWidth(0.5f))
+                        Text(text = event.event.eventName, Modifier.fillMaxWidth(0.5f))
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(text = formattedDate, modifier = Modifier.align(Alignment.End))
@@ -187,7 +170,7 @@ fun FeedEventCard(event: FeedEventUi) {
                 Spacer(Modifier.height(20.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Icon(Icons.Filled.Place, "Add")
-                    Text(text = "КЗ Измайлово")
+                    Text(text = event.event.locationName)
                 }
                 Spacer(Modifier.height(20.dp))
             }
@@ -205,11 +188,12 @@ fun FeedEventCard(event: FeedEventUi) {
                     showBottomSheet = true
                 }
         ) {
-            for (i in 0..min(event.friends.size - 1, maxImages - 1)) {
-                Image(
-                    painter = painterResource(R.drawable.ic_launcher_background),
+            for (i in 0..min(event.users.size - 1, maxImages - 1)) {
+                AsyncImage(
+                    model = event.users[i].imageUrl,
+                    error = painterResource(R.drawable.ic_launcher_background),
                     contentDescription = "",
-                    colorFilter = ColorFilter.tint(event.friends[i].color),
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .offset(x = (-i * profileImageSize / 2).dp)
                         .size(profileImageSize.dp)
@@ -217,8 +201,8 @@ fun FeedEventCard(event: FeedEventUi) {
                 )
             }
 
-            if (event.friends.size >= maxImages) {
-                val remain = event.friends.size - maxImages
+            if (event.users.size >= maxImages) {
+                val remain = event.users.size - maxImages
                 Box(
                     modifier = Modifier
                         .offset(x = (-maxImages * profileImageSize / 2).dp)
@@ -246,12 +230,3 @@ fun generateWarmSoftColor(): Color {
     val blue = Random.nextFloat() * 0.3f + 0.4f  // 40% - 70% Blue
     return Color(red, green, blue, 1f) // Full opacity
 }
-
-data class FeedEventUi(
-    val eventName: String,
-    val locationName: String,
-    val date: LocalDate = LocalDate.now(),
-    val friends: List<EventFriendsUi>
-)
-
-data class EventFriendsUi(val name: String, val color: Color)
