@@ -37,7 +37,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _goingToEvents = MutableStateFlow<List<EventUi>>(listOf())
     val goingToEvents = _goingToEvents.asStateFlow()
 
-
     private val _notGoingToEvents = MutableStateFlow<List<EventUi>>(listOf())
     val notGoingToEvents = _notGoingToEvents.asStateFlow()
 
@@ -91,11 +90,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             val response = _usersService.getUserInfoById(userId, token)
 
             _userInfo.update {
-                UserUi(
-                    name = response.username,
-                    id = response.id,
-                    imageUrl = response.imageUrl
-                )
+                response.toUserUi()
             }
         }
     }
@@ -113,11 +108,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             _usersService.putImage(url.uploadUrl, imageBytes)
             val userInfoResponse = _usersService.confirmImageUpload(userId, token, url.key)
             _userInfo.update {
-                UserUi(
-                    name = userInfoResponse.username,
-                    id = userInfoResponse.id,
-                    imageUrl = userInfoResponse.imageUrl
-                )
+                userInfoResponse.toUserUi()
             }
             _imageState.update { UUID.randomUUID() }
         }
@@ -157,3 +148,4 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 }
+

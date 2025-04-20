@@ -20,13 +20,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import ru.vmestego.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +46,7 @@ fun OtherUserProfileScreenWrapper(viewModel: OtherUserProfileViewModel) {
         PullToRefreshBox(
             modifier = Modifier.fillMaxSize(),
             isRefreshing = viewModel.isLoading,
-            onRefresh = viewModel::getRequestStatus,
+            onRefresh = viewModel::updateStatuses,
             state = state
         ) {
             OtherUserProfileScreen(viewModel)
@@ -52,13 +56,21 @@ fun OtherUserProfileScreenWrapper(viewModel: OtherUserProfileViewModel) {
 
 @Composable
 fun OtherUserProfileScreen(viewModel: OtherUserProfileViewModel) {
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    val userInfo by viewModel.userInfo.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+//        .verticalScroll(rememberScrollState())  TODO: fix, add limit 3 and modal bottom sheet to view all
+    ) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
+            AsyncImage(
+                model = userInfo?.imageUrl,
+                error = painterResource(id = R.drawable.ic_launcher_background),
                 contentDescription = "Profile Picture",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(150.dp)
                     .clip(CircleShape)
@@ -68,59 +80,95 @@ fun OtherUserProfileScreen(viewModel: OtherUserProfileViewModel) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = viewModel.username,
+            text = userInfo?.name ?: "", // TODO: handle loading
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = viewModel::changeRequestStatus,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            when (viewModel.requestStatus) {
-                RequestStatus.NONE -> {
-                    Text("Добавить в друзья")
+
+        val incomingRequestStatus by viewModel.incomingRequestStatus.collectAsState()
+        if (incomingRequestStatus != FriendRequestStatusUi.None) {
+            when (incomingRequestStatus) {
+                FriendRequestStatusUi.Pending -> {
+                    Column(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                        Button(
+                            onClick = viewModel::acceptIncomingRequest,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Принять заявку в друзья")
+                        }
+                        Button(
+                            onClick = viewModel::rejectIncomingRequest,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Отклонить заявку в друзья")
+                        }
+                    }
                 }
 
-                RequestStatus.PENDING -> {
-                    Text("Отменить заявку в друзья")
+                FriendRequestStatusUi.Rejected -> {
+                    Button(
+                        onClick = viewModel::acceptIncomingRequest,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Принять заявку в друзья")
+                    }
                 }
 
-                RequestStatus.DONE -> {
-                    Text("Удалить из друзей")
+                FriendRequestStatusUi.Done -> {
+                    Button(
+                        onClick = viewModel::removeFriend,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Удалить из друзей")
+                    }
+                }
+
+                else -> {}
+            }
+        } else {
+            Button(
+                onClick = viewModel::changeRequestStatus,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                val requestStatus by viewModel.outgoingRequestStatus.collectAsState()
+                when (requestStatus) {
+                    FriendRequestStatusUi.None -> {
+                        Text("Добавить в друзья")
+                    }
+
+                    FriendRequestStatusUi.Pending -> {
+                        Text("Отменить заявку в друзья")
+                    }
+
+                    FriendRequestStatusUi.Done -> {
+                        Text("Удалить из друзей")
+                    }
+
+                    FriendRequestStatusUi.Rejected -> {
+                        Text("Отменить заявку в друзья")
+                    }
                 }
             }
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Хочет пойти",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
+        val wantToGoEvents by viewModel.wantToGoEvents.collectAsState()
+        EventSection("Хочет пойти", wantToGoEvents)
 
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Идет",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
+        val goingEvents by viewModel.goingToEvents.collectAsState()
+        EventSection("Идет", goingEvents)
 
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Не пойдет",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(16.dp, 8.dp)
-        )
+        val notGoingEvents by viewModel.notGoingToEvents.collectAsState()
+        EventSection("Не пойдет", notGoingEvents)
 
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

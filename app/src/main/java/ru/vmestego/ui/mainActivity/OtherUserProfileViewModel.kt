@@ -8,141 +8,252 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import ru.vmestego.bll.services.users.models.UserResponse
+import ru.vmestego.bll.services.events.EventsService
+import ru.vmestego.bll.services.friends.FriendsService
+import ru.vmestego.bll.services.friends.models.FriendRequestResponse
+import ru.vmestego.bll.services.friends.models.FriendRequestStatus
+import ru.vmestego.bll.services.users.UsersService
+import ru.vmestego.core.EventStatus
+import ru.vmestego.event.EventUi
+import ru.vmestego.utils.TokenDataProvider
 
-class OtherUserProfileViewModel(application: Application, userId: Int) : AndroidViewModel(application) {
+class OtherUserProfileViewModel(application: Application, userId: Long) : AndroidViewModel(application) {
     val currentUserId = userId
 
-    var requestStatus by mutableStateOf(RequestStatus.NONE)
-        private set
+    private val _outgoingRequestStatus = MutableStateFlow(FriendRequestStatusUi.None)
+    val outgoingRequestStatus = _outgoingRequestStatus.asStateFlow()
 
-    var username by mutableStateOf("")
-        private set
+    private val _incomingRequestStatus = MutableStateFlow(FriendRequestStatusUi.None)
+    val incomingRequestStatus = _incomingRequestStatus.asStateFlow()
+
+    private val _friendRequest = MutableStateFlow<FriendRequestUi?>(null)
+    private val _incomingFriendRequest = MutableStateFlow<FriendRequestUi?>(null)
+
+
+    private val _userInfo = MutableStateFlow<UserUi?>(null)
+    val userInfo = _userInfo.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         private set
 
-    private val client = HttpClient(Android) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-            })
-        }
-    }
+    private val _wantToGoEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val wantToGoEvents = _wantToGoEvents.asStateFlow()
+
+    private val _goingToEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val goingToEvents = _goingToEvents.asStateFlow()
+
+    private val _notGoingToEvents = MutableStateFlow<List<EventUi>>(listOf())
+    val notGoingToEvents = _notGoingToEvents.asStateFlow()
+
+    private val tokenDataProvider = TokenDataProvider(application)
+    private val _usersService = UsersService()
+    private val _friendsService = FriendsService()
+    private val _eventsService = EventsService()
 
     init {
-        getRequestStatus()
+        getUserInfo()
+        updateStatuses()
+        getAllEvents()
+    }
+
+    private fun getUserInfo() {
+        val userId = tokenDataProvider.getUserIdFromToken()
+        val token = tokenDataProvider.getToken()!!
+
+        if (userId == null) {
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = _usersService.getUserInfoById(currentUserId.toString(), token)
+
+            _userInfo.update {
+                response.toUserUi()
+            }
+        }
     }
 
     fun changeRequestStatus() {
-        if (requestStatus == RequestStatus.NONE) {
+        val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()!!
+
+        if (_outgoingRequestStatus.value == FriendRequestStatusUi.None) {
             viewModelScope.launch(Dispatchers.IO) {
-                val response: HttpResponse =
-                    client.post("http://10.0.2.2:8080/requests/${currentUserId}") {
-                        contentType(ContentType.Application.Json)
-                    }
-
-                if (response.status != HttpStatusCode.OK) {
-                    return@launch
+                _friendsService.createFriendRequest(token, currentUserId.toString())
+                val friendRequest = _friendsService.getFriendRequest(token, userId, currentUserId.toString())
+                _friendRequest.update {
+                    friendRequest!!.toFriendRequestUi()
                 }
-
-                withContext(Dispatchers.Main) {
-                    requestStatus = RequestStatus.PENDING
+                _outgoingRequestStatus.update {
+                    FriendRequestStatusUi.Pending
                 }
             }
-        } else if (requestStatus == RequestStatus.PENDING) {
-            // TODO: может быть кейс, когда не обновилось, но данные на сервере поменялись
+        }
+
+        if (_outgoingRequestStatus.value == FriendRequestStatusUi.Pending
+            || _outgoingRequestStatus.value == FriendRequestStatusUi.Rejected
+            || _outgoingRequestStatus.value == FriendRequestStatusUi.Done ) {
             viewModelScope.launch(Dispatchers.IO) {
-                // requests/${currentUserId} -- удалить запрос на дружбу к пользователю, чья страничка
-                val response: HttpResponse =
-                    client.delete("http://10.0.2.2:8080/requests/${currentUserId}") {
-                        contentType(ContentType.Application.Json)
-                    }
-
-                if (response.status != HttpStatusCode.OK) {
-                    return@launch
-                }
-
-                withContext(Dispatchers.Main) {
-                    requestStatus = RequestStatus.NONE
-                }
-            }
-        } else {
-            viewModelScope.launch(Dispatchers.IO) {
-                val response: HttpResponse =
-                    client.delete("http://10.0.2.2:8080/friends/${currentUserId}") {
-                        contentType(ContentType.Application.Json)
-                    }
-
-                if (response.status != HttpStatusCode.OK) {
-                    return@launch
-                }
-
-                withContext(Dispatchers.Main) {
-                    requestStatus = RequestStatus.NONE
+                _friendsService.cancelFriendRequest(token, _friendRequest.value!!.id)
+                _outgoingRequestStatus.update {
+                    FriendRequestStatusUi.None
                 }
             }
         }
     }
 
-    fun getRequestStatus() {
-        isLoading = true
+    fun acceptIncomingRequest() {
+        val token = tokenDataProvider.getToken()!!
+
         viewModelScope.launch(Dispatchers.IO) {
-            val userResponse: HttpResponse = client.get("http://10.0.2.2:8080/users/${currentUserId}") {
-                contentType(ContentType.Application.Json)
+            _friendsService.acceptFriendRequest(token, _incomingFriendRequest.value!!.id)
+            _incomingRequestStatus.update {
+                FriendRequestStatusUi.Done
             }
-            val userData = userResponse.body<UserResponse>()
+        }
+    }
 
-            val response: HttpResponse = client.get("http://10.0.2.2:8080/requests/${currentUserId}") {
-                contentType(ContentType.Application.Json)
+    fun rejectIncomingRequest() {
+        val token = tokenDataProvider.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _friendsService.rejectFriendRequest(token, _incomingFriendRequest.value!!.id)
+            _incomingRequestStatus.update {
+                FriendRequestStatusUi.Rejected
             }
+        }
+    }
 
-            val responseData = response.body<RequestStatusResponse>()
-            withContext(Dispatchers.Main) {
-                username = userData.username
-                when {
-                    responseData.status.lowercase() == "done" -> {
-                        requestStatus = RequestStatus.DONE
-                    }
-                    responseData.status.lowercase() == "pending" -> {
-                        requestStatus = RequestStatus.PENDING
-                    }
-                    responseData.status.lowercase() == "none" -> {
-                        requestStatus = RequestStatus.NONE
-                    }
+    fun updateStatuses() {
+        getIncomingRequestStatus()
+        getOutgoingRequestStatus()
+    }
+
+    fun removeFriend() {
+        val token = tokenDataProvider.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _friendsService.removeFriend(token, currentUserId)
+            _incomingRequestStatus.update {
+                FriendRequestStatusUi.Rejected
+            }
+        }
+    }
+
+    fun getOutgoingRequestStatus() {
+        isLoading = true
+        val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val friendRequest = _friendsService.getFriendRequest(token, userId, currentUserId.toString())
+
+            if (friendRequest == null) {
+                _outgoingRequestStatus.update {
+                    FriendRequestStatusUi.None
                 }
+            } else {
+                _friendRequest.update {
+                    friendRequest.toFriendRequestUi()
+                }
+                _outgoingRequestStatus.update {
+                    friendRequest.toFriendRequestUi().status
+                }
+            }
+
+            withContext(Dispatchers.Main) {
                 isLoading = false
             }
         }
     }
+
+    fun getIncomingRequestStatus() {
+        isLoading = true
+        val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val friendRequest = _friendsService.getFriendRequest(token, currentUserId.toString(), userId)
+
+            if (friendRequest == null) {
+                _incomingRequestStatus.update {
+                    FriendRequestStatusUi.None
+                }
+            } else {
+                _incomingFriendRequest.update {
+                    friendRequest.toFriendRequestUi()
+                }
+                _incomingRequestStatus.update {
+                    friendRequest.toFriendRequestUi().status
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                isLoading = false
+            }
+        }
+    }
+
+    private fun getAllEvents() {
+        val currentUserIdString = currentUserId.toString()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            var events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.WantToGo)
+            _wantToGoEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+
+            events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.Going)
+            _goingToEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+
+            events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.NotGoing)
+            _notGoingToEvents.update {
+                events.map {
+                    it.toEventUi()
+                }
+            }
+        }
+    }
 }
 
-@Serializable
-data class RequestStatusResponse(val status: String)
-
-enum class RequestStatus {
-    DONE, PENDING, NONE
+fun FriendRequestResponse.toFriendRequestUi(): FriendRequestUi {
+    return FriendRequestUi(
+        id = this.id,
+        from = this.sender.toUserUi(),
+        to = this.receiver.toUserUi(),
+        status = this.status.toFriendRequestStatusUi()
+    )
 }
 
-class OtherUserProfileViewModelFactory(val application: Application, val userId: Int): ViewModelProvider.AndroidViewModelFactory(application) {
+fun FriendRequestStatus.toFriendRequestStatusUi(): FriendRequestStatusUi {
+    when {
+        this == FriendRequestStatus.Accepted -> {
+            return FriendRequestStatusUi.Done
+        }
+        this == FriendRequestStatus.Pending -> {
+            return FriendRequestStatusUi.Pending
+        }
+        this == FriendRequestStatus.Rejected -> {
+            return FriendRequestStatusUi.Rejected
+        }
+    }
+
+    return FriendRequestStatusUi.None
+}
+
+class OtherUserProfileViewModelFactory(val application: Application, val userId: Long): ViewModelProvider.AndroidViewModelFactory(application) {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return OtherUserProfileViewModel(
             application, userId

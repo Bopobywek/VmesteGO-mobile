@@ -6,6 +6,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -17,7 +18,6 @@ import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.users.models.ConfirmImageUploadRequest
 import ru.vmestego.bll.services.users.models.GetUploadImageUrlResponse
 import ru.vmestego.bll.services.users.models.UserResponse
-import ru.vmestego.bll.services.users.models.UsersSearchResponse
 
 class UsersService {
     private val client = HttpClient(Android) {
@@ -27,14 +27,6 @@ class UsersService {
                 isLenient = true
             })
         }
-    }
-
-    suspend fun getAllFriends(): UsersSearchResponse {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends") {
-            contentType(ContentType.Application.Json)
-        }
-
-        return response.body<UsersSearchResponse>();
     }
 
     suspend fun getUploadImageUrl(userId: String, token: String): GetUploadImageUrlResponse {
@@ -63,16 +55,16 @@ class UsersService {
         return response.body<UserResponse>();
     }
 
-    suspend fun findUsers(query: String): UsersSearchResponse {
+    suspend fun findUsers(token: String, query: String): List<UserResponse> {
         val response: HttpResponse = client.get("http://10.0.2.2:8080/users/search") {
-            url {
-                parameters["q"] = query
-            }
-
+            bearerAuth(token)
             contentType(ContentType.Application.Json)
+            parameter("username", query)
+            parameter("page", "1")
+            parameter("pageSize", "50")
         }
 
-        return response.body<UsersSearchResponse>();
+        return response.body<List<UserResponse>>();
     }
 
     suspend fun getUserInfoById(userId: String, token: String): UserResponse {

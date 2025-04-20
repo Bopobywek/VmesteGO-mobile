@@ -14,7 +14,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import ru.vmestego.bll.services.users.models.UsersSearchResponse
 import ru.vmestego.ui.authActivity.models.LoginRequest
 import ru.vmestego.ui.authActivity.models.LoginResponse
 import ru.vmestego.ui.authActivity.models.RegisterRequest

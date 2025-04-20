@@ -1,37 +1,38 @@
 package ru.vmestego.ui.mainActivity
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.vmestego.bll.services.friends.FriendsService
 import ru.vmestego.bll.services.users.UsersService
-import ru.vmestego.data.SecureStorage
+import ru.vmestego.utils.TokenDataProvider
 
 class FriendsTabViewModel(application: Application) : AndroidViewModel(application) {
     var searchText by mutableStateOf("")
         private set
 
-    private val _users = mutableStateListOf<UserUi>()
-    val users: List<UserUi> = _users
+    private val _users = MutableStateFlow<List<UserUi>>(listOf())
+    val users = _users.asStateFlow()
 
-    private val _incomingFriendsRequests = mutableStateListOf<FriendRequestUi>()
-    val incomingFriendsRequests: List<FriendRequestUi> = _incomingFriendsRequests
+    private val _incomingFriendsRequests = MutableStateFlow<List<FriendRequestUi>>(listOf())
+    val incomingFriendsRequests = _incomingFriendsRequests.asStateFlow()
 
-    private val _outcomingFriendsRequests = mutableStateListOf<FriendRequestUi>()
-    val outcomingFriendsRequests: List<FriendRequestUi> = _outcomingFriendsRequests
+    private val _outgoingFriendsRequests = MutableStateFlow<List<FriendRequestUi>>(listOf())
+    val outgoingFriendsRequests = _outgoingFriendsRequests.asStateFlow()
 
     var isLoading by mutableStateOf(false)
         private set
 
-    private val secureStorage = SecureStorage.getStorageInstance(application)
+    private val tokenDataProvider = TokenDataProvider(application)
     private val usersService = UsersService()
     private val friendsService = FriendsService()
 
@@ -41,33 +42,32 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun updateRequests() {
+        val token = tokenDataProvider.getToken()!!
         viewModelScope.launch(Dispatchers.IO) {
-            val responseData = friendsService.getSentFriendRequests()
+            val sentRequests = friendsService.getSentFriendRequests(token)
+            _outgoingFriendsRequests.update {
+                sentRequests.map {
+                    it.toFriendRequestUi()
+                }
+            }
 
-            withContext(Dispatchers.Main) {
-                _outcomingFriendsRequests.clear()
-                responseData.requests.forEach { fr ->
-                    val uiModel = FriendRequestUi(
-                        from = UserUi(imageUrl = fr.from.imageUrl!!, name = fr.from.username, fr.from.id),  // TODO: add fallback
-                        to = UserUi(imageUrl = fr.to.imageUrl!!, name = fr.to.username, fr.to.id),  // TODO: add fallback
-                        id = fr.id,
-                        status = fr.status
-                    )
-                    _outcomingFriendsRequests.apply {
-                        add(uiModel)
-                    }
+            val pendingRequests = friendsService.getIncomingFriendRequests(token)
+            _incomingFriendsRequests.update {
+                pendingRequests.map {
+                    it.toFriendRequestUi()
                 }
             }
         }
     }
 
     fun cancelFriendRequest(request: FriendRequestUi) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // requests/${request.to.id} -- удалить запрос на дружбу к пользователю
-            friendsService.cancelFriendRequest(request.to.id.toLong())
+        val token = tokenDataProvider.getToken()!!
 
-            withContext(Dispatchers.Main) {
-                _outcomingFriendsRequests.apply {
+        viewModelScope.launch(Dispatchers.IO) {
+            friendsService.cancelFriendRequest(token, request.id)
+
+            _outgoingFriendsRequests.update {
+                _outgoingFriendsRequests.value.toMutableList().apply {
                     remove(request)
                 }
             }
@@ -75,11 +75,13 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun declineFriendRequest(request: FriendRequestUi) {
-        viewModelScope.launch(Dispatchers.IO) {
-            friendsService.rejectFriendRequest(request.id)
+        val token = tokenDataProvider.getToken()!!
 
-            withContext(Dispatchers.Main) {
-                _incomingFriendsRequests.apply {
+        viewModelScope.launch(Dispatchers.IO) {
+            friendsService.rejectFriendRequest(token, request.id)
+
+            _incomingFriendsRequests.update {
+                _incomingFriendsRequests.value.toMutableList().apply {
                     remove(request)
                 }
             }
@@ -87,12 +89,13 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun acceptFriendRequest(request: FriendRequestUi) {
+        val token = tokenDataProvider.getToken()!!
+
         viewModelScope.launch(Dispatchers.IO) {
-            friendsService.acceptFriendRequest(request.id)
+            friendsService.acceptFriendRequest(token, request.id)
 
-
-            withContext(Dispatchers.Main) {
-                _incomingFriendsRequests.apply {
+            _incomingFriendsRequests.update {
+                _incomingFriendsRequests.value.toMutableList().apply {
                     remove(request)
                 }
             }
@@ -106,13 +109,17 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun setAllFriends() {
         isLoading = true
+        val token = tokenDataProvider.getToken()!!
         viewModelScope.launch(Dispatchers.IO) {
-            val responseData = usersService.getAllFriends()
+            val response  = friendsService.getAllFriends(token)
 
-            _users.clear()
-            responseData.users.forEach {
-                _users.apply {
-                    add(UserUi(it.imageUrl!!, it.username, it.id)) // TODO: add fallback
+            _users.update {
+                response.map {
+                    UserUi(
+                        id = it.friendUserId,
+                        name = it.friendUsername,
+                        imageUrl = it.friendImageUrl
+                    )
                 }
             }
 
@@ -129,14 +136,13 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         isLoading = true
+        val token = tokenDataProvider.getToken()!!
         viewModelScope.launch(Dispatchers.IO) {
-            val responseData = usersService.findUsers(query)
+            val responseData = usersService.findUsers(token, query)
 
-            Log.i("Users", responseData.users.size.toString())
-            _users.clear()
-            responseData.users.forEach {
-                _users.apply {
-                    add(UserUi(it.imageUrl!!, it.username, it.id)) // TODO: add fallback
+            _users.update {
+                responseData.map {
+                    it.toUserUi()
                 }
             }
 

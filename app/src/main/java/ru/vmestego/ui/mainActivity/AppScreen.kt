@@ -80,7 +80,7 @@ data class Event(
 
 @Serializable
 data class User(
-    val id: Int
+    val id: Long
 )
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

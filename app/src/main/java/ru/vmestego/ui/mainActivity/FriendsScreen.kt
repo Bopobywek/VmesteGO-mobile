@@ -154,7 +154,7 @@ fun InvitationsList() {
 
 // https://stackoverflow.com/a/70303650
 @Composable
-fun FriendsScreen(goToUserScreen: (Int) -> Unit) {
+fun FriendsScreen(goToUserScreen: (Long) -> Unit) {
     val navController = rememberNavController()
 
     Scaffold(

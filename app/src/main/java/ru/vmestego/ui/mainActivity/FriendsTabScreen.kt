@@ -33,14 +33,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,13 +55,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import ru.vmestego.R
 import ru.vmestego.routing.SecondaryLevelRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewModel = viewModel()) {
+fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewModel = viewModel()) {
     val showBottomSheet = remember { mutableStateOf(false) }
 
     Column {
@@ -90,7 +94,7 @@ fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewMod
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = viewModel.incomingFriendsRequests.size.toString(),
+                        text = viewModel.incomingFriendsRequests.collectAsState().value.size.toString(),
                         fontSize = 14.sp,
                         // 696969
                         color = Color(0.4117647058823529f, 0.4117647058823529f, 0.4117647058823529f)
@@ -134,7 +138,8 @@ fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewMod
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
-            FriendsList(goToUserScreen, viewModel.users)
+            val users by viewModel.users.collectAsState()
+            FriendsList(goToUserScreen, users)
         }
     }
 
@@ -142,7 +147,7 @@ fun FriendsTabScreen(goToUserScreen: (Int) -> Unit, viewModel: FriendsTabViewMod
 }
 
 @Composable
-fun FriendsList(goToUserScreen: (Int) -> Unit, users: List<UserUi>) {
+fun FriendsList(goToUserScreen: (Long) -> Unit, users: List<UserUi>) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -161,10 +166,11 @@ fun FriendsList(goToUserScreen: (Int) -> Unit, users: List<UserUi>) {
                         .padding(horizontal = 15.dp)
                         .fillMaxWidth()
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_launcher_background),
+                    AsyncImage(
+                        model = user.imageUrl,
+                        error = painterResource(R.drawable.ic_launcher_background),
                         contentDescription = "",
-                        colorFilter = ColorFilter.tint(Color.Gray),
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
@@ -208,7 +214,7 @@ val friendsRequestsRoutes = listOf(
 fun FriendsRequestsModalSheet(
     showBottomSheet: MutableState<Boolean>,
     viewModel: FriendsTabViewModel,
-    goToUserScreen: (Int) -> Unit
+    goToUserScreen: (Long) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -254,10 +260,11 @@ fun FriendsRequestsModalSheet(
 @Composable
 fun FriendsIncomingRequestsScreen(
     viewModel: FriendsTabViewModel,
-    goToUserScreen: (Int) -> Unit
+    goToUserScreen: (Long) -> Unit
 ) {
+    val incomingRequests by viewModel.incomingFriendsRequests.collectAsState()
     LazyColumn(Modifier.padding(top = 15.dp)) {
-        items(viewModel.incomingFriendsRequests) { request ->
+        items(incomingRequests) { request ->
             Row(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
@@ -265,10 +272,11 @@ fun FriendsIncomingRequestsScreen(
                     .clickable { goToUserScreen(request.from.id) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_launcher_background),
+                AsyncImage(
+                    model = request.from.imageUrl,
+                    error = painterResource(R.drawable.ic_launcher_background),
                     contentDescription = "",
-                    colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
@@ -318,13 +326,14 @@ fun FriendsIncomingRequestsScreen(
 @Composable
 fun FriendsOutcomingRequestsScreen(
     viewModel: FriendsTabViewModel,
-    goToUserScreen: (Int) -> Unit
+    goToUserScreen: (Long) -> Unit
 ) {
+    val outgoingRequests by viewModel.outgoingFriendsRequests.collectAsState()
     LazyColumn(
         modifier = Modifier
             .padding(top = 15.dp)
     ) {
-        items(viewModel.outcomingFriendsRequests) { request ->
+        items(outgoingRequests) { request ->
             Row(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
@@ -334,10 +343,11 @@ fun FriendsOutcomingRequestsScreen(
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_launcher_background),
+                AsyncImage(
+                    model = request.to.imageUrl,
+                    error = painterResource(R.drawable.ic_launcher_background),
                     contentDescription = "",
-                    colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
