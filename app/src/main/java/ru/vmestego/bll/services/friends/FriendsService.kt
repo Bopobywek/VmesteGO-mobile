@@ -15,9 +15,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.friends.models.FriendRequestResponse
 import ru.vmestego.bll.services.friends.models.FriendResponse
+import ru.vmestego.bll.services.friends.models.FriendStatusResponse
 import ru.vmestego.bll.services.friends.models.FriendsEventResponse
 import ru.vmestego.bll.services.friends.models.SendRequestForUserRequest
 
@@ -110,7 +112,6 @@ class FriendsService {
         return response.body<List<FriendRequestResponse>>()
     }
 
-
     suspend fun getFriendsEvents(token: String): List<FriendsEventResponse> {
         val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/events") {
             contentType(ContentType.Application.Json)
@@ -119,5 +120,27 @@ class FriendsService {
 
         return response.body<List<FriendsEventResponse>>()
     }
+
+    suspend fun getFriendsStatusesForEvent(token: String, eventId: String): List<FriendStatusResponse> {
+        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/events/${eventId}") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+        }
+
+        return response.body<List<FriendStatusResponse>>()
+    }
+
+    suspend fun inviteFriendOnEvent(token: String, eventId: Long, userId: Long) {
+        var request = CreateInvitationRequest(eventId, userId)
+        client.post("http://10.0.2.2:8080/events-invitations/invite") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(request)
+        }
+    }
 }
 
+@Serializable
+data class CreateInvitationRequest(
+    val eventId: Long,
+    val receiverId: Long)

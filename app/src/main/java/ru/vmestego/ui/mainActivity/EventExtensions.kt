@@ -1,7 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
 import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.core.EventStatus
 import ru.vmestego.event.EventUi
 
 fun EventResponse.toEventUi(): EventUi {

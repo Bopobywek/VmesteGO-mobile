@@ -2,7 +2,6 @@ package ru.vmestego.ui.mainActivity
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,10 +49,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.utils.LocalDateFormatters
-import ru.vmestego.utils.LocalDateTimeFormatters
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -94,7 +89,7 @@ fun FeedEventsList(events: List<FeedEventUi>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedEventCard(event: FeedEventUi) {
-    val profileImageSize = 24
+    val profileImageSize = 32
     val boxContentPadding = 15
 
     // TODO: вынести bottomSheet в отдельную функцию
@@ -187,7 +182,7 @@ fun FeedEventCard(event: FeedEventUi) {
                 // https://stackoverflow.com/questions/66820206/ripple-with-rounded-corners-jetpack-compose
                 // TODO: fix ripple width
                 .clip(RoundedCornerShape(30.dp))
-                .clickable {
+                .noRippleClickable {
                     showBottomSheet = true
                 }
         ) {

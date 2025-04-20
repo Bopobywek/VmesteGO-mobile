@@ -30,7 +30,7 @@ class EventsService {
         }
     }
 
-    private val retryNumber = 3;
+    private val retryNumber = 3
 
     suspend fun getEventsByStatus(userId: String?, eventStatus: EventStatus?) : List<EventResponse> {
         val response: HttpResponse

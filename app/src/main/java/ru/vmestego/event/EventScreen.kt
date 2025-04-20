@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,13 +20,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -57,11 +61,14 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
+import ru.vmestego.ui.mainActivity.UserUi
 import ru.vmestego.ui.mainActivity.generateWarmSoftColor
 import ru.vmestego.utils.LocalDateFormatters
 import java.time.Duration
@@ -210,13 +217,35 @@ fun EventScreen(
                 viewModel::changeEventStatus
             )
 
-            Spacer(Modifier.height(20.dp))
 
-            Text("О мероприятии", fontSize = 20.sp)
-            Spacer(Modifier.height(2.dp))
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(Modifier.height(5.dp))
-            Text(eventUi.description, lineHeight = 18.sp)
+            val showFriendsWithoutStatusesModal = remember { mutableStateOf(false) }
+            if (showFriendsWithoutStatusesModal.value) {
+                FriendsModal(
+                    showFriendsWithoutStatusesModal,
+                    viewModel.friendsWithStatus.collectAsState().value,
+                    viewModel::inviteFriend
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Button(
+                { showFriendsWithoutStatusesModal.value = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Пригласите своих друзей", fontSize = 16.sp)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                InEventSection("О мероприятии") {
+                    Text(eventUi.description, lineHeight = 18.sp)
+                }
+
+                Spacer(Modifier.height(5.dp))
+            }
         }
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -248,6 +277,107 @@ fun EventScreen(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FriendsModal(
+    showModal: MutableState<Boolean>,
+    friends: List<UserWithStatusUi>,
+    sendInvite: (Long) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = {
+            showModal.value = false
+        },
+        sheetState = sheetState
+    ) {
+        if (friends.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Text(
+                        "Ваш список друзей пуст :(",
+                        textAlign = TextAlign.Center,
+                        color = Color.LightGray
+                    )
+                    Text(
+                        "Скорее добавьте кого-нибудь",
+                        textAlign = TextAlign.Center,
+                        color = Color.LightGray
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            for (friend in friends) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 15.dp)
+                        .fillMaxWidth()
+                ) {
+                    AsyncImage(
+                        model = friend.user.imageUrl,
+                        error = painterResource(R.drawable.ic_launcher_background),
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Text(
+                        text = friend.user.name,
+                        fontWeight = FontWeight.W400,
+                        fontSize = 20.sp,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+
+                    if (friend.status != null) {
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            friend.status.toText(),
+                            color = Color.DarkGray,
+                            fontWeight = FontWeight.W300,
+                            fontSize = 16.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+
+                    if (friend.status == null) {
+                        Spacer(Modifier.weight(1f))
+                        Button(
+                            onClick = { sendInvite(friend.user.id) },
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        ) {
+                            Text("Пригласить")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun InEventSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable (() -> Unit)
+) {
+    Column(modifier = modifier) {
+        Text(title, fontSize = 20.sp)
+        Spacer(Modifier.height(2.dp))
+        HorizontalDivider(thickness = 2.dp)
+        Spacer(Modifier.height(5.dp))
+        content()
     }
 }
 
@@ -332,6 +462,20 @@ fun Int.toEventStatus(): EventStatus {
         return EventStatus.Going
     }
     return EventStatus.NotGoing
+}
+
+fun EventStatus?.toText(): String {
+    if (this == EventStatus.WantToGo) {
+        return "Хочет пойти"
+    }
+    if (this == EventStatus.Going) {
+        return "Пойдет"
+    }
+    if (this == EventStatus.NotGoing) {
+        return "Не пойдет"
+    }
+
+    return ""
 }
 
 
