@@ -40,7 +40,7 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
                             it.ticket.uid,
                             it.event.title,
                             it.event.location,
-                            it.event.startAt.toLocalDate(),
+                            it.event.startAt,
                             Uri.parse(it.ticket.uri)
                         )
                     }

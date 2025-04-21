@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.bll.services.notifications.models.NotificationResponse
 import ru.vmestego.bll.services.notifications.models.NotificationsResponse
+import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.core.EventStatus
 
 class EventsService {
@@ -77,5 +78,22 @@ class EventsService {
         }
 
         return response.body<EventResponse>()
+    }
+
+    suspend fun getAllAvailableCategories(token: String): List<CategoryResponse> {
+        val response: HttpResponse
+        try {
+            response = client.get("http://10.0.2.2:8080/events/categories") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (_: Exception) {
+            return listOf()
+        }
+
+        return response.body<List<CategoryResponse>>()
     }
 }

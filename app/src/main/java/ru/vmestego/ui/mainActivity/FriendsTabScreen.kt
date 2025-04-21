@@ -2,6 +2,7 @@ package ru.vmestego.ui.mainActivity
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -133,12 +135,20 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
 
         Spacer(Modifier.height(10.dp))
 
+        val users by viewModel.users.collectAsState()
         if (viewModel.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        } else {
-            val users by viewModel.users.collectAsState()
+        } else if (users.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Text("Тут пока пусто", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text("Скорее добавьте друзей", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+        }
+        else {
             FriendsList(goToUserScreen, users)
         }
     }
@@ -149,13 +159,13 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
 @Composable
 fun FriendsList(goToUserScreen: (Long) -> Unit, users: List<UserUi>) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         items(users) { user ->
             Box(
                 Modifier
                     .padding(horizontal = 20.dp)
-                    .background(Color.LightGray, shape = RoundedCornerShape(15.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(15.dp))
                     .padding(vertical = 10.dp)
                     .clickable {
                         goToUserScreen(user.id)
@@ -173,6 +183,7 @@ fun FriendsList(goToUserScreen: (Long) -> Unit, users: List<UserUi>) {
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(42.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                             .clip(CircleShape)
                     )
                     Spacer(modifier = Modifier.width(20.dp))

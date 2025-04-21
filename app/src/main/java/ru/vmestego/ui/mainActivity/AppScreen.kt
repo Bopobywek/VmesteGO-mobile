@@ -130,10 +130,16 @@ fun AppScreen() {
             composable<Search> {
                 SearchScreen(
                     goToEvent = {
-                        navController.navigate(Event(it.id))
+                        navController.navigate(Event(it.id)) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                     createEvent = {
-                        navController.navigate(CustomEvent)
+                        navController.navigate(CustomEvent) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     })
             }
             composable<Tickets> { TicketsScreen() }

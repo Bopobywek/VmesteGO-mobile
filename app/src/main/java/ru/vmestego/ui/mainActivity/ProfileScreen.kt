@@ -216,7 +216,7 @@ fun EventSection(title: String, events: List<EventUi>) {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
     Spacer(modifier = Modifier.height(8.dp))
 
-    LazyColumn {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         items(events) {
             Box(
                 Modifier.padding(horizontal = 20.dp)
@@ -236,7 +236,7 @@ fun EventSection(title: String, events: List<EventUi>) {
                                 Text(text = it.eventName, Modifier.fillMaxWidth(0.5f))
                             }
                             Column {
-                                Text(text = LocalDateFormatters.formatByDefault(it.date))
+                                Text(text = LocalDateTimeFormatters.formatByDefault(it.dateTime))
                             }
                         }
 

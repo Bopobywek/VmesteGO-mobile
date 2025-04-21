@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,6 +56,7 @@ import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.event.formatPrettyTime
 import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 
 @Composable
@@ -109,7 +112,15 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
         Spacer(Modifier.height(2.dp))
         HorizontalDivider(Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
         val pendingInvitations by viewModel.pendingInvitations.collectAsState()
-        InvitationsList(pendingInvitations, viewModel::acceptInvite, viewModel::rejectInvite)
+        if (pendingInvitations.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Text("У пока вас нет приглашений", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+        } else {
+            InvitationsList(pendingInvitations, viewModel::acceptInvite, viewModel::rejectInvite)
+        }
     }
 }
 
@@ -150,7 +161,7 @@ fun InvitationsList(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = LocalDateFormatters.formatByDefault(eventInfo.date),
+                                    text = LocalDateTimeFormatters.formatByDefault(eventInfo.dateTime),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -280,7 +291,7 @@ fun OutgoingInvitationsModal(
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                text = LocalDateFormatters.formatByDefault(invitation.event.date),
+                                text = LocalDateTimeFormatters.formatByDefault(invitation.event.dateTime),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }

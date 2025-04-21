@@ -71,6 +71,7 @@ import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.mainActivity.UserUi
 import ru.vmestego.ui.mainActivity.generateWarmSoftColor
 import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -198,7 +199,7 @@ fun EventScreen(
                 .padding(horizontal = 15.dp)
                 .padding(top = 10.dp)
         ) {
-            Text(LocalDateFormatters.formatByDefault(eventUi.date), fontSize = 16.sp)
+            Text(LocalDateTimeFormatters.formatByDefault(eventUi.dateTime), fontSize = 16.sp)
 
             Spacer(Modifier.height(10.dp))
 
@@ -297,16 +298,8 @@ fun FriendsModal(
         if (friends.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
-                    Text(
-                        "Ваш список друзей пуст :(",
-                        textAlign = TextAlign.Center,
-                        color = Color.LightGray
-                    )
-                    Text(
-                        "Скорее добавьте кого-нибудь",
-                        textAlign = TextAlign.Center,
-                        color = Color.LightGray
-                    )
+                    Text("Ваш список друзей пуст", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text("Скорее добавьте кого-нибудь", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
                 }
             }
         }

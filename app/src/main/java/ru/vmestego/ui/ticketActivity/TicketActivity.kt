@@ -352,7 +352,7 @@ fun EventParametersScreen(
                                 it.id,
                                 it.eventName,
                                 it.locationName,
-                                LocalDateTime.of(it.date, LocalTime.MIDNIGHT)
+                                it.dateTime
                             )
                         )
                     })

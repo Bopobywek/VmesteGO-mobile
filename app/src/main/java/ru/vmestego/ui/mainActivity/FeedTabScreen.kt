@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -43,24 +45,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 import kotlin.random.Random
 
 @Composable
 fun FeedTabScreen(viewModel: FeedTabViewModel = viewModel()) {
     val events by viewModel.feedEvents.collectAsState()
-    FeedEventsList(events)
+    if (events.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column {
+                Text("Тут пока пусто", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                Text("Скорее пригласите друзей куда-нибудь", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+            }
+        }
+    } else {
+        FeedEventsList(events)
+    }
 }
 
 @Composable
 fun FeedEventsList(events: List<FeedEventUi>) {
-    val grouped = events.groupBy { it.event.date.withDayOfMonth(1) }
+    val grouped = events.groupBy { it.event.dateTime.toLocalDate().withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
     // https://stackoverflow.com/a/74227507
@@ -77,7 +90,7 @@ fun FeedEventsList(events: List<FeedEventUi>) {
                 DateHeader(date)
             }
 
-            val sortedEvents = dateEvents.sortedBy { t -> t.event.date }
+            val sortedEvents = dateEvents.sortedBy { t -> t.event.dateTime.toLocalDate() }
             items(sortedEvents) { event ->
                 FeedEventCard(event)
             }
@@ -160,7 +173,7 @@ fun FeedEventCard(event: FeedEventUi) {
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = LocalDateFormatters.formatByDefault(event.event.date),
+                            text = LocalDateTimeFormatters.formatByDefault(event.event.dateTime),
                             modifier = Modifier.align(Alignment.End)
                         )
                     }

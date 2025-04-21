@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,11 +22,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
@@ -33,6 +38,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -46,6 +52,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,8 +64,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
+import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.event.EventUi
-import ru.vmestego.utils.LocalDateFormatters
+import ru.vmestego.utils.LocalDateTimeFormatters
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,6 +82,7 @@ fun SearchScreen(
     createEvent: () -> Unit
 ) {
     val isUserSelectDate = remember { mutableStateOf(false) }
+    var showCategoryDialog = remember { mutableStateOf(false) }
     Scaffold(
         // https://composables.com/material3/searchbar
         topBar = {
@@ -123,13 +137,27 @@ fun SearchScreen(
             }
         }
     ) { padding ->
+        if (showCategoryDialog.value) {
+            MultiSelectDialog(
+                title = "Выберите пункты",
+                options = viewModel.categories.collectAsState().value,
+                optionLabel = { it.name },
+                onDismiss = { showCategoryDialog.value = false },
+                onDone = { newSelection ->
+                    viewModel.applyCategoriesFilter(newSelection)
+                }
+            )
+        }
+
         Column(
             Modifier
                 .padding(horizontal = 16.dp)
                 .padding(padding)
         ) {
             if (isUserSelectDate.value) {
-                DateRangePickerModal({}, { isUserSelectDate.value = false })
+                DateRangePickerModal({
+                    viewModel.applyDateFilter(it.first!!, it.second)
+                }, { isUserSelectDate.value = false })
             }
             val scrollState = rememberScrollState()
             Row(
@@ -139,30 +167,75 @@ fun SearchScreen(
             ) {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        Color.LightGray,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(15.dp),
                     onClick = { isUserSelectDate.value = true }
                 ) {
-                    Text("Дата")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        when {
+                            viewModel.startDateFilter == null && viewModel.endDateFilter == null -> {
+                                Text("Дата")
+                            }
+
+                            viewModel.endDateFilter == null -> {
+                                Text("от ${viewModel.startDateFilter!!.toSimpleDateString()}")
+                            }
+
+                            else -> {
+                                Text("с ${viewModel.startDateFilter!!.toSimpleDateString()} по ${viewModel.endDateFilter!!.toSimpleDateString()}")
+                            }
+                        }
+
+                        if (viewModel.startDateFilter != null || viewModel.endDateFilter != null) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Очистить фильтр",
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .clickable {
+                                        viewModel.resetDateFilters()
+                                    }
+                                    .padding(start = 4.dp)
+                            )
+                        }
+                    }
                 }
                 Spacer(Modifier.size(10.dp))
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        Color.LightGray,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(15.dp),
-                    onClick = {}
+                    onClick = { showCategoryDialog.value = true }
                 ) {
-                    Text("Тип")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Тип")
+
+                        if (viewModel.categoriesApplied.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Очистить фильтр",
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .clickable {
+                                        viewModel.resetCategoriesFilter()
+                                    }
+                                    .padding(start = 4.dp)
+                            )
+                        }
+                    }
                 }
                 Spacer(Modifier.size(10.dp))
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        Color.LightGray,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(15.dp),
                     onClick = {}
@@ -219,6 +292,7 @@ fun EventsList(
         }
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 10.dp)
         ) {
             items(events) {
                 EventCard(it, goToEvent, onEventClick)
@@ -252,7 +326,7 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
             Column {
                 Text(eventUi.eventName, fontSize = 20.sp)
                 Text(eventUi.locationName, fontSize = 16.sp)
-                Text(LocalDateFormatters.formatByDefault(eventUi.date), fontSize = 16.sp)
+                Text(LocalDateTimeFormatters.formatByDefault(eventUi.dateTime), fontSize = 16.sp)
             }
         }
     }
@@ -262,7 +336,7 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerModal(
-    onDateRangeSelected: (Pair<Long?, Long?>) -> Unit,
+    onDateRangeSelected: (Pair<LocalDateTime?, LocalDateTime?>) -> Unit,
     onDismiss: () -> Unit
 ) {
     val dateRangePickerState = rememberDateRangePickerState()
@@ -272,10 +346,24 @@ fun DateRangePickerModal(
         confirmButton = {
             TextButton(
                 onClick = {
+                    var startDate: LocalDateTime? = null
+                    if (dateRangePickerState.selectedStartDateMillis != null) {
+                        startDate = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(dateRangePickerState.selectedStartDateMillis!!),
+                            ZoneId.systemDefault()
+                        )
+                    }
+                    var endDate: LocalDateTime? = null
+                    if (dateRangePickerState.selectedEndDateMillis != null) {
+                        endDate = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(dateRangePickerState.selectedEndDateMillis!!),
+                            ZoneId.systemDefault()
+                        )
+                    }
                     onDateRangeSelected(
                         Pair(
-                            dateRangePickerState.selectedStartDateMillis,
-                            dateRangePickerState.selectedEndDateMillis
+                            startDate,
+                            endDate
                         )
                     )
                     onDismiss()
@@ -286,22 +374,92 @@ fun DateRangePickerModal(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Закрыть")
             }
         }
     ) {
         DateRangePicker(
             state = dateRangePickerState,
-            title = {
-                Text(
-                    text = "Select date range"
-                )
-            },
             showModeToggle = false,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp)
-                .padding(16.dp)
+                .padding(top = 10.dp)
         )
     }
+}
+
+fun LocalDateTime.toSimpleDateString(): String {
+    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
+    return this.format(formatter)
+}
+
+
+data class CategoryUi(
+    val id: Long,
+    val name: String
+)
+
+fun CategoryResponse.toCategoryUi(): CategoryUi {
+    return CategoryUi(id, name)
+}
+
+
+@Composable
+fun <T> MultiSelectDialog(
+    title: String = "Выбор",
+    options: List<T>,
+    initiallySelected: List<T> = emptyList(),
+    optionLabel: (T) -> String = { it.toString() },
+    onDismiss: () -> Unit,
+    onDone: (List<T>) -> Unit
+) {
+    val selectedItems = remember { mutableStateListOf<T>().apply { addAll(initiallySelected) } }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDone(selectedItems)
+                onDismiss()
+            }) {
+                Text("Готово")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        },
+        title = {
+            Text(text = title)
+        },
+        text = {
+            Column {
+                options.forEach { item ->
+                    val isSelected = item in selectedItems
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .toggleable(
+                                value = isSelected,
+                                onValueChange = {
+                                    if (isSelected) selectedItems.remove(item)
+                                    else selectedItems.add(item)
+                                }
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(optionLabel(item))
+                    }
+                }
+            }
+        }
+    )
 }

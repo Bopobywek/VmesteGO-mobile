@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,23 +22,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,29 +57,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
+import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Locale
 
 
 @Composable
 fun TicketCard(ticket: TicketUi) {
-    val formatter = DateTimeFormatter.ofPattern("EE, dd MMM. yyyy", Locale("ru")) // Russian locale
-    val formattedDate = ticket.date.format(formatter)
     val context = LocalContext.current
 
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         modifier = Modifier
-            .heightIn(min = 100.dp)
             .fillMaxWidth()
             .clickable {
                 Log.i("Main", "hello")
@@ -82,25 +85,19 @@ fun TicketCard(ticket: TicketUi) {
                 val intent = IntentHelper.createOpenPdfIntent(ticket.ticketUri)
                 context.startActivity(intent)
             }) {
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp)) {
-                Row {
-                    Column {
-                        Text(text = ticket.eventName, Modifier.fillMaxWidth(0.5f))
-                    }
-                    Column {
-                        Text(text = formattedDate)
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
+        Box(Modifier.padding(20.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(ticket.eventName, fontSize = 20.sp, modifier = Modifier.padding(start = 2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Icon(Icons.Filled.Place, "Add")
-                    Text(text = ticket.locationName)
+                    Text(ticket.locationName, fontSize = 16.sp)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Icon(Icons.Filled.AccessTime, "Add")
+                    Text(LocalDateTimeFormatters.formatByDefault(ticket.date), fontSize = 16.sp)
                 }
             }
+        }
         }
 }
 
@@ -166,7 +163,7 @@ fun ActionIcon(
 @Composable
 fun TicketList(ticketsViewModel: TicketsViewModel) {
     val tickets = ticketsViewModel.tickets.collectAsState().value
-    val grouped = tickets.groupBy { it.date.withDayOfMonth(1) }
+    val grouped = tickets.groupBy { it.date.toLocalDate().withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
     val context = LocalContext.current
 
@@ -181,6 +178,7 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
         ordered.forEach { (date, dateTickets) ->
             item {
                 DateHeader(date)
+                Spacer(Modifier.height(5.dp))
             }
 
             val sortedTickets = dateTickets.sortedBy { t -> t.date }.toMutableList()
@@ -188,7 +186,7 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                 val confirmTicketDeleteDialogOpen = remember { mutableStateOf(false) }
                 Box(
                     Modifier
-                        .padding(20.dp)
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
                         .clip(RoundedCornerShape(20.dp)),
                 ) {
                     var showMenu by remember {
@@ -278,6 +276,7 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
         floatingActionButton = {
             LargeFloatingActionButton(
                 shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
                 onClick = {
                     launcher.launch(arrayOf("application/pdf"))
                 }) {

@@ -8,8 +8,9 @@ fun EventResponse.toEventUi(): EventUi {
         id = this.id,
         eventName = this.title,
         locationName = this.location,
-        date = this.dates.toLocalDate(),
+        dateTime = this.dates,
         description = this.description,
-        eventStatus = this.eventStatus
+        eventStatus = this.eventStatus,
+        categories = categories.map { it.toCategoryUi() }
     )
 }

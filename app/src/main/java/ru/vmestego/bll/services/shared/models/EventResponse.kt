@@ -19,7 +19,13 @@ data class EventResponse(
     val externalId: Long?,
     val creatorId: Long?,
     val creatorUsername: String,
-    val categories: List<String>,
+    val categories: List<CategoryResponse>,
     val images: List<String>,
     val eventStatus: EventStatus?,
+)
+
+@Serializable
+data class CategoryResponse(
+    val id: Long,
+    val name: String
 )

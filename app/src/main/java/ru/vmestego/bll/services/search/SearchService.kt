@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
@@ -46,16 +47,85 @@ class SearchService {
 //        return response.body<SearchEventsResponse>()
 //    }
 
-    suspend fun getAllEvents(): List<EventResponse> {
+    suspend fun getAllEvents(token: String): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events") {
                 contentType(ContentType.Application.Json)
+                bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            return listOf()
+        }
+
+        return response.body<List<EventResponse>>()
+    }
+
+    suspend fun getPublicEvents(token: String): List<EventResponse> {
+        val response: HttpResponse
+        try {
+            response = client.get("http://10.0.2.2:8080/events/created-public") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (e: Exception) {
+            return listOf()
+        }
+
+        return response.body<List<EventResponse>>()
+    }
+
+    suspend fun getPrivateEvents(token: String): List<EventResponse> {
+        val response: HttpResponse
+        try {
+            response = client.get("http://10.0.2.2:8080/events/created-private") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (e: Exception) {
+            return listOf()
+        }
+
+        return response.body<List<EventResponse>>()
+    }
+
+    suspend fun getJoinedPrivateEvents(token: String): List<EventResponse> {
+        val response: HttpResponse
+        try {
+            response = client.get("http://10.0.2.2:8080/events/joined-private") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (e: Exception) {
+            return listOf()
+        }
+
+        return response.body<List<EventResponse>>()
+    }
+
+    suspend fun getOtherAdminsPublicEvents(token: String): List<EventResponse> {
+        val response: HttpResponse
+        try {
+            response = client.get("http://10.0.2.2:8080/events/other-admins-public") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (e: Exception) {
             return listOf()
         }
 
