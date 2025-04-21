@@ -9,6 +9,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -64,11 +65,12 @@ class SearchService {
         return response.body<List<EventResponse>>()
     }
 
-    suspend fun getPublicEvents(token: String): List<EventResponse> {
+    suspend fun getPublicEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events/created-public") {
                 contentType(ContentType.Application.Json)
+                parameter("q", query)
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
@@ -81,12 +83,13 @@ class SearchService {
         return response.body<List<EventResponse>>()
     }
 
-    suspend fun getPrivateEvents(token: String): List<EventResponse> {
+    suspend fun getPrivateEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events/created-private") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
+                parameter("q", query)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
@@ -98,11 +101,12 @@ class SearchService {
         return response.body<List<EventResponse>>()
     }
 
-    suspend fun getJoinedPrivateEvents(token: String): List<EventResponse> {
+    suspend fun getJoinedPrivateEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events/joined-private") {
                 contentType(ContentType.Application.Json)
+                parameter("q", query)
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
@@ -115,11 +119,12 @@ class SearchService {
         return response.body<List<EventResponse>>()
     }
 
-    suspend fun getOtherAdminsPublicEvents(token: String): List<EventResponse> {
+    suspend fun getOtherAdminsPublicEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("http://10.0.2.2:8080/events/other-admins-public") {
                 contentType(ContentType.Application.Json)
+                parameter("q", query)
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)

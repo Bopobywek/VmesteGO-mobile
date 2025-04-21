@@ -1,6 +1,7 @@
 package ru.vmestego.ui.authActivity
 
 import android.app.Activity
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.vmestego.ui.mainActivity.MainActivity
 
 @Composable
 fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -> Unit) {
@@ -32,8 +34,8 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
     LaunchedEffect(viewModel.authorizeError) {
         if (viewModel.authorizeError.isNotEmpty()) {
             Toast
-            .makeText(activity, viewModel.authorizeError, Toast.LENGTH_SHORT)
-            .show()
+                .makeText(activity, viewModel.authorizeError, Toast.LENGTH_SHORT)
+                .show()
 
             viewModel.clearErrors()
         }
@@ -76,7 +78,12 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.authorizeUser { activity.finish() } },
+                onClick = {
+                    viewModel.authorizeUser {
+                        activity.startActivity(Intent(activity, MainActivity::class.java))
+                        activity.finish()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

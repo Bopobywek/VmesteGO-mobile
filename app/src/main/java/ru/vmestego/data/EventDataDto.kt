@@ -7,5 +7,6 @@ import java.time.LocalDateTime
 data class EventDataDto(
     val name: String,
     val location: String,
-    val startAt: LocalDateTime
+    val startAt: LocalDateTime,
+    val externalId: Long
 )

@@ -142,6 +142,7 @@ fun SearchScreen(
                 title = "Выберите пункты",
                 options = viewModel.categories.collectAsState().value,
                 optionLabel = { it.name },
+                initiallySelected = viewModel.categoriesApplied,
                 onDismiss = { showCategoryDialog.value = false },
                 onDone = { newSelection ->
                     viewModel.applyCategoriesFilter(newSelection)

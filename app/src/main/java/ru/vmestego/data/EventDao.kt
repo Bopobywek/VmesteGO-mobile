@@ -14,6 +14,9 @@ interface EventDao {
     @Query("SELECT * FROM events e WHERE uid = :id")
     suspend fun get(id: Int): List<Event>
 
+    @Query("SELECT * FROM events e WHERE external_id = :id")
+    suspend fun getByExternalId(id: Int): List<Event>
+
     @Query("SELECT * FROM events WHERE title LIKE :pattern || '%'")
     suspend fun search(pattern: String): List<Event>
 

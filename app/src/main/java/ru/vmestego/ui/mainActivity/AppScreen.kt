@@ -1,5 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
+import EventFormScreen
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
@@ -49,6 +50,8 @@ import ru.vmestego.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
 import ru.vmestego.ui.ticketActivity.EventCreationScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 val iconizedRoutes = listOf(
@@ -150,7 +153,7 @@ fun AppScreen() {
             }
             composable<Profile> { ProfileScreen() }
             composable<CustomEvent> {
-                EventCreationScreen {
+                EventFormScreen {
                     val viewModel =
                         EventParametersViewModel(context.applicationContext as Application)
                     scope.launch(Dispatchers.IO) {
@@ -158,7 +161,8 @@ fun AppScreen() {
                             EventDataDto(
                                 it.title,
                                 it.location,
-                                LocalDateTime.of(it.date, it.time)
+                                LocalDateTime.of(it.date, it.time),
+                                it.externalId
                             )
                         )
 

@@ -1,5 +1,6 @@
 package ru.vmestego.ui.ticketActivity
 
+import EventFormScreen
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
@@ -133,7 +134,7 @@ object EventParameters
 @Serializable
 object TicketParameters
 
-data class EventDto(val title: String, val location: String, val date: LocalDate, val time: LocalTime)
+data class EventDto(val title: String, val location: String, val date: LocalDate, val time: LocalTime, val externalId: Long)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,7 +241,7 @@ fun EventCreationScreen(onSave: (EventDto) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onSave(EventDto(title, location, date, time)) }, modifier = Modifier
+            onClick = { onSave(EventDto(title, location, date, time, -1)) }, modifier = Modifier
                 .padding(horizontal = 15.dp)
                 .fillMaxWidth()
         ) {
@@ -311,12 +312,12 @@ fun EventParametersScreen(
                     },
                     sheetState = sheetState
                 ) {
-                    EventCreationScreen {
+                    EventFormScreen {
                         showBottomSheet = false
                         scope.launch(Dispatchers.Main) {
                             val receivedId =
                                 viewModel.addEvent(
-                                    EventDataDto(it.title, it.location, LocalDateTime.of(it.date, it.time))
+                                    EventDataDto(it.title, it.location, LocalDateTime.of(it.date, it.time), it.externalId)
                                 )
                             navigateToTicketParams(
                                 EventRouteDto(
@@ -346,15 +347,28 @@ fun EventParametersScreen(
                         .padding(20.dp)
                         .fillMaxSize()
                 ) {
+                    val scope = rememberCoroutineScope()
                     EventsList(searchViewModel, {}, {
-                        navigateToTicketParams(
-                            EventRouteDto(
-                                it.id,
-                                it.eventName,
-                                it.locationName,
-                                it.dateTime
+                        e ->
+                        scope.launch(Dispatchers.Main) {
+                            val receivedId =
+                                viewModel.addEvent(
+                                    EventDataDto(
+                                        e.eventName,
+                                        e.locationName,
+                                        e.dateTime,
+                                        e.id
+                                    )
+                                )
+                            navigateToTicketParams(
+                                EventRouteDto(
+                                    receivedId,
+                                    e.eventName,
+                                    e.locationName,
+                                    e.dateTime
+                                )
                             )
-                        )
+                        }
                     })
                 }
             }

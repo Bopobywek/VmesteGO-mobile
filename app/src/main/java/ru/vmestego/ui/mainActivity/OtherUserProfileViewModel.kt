@@ -202,23 +202,24 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
 
     private fun getAllEvents() {
         val currentUserIdString = currentUserId.toString()
+        val token = tokenDataProvider.getToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            var events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.WantToGo)
+            var events = _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.WantToGo)
             _wantToGoEvents.update {
                 events.map {
                     it.toEventUi()
                 }
             }
 
-            events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.Going)
+            events = _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.Going)
             _goingToEvents.update {
                 events.map {
                     it.toEventUi()
                 }
             }
 
-            events = _eventsService.getEventsByStatus(currentUserIdString, EventStatus.NotGoing)
+            events = _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.NotGoing)
             _notGoingToEvents.update {
                 events.map {
                     it.toEventUi()

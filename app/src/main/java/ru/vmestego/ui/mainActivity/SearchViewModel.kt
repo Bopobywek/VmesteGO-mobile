@@ -98,27 +98,27 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     fun resetDateFilters() {
         startDateFilter = null
         endDateFilter = null
-        getAllEvents()
+        getAllEvents(searchText)
     }
 
     fun resetCategoriesFilter() {
         categoriesApplied = listOf()
-        getAllEvents()
+        getAllEvents(searchText)
     }
 
-    private fun getAllEvents() {
+    private fun getAllEvents(query: String? = null) {
         val token = tokenDataProvider.getToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
 
-            var response = searchService.getPrivateEvents(token)
+            var response = searchService.getPrivateEvents(token, query)
             _events.update {
                 response.map {
                     it.toEventUi()
                 }
             }
 
-            response = searchService.getPublicEvents(token)
+            response = searchService.getPublicEvents(token, query)
             _events.update {
                 val newVals = response.map {
                     it.toEventUi()
@@ -127,7 +127,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 updated
             }
 
-            response = searchService.getJoinedPrivateEvents(token)
+            response = searchService.getJoinedPrivateEvents(token, query)
             _events.update {
                 val newVals = response.map {
                     it.toEventUi()
@@ -136,7 +136,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 updated
             }
 
-            response = searchService.getOtherAdminsPublicEvents(token)
+            response = searchService.getOtherAdminsPublicEvents(token, query)
             _events.update {
                 val newVals = response.map {
                     it.toEventUi()
@@ -166,34 +166,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-//            val localEvents = _eventsRepository.getAllEvents().filter {
-//                it.title.startsWith(query)
-//            }
-//
-//            _events.clear()
-//            localEvents.forEach {
-//                _events.apply {
-//                    add(EventUi(it.uid.toLong(), it.title, it.location, it.startAt.toLocalDate(), ""))
-//                }
-//            }
-//            withContext(Dispatchers.Main) {
-//                isLoading = true
-//            }
-//
-//            val responseData = searchService.searchEvents(query)
-//
-//            responseData.events.forEach {
-//                val date: LocalDate =
-//                Instant.ofEpochSecond(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
-//                _events.apply {
-//                    add(EventUi(it.id, it.title, it.location, date, it.description))
-//                }
-//            }
-//
-//            withContext(Dispatchers.Main) {
-//                isLoading = false
-//            }
+        getAllEvents(query)
+        applyCategoriesFilter(categoriesApplied)
+        if (startDateFilter != null ) {
+            applyDateFilter(startDateFilter!!, endDateFilter)
         }
     }
 }

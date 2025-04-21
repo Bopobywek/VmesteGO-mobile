@@ -12,6 +12,7 @@ import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.notifications.NotificationService
 import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.core.EventStatus
+import ru.vmestego.data.SecureStorage
 import ru.vmestego.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 import java.util.UUID
@@ -78,7 +79,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun getUserInfo() {
+     private fun getUserInfo() {
         val userId = tokenDataProvider.getUserIdFromToken()
         val token = tokenDataProvider.getToken()!!
 
@@ -124,22 +125,24 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private fun getAllEvents() {
         val userId = tokenDataProvider.getUserIdFromToken()
+        val token = tokenDataProvider.getToken()!!
+
         viewModelScope.launch(Dispatchers.IO) {
-            var events = _eventsService.getEventsByStatus(userId, EventStatus.WantToGo)
+            var events = _eventsService.getEventsByStatus(token, userId, EventStatus.WantToGo)
             _wantToGoEvents.update {
                 events.map {
                     it.toEventUi()
                 }
             }
 
-            events = _eventsService.getEventsByStatus(userId, EventStatus.Going)
+            events = _eventsService.getEventsByStatus(token, userId, EventStatus.Going)
             _goingToEvents.update {
                 events.map {
                     it.toEventUi()
                 }
             }
 
-            events = _eventsService.getEventsByStatus(userId, EventStatus.NotGoing)
+            events = _eventsService.getEventsByStatus(token, userId, EventStatus.NotGoing)
             _notGoingToEvents.update {
                 events.map {
                     it.toEventUi()

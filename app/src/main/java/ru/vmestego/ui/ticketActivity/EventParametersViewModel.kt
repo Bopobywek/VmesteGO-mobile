@@ -24,14 +24,26 @@ class EventParametersViewModel(application: Application) : AndroidViewModel(appl
     }
 
     suspend fun addEvent(eventDto: EventDataDto): Long {
+        var existingEvent = getEventByExternalId(eventDto.externalId.toInt())
+        if (existingEvent != null) {
+            return existingEvent.uid.toLong()
+        }
         return _eventsRepository.insert(
             Event(
-                externalId = 1,
+                externalId = eventDto.externalId.toInt(),
                 title = eventDto.name,
                 location = eventDto.location,
                 startAt = eventDto.startAt,
                 isSynchronized = false
             )
         )
+    }
+
+    suspend fun getEventByExternalId(externalId: Int): Event? {
+        val result = _eventsRepository.getByExternalId(externalId)
+        if (result.isEmpty()) {
+            return null
+        }
+        return result[0]
     }
 }

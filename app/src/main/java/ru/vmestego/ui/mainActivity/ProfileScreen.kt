@@ -71,7 +71,6 @@ import coil.imageLoader
 import ru.vmestego.R
 import ru.vmestego.event.EventUi
 import ru.vmestego.ui.authActivity.AuthActivity
-import ru.vmestego.utils.LocalDateFormatters
 import ru.vmestego.utils.LocalDateTimeFormatters
 
 
@@ -112,6 +111,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
             IconButton(onClick = {
                 viewModel.logout()
                 activity.startActivity(Intent(activity, AuthActivity::class.java))
+                activity.finish()
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ExitToApp,
