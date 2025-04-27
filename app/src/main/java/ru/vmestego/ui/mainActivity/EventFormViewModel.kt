@@ -40,6 +40,10 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
         getAllCategories()
     }
 
+    fun isAdmin() : Boolean {
+        return _tokenDataProvider.isAdmin()
+    }
+
     private fun getAllCategories() {
         val token = _tokenDataProvider.getToken()!!
 

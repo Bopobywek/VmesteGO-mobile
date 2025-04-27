@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import aws.smithy.kotlin.runtime.util.toNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.vmestego.event.SingleChoiceSegmentedButton
@@ -53,6 +54,27 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
 
     var scope = rememberCoroutineScope()
     Scaffold(
+        topBar = {
+            if (viewModel.isAdmin()) {
+                val options = listOf("Публичное", "Приватное")
+
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(top=10.dp).padding(horizontal = 10.dp).fillMaxWidth()) {
+                    options.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = options.size
+                            ),
+                            onClick = {
+                                isPrivate = (index > 0)
+                            },
+                            selected = index == if(isPrivate) 1 else 0,
+                            label = { Text(label) }
+                        )
+                    }
+                }
+            }
+        },
         bottomBar = {
             Button(
                 onClick = {
@@ -99,11 +121,11 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (false) {
+            if (viewModel.isAdmin()) {
                 OutlinedTextField(
                     value = ageRestriction,
                     onValueChange = { ageRestriction = it.filter { it.isDigit() } },
-                    label = { Text("Age Restriction") },
+                    label = { Text("Возрастное ограничение") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -111,7 +133,7 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it.filter { it.isDigit() || it == '.' } },
-                    label = { Text("Price (optional)") },
+                    label = { Text("Цена") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -164,26 +186,6 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
                                 selectedCategories + category
                         },
                         label = { Text(category.name) }
-                    )
-                }
-            }
-        }
-
-        if (false) {
-            val options = listOf("Публичное", "Приватное")
-
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                options.forEachIndexed { index, label ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = options.size
-                        ),
-                        onClick = {
-                            isPrivate = (index > 0)
-                        },
-                        selected = index == (isPrivate as Int),
-                        label = { Text(label) }
                     )
                 }
             }

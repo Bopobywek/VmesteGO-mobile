@@ -2,10 +2,12 @@ package ru.vmestego.ui.mainActivity
 
 import android.annotation.SuppressLint
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -63,11 +65,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
+import ru.vmestego.event.EventUi
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Calendar
 
 
@@ -204,15 +209,15 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                             )
                             ActionIcon(
                                 onClick = {
-                                    val builder = CalendarContract.CONTENT_URI.buildUpon()
-                                    builder.appendPath("time")
-                                    ContentUris.appendId(
-                                        builder,
-                                        Calendar.getInstance().timeInMillis
-                                    )
-                                    val intent = Intent(Intent.ACTION_VIEW)
-                                        .setData(builder.build())
-                                    context.startActivity(intent)
+//                                    val builder = CalendarContract.CONTENT_URI.buildUpon()
+//                                    builder.appendPath("time")
+//                                    ContentUris.appendId(
+//                                        builder,
+//                                        Calendar.getInstance().timeInMillis
+//                                    )
+//                                    val intent = Intent(Intent.ACTION_VIEW)
+//                                        .setData(builder.build())
+                                    openCalendarWithEvent(context, ticket)
                                     showMenu = false
                                 },
                                 backgroundColor = Color.Blue,
@@ -287,4 +292,23 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
     ) {
         TicketList(ticketsViewModel)
     }
+}
+
+fun openCalendarWithEvent(context: Context, ticket: TicketUi) {
+    val intent = Intent(Intent.ACTION_INSERT).apply {
+        data = CalendarContract.Events.CONTENT_URI
+        putExtra(CalendarContract.Events.TITLE, ticket.eventName)
+        putExtra(CalendarContract.Events.EVENT_LOCATION, ticket.locationName)
+        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, ticket.date.toMillis())
+    }
+
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun LocalDateTime.toMillis(): Long {
+    return this.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }

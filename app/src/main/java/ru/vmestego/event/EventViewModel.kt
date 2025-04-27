@@ -108,6 +108,14 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
         }
     }
 
+    fun removeComment(commentUi: CommentUi) {
+        val c = _comments.value.toMutableList()
+        c -= commentUi
+        _comments.update {
+            c
+        }
+    }
+
     fun inviteFriend(userId: Long) {
         val token = tokenDataProvider.getToken()!!
 

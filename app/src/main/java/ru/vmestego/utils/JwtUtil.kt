@@ -11,5 +11,10 @@ class JwtUtil {
             val decoded = JWT.decode(token)
             return decoded.getClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").asString()
         }
+
+        fun getRoleFromToken(token: String): String? {
+            val decoded = JWT.decode(token)
+            return decoded.getClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role").asString()
+        }
     }
 }

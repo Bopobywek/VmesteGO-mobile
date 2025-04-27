@@ -3,6 +3,7 @@ package ru.vmestego.ui.dialogs
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -39,9 +40,6 @@ fun YesNoDialog(
                 Text("Отмена", fontSize = 22.sp)
             }
         },
-        containerColor = Color.DarkGray,
-        titleContentColor = Color.LightGray,
-        textContentColor = Color.LightGray,
-        iconContentColor = Color.LightGray
+        containerColor = MaterialTheme.colorScheme.primaryContainer
     )
 }

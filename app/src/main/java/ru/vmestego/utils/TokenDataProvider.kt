@@ -21,6 +21,17 @@ class TokenDataProvider(application: Application) {
         return userId;
     }
 
+    fun isAdmin(): Boolean {
+        val token = secureStorage.getToken()
+
+        if (token == null) {
+            return false
+        }
+
+        val role = JwtUtil.getRoleFromToken(token)
+        return role == "Admin";
+    }
+
     fun removeToken() {
         secureStorage.removeToken()
     }

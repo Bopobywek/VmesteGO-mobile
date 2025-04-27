@@ -115,7 +115,7 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
         if (pendingInvitations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
-                    Text("У пока вас нет приглашений", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text("У вас пока нет приглашений", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
                 }
             }
         } else {
