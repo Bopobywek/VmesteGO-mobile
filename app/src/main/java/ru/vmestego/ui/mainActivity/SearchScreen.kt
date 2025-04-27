@@ -53,6 +53,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import ru.vmestego.R
 import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.event.EventUi
@@ -275,10 +278,17 @@ fun EventsList(
     onEventClick: (EventUi) -> Unit
 ) {
     val state = rememberPullToRefreshState()
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing = remember { mutableStateOf(false) }
     PullToRefreshBox(
-        isRefreshing = viewModel.isRefreshing,
+        isRefreshing = isRefreshing.value,
         onRefresh = {
-            viewModel.update()
+            coroutineScope.launch {
+                isRefreshing.value = true
+                viewModel.update()
+                isRefreshing.value = false
+                state.animateToHidden()
+            }
         },
         state = state
     ) {

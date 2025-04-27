@@ -51,8 +51,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _eventsService = EventsService()
 
     init {
+        isLoading = true
         getAllEvents()
         getAllCategories()
+        isLoading = false
     }
 
     fun update() {
