@@ -5,7 +5,7 @@ class TicketsRepositoryImpl(private val ticketDao: TicketDao) : TicketsRepositor
         return ticketDao.insert(ticket)
     }
 
-    override fun getAllTicketsWithEvents() = ticketDao.getAllWithEvents()
+    override fun getAllTicketsWithEvents(userId: Long) = ticketDao.getAllWithEvents(userId)
 
     override fun getAllTicketsStream() = ticketDao.getAll()
 

@@ -119,7 +119,22 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         val token = tokenDataProvider.getToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            // TODO
+            val old = _notifications.value
+            val new: MutableList<NotificationUi> = mutableListOf()
+            old.forEachIndexed { index, n ->
+                if (ids.contains(index)) {
+                    _notificationsService.markAsRead(token, old[index].id)
+                    new.add(old[index].copy(isRead = true))
+                } else {
+                    new.add(old[index])
+                }
+            }
+
+            _notifications.update {
+                new
+            }
+
+            _hasUnreadNotifications.update { new.any { !it.isRead } }
         }
     }
 

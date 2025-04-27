@@ -12,12 +12,14 @@ import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.data.Ticket
 import ru.vmestego.data.TicketsRepository
 import ru.vmestego.data.TicketsRepositoryImpl
+import ru.vmestego.utils.TokenDataProvider
 
 class TicketParametersViewModel(application: Application) : AndroidViewModel(application) {
     private val _ticketsRepository: TicketsRepository =
         TicketsRepositoryImpl(AppDatabase.getDatabase(application).ticketDao())
     private val _eventsRepository: EventsRepositoryImpl =
         EventsRepositoryImpl(AppDatabase.getDatabase(application).eventDao())
+    private val _tokenDataProvider = TokenDataProvider(application)
 
     init {
         Log.i("TicketParametersViewModel", "init")
@@ -25,11 +27,14 @@ class TicketParametersViewModel(application: Application) : AndroidViewModel(app
 
 
     fun addTicket(uri: Uri, eventId: Long) {
+        var userId = _tokenDataProvider.getUserIdFromToken()!!.toLong()
+
         viewModelScope.launch(Dispatchers.IO) {
             _ticketsRepository.insert(
                 Ticket(
                     eventId = eventId,
-                    uri = uri.toString()
+                    uri = uri.toString(),
+                    userId = userId
                 )
             )
         }

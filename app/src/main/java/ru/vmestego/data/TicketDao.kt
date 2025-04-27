@@ -13,8 +13,8 @@ interface TicketDao {
     @Query("SELECT * FROM tickets")
     fun getAll(): Flow<List<Ticket>>
 
-    @Query("SELECT * FROM tickets")
-    fun getAllWithEvents(): Flow<List<TicketWithEvent>>
+    @Query("SELECT * FROM tickets WHERE user_id = :userId")
+    fun getAllWithEvents(userId: Long): Flow<List<TicketWithEvent>>
 
     @Query("SELECT * FROM tickets WHERE uid = :id")
     suspend fun getWithEvent(id: Long): TicketWithEvent

@@ -4,6 +4,7 @@ package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -28,8 +29,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
@@ -86,7 +89,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         ) { showBottomSheet = false }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,10 +133,12 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
                 if (uri != null) {
                     photoUri.value = uri.encodedPath!!
                     Log.d("PhotoPicker", "Selected URI: $uri")
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
+                    if (Build.VERSION.SDK_INT >= 34) {
+                        context.contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    }
                     val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
                     viewModel.updateImage(bytes)
                     context.imageLoader.diskCache?.clear()
@@ -216,8 +221,8 @@ fun EventSection(title: String, events: List<EventUi>) {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
     Spacer(modifier = Modifier.height(8.dp))
 
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        items(events) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        for (it in events) {
             Box(
                 Modifier.padding(horizontal = 20.dp)
             ) {

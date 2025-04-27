@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TicketsRepository {
     suspend fun insert(ticket: Ticket): Long
-    fun getAllTicketsWithEvents(): Flow<List<TicketWithEvent>>
+    fun getAllTicketsWithEvents(userId: Long): Flow<List<TicketWithEvent>>
     fun getAllTicketsStream(): Flow<List<Ticket>>
     suspend fun getTicketWithEvent(id: Long): TicketWithEvent
     suspend fun deleteTicketById(id: Long)
