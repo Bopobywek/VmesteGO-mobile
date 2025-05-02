@@ -31,7 +31,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ElevatedCard
@@ -64,11 +63,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import ru.vmestego.R
 import ru.vmestego.bll.services.shared.models.CategoryResponse
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.Instant
 import java.time.LocalDateTime

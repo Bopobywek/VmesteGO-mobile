@@ -1,4 +1,4 @@
-package ru.vmestego.event
+package ru.vmestego.ui.mainActivity.event
 
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.mainActivity.CategoryUi

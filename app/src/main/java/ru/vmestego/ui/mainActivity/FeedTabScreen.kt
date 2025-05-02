@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
-import ru.vmestego.utils.LocalDateFormatters
 import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 import kotlin.random.Random

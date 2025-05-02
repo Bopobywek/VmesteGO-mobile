@@ -5,15 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.events.CreateEventRequest
 import ru.vmestego.bll.services.events.EventsService
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 import java.time.LocalDate
 import java.time.LocalDateTime

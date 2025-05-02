@@ -1,4 +1,4 @@
-package ru.vmestego.event
+package ru.vmestego.ui.mainActivity.event
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image

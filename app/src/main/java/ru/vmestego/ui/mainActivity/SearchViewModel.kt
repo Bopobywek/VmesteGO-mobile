@@ -16,9 +16,8 @@ import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.search.SearchService
 import ru.vmestego.data.AppDatabase
 import ru.vmestego.data.EventsRepositoryImpl
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
-import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import kotlin.collections.any
 

@@ -1,7 +1,7 @@
 package ru.vmestego.ui.mainActivity
 
 import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 
 fun EventResponse.toEventUi(): EventUi {
     return EventUi(

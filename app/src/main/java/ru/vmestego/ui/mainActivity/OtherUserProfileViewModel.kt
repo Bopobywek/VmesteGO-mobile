@@ -20,7 +20,7 @@ import ru.vmestego.bll.services.friends.models.FriendRequestResponse
 import ru.vmestego.bll.services.friends.models.FriendRequestStatus
 import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.core.EventStatus
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 
 class OtherUserProfileViewModel(application: Application, userId: Long) : AndroidViewModel(application) {

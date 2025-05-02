@@ -1,4 +1,4 @@
-package ru.vmestego.event
+package ru.vmestego.ui.mainActivity.event
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

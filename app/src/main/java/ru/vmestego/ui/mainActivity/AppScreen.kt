@@ -22,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asIntState
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,14 +43,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import ru.vmestego.data.EventDataDto
-import ru.vmestego.event.EventScreenWrapper
-import ru.vmestego.event.EventViewModel
-import ru.vmestego.event.EventViewModelFactory
+import ru.vmestego.ui.mainActivity.event.EventScreenWrapper
+import ru.vmestego.ui.mainActivity.event.EventViewModel
+import ru.vmestego.ui.mainActivity.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
-import ru.vmestego.ui.ticketActivity.EventCreationScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
-import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 val iconizedRoutes = listOf(

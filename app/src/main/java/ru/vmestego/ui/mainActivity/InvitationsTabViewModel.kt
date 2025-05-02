@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.invitations.EventInvitationStatus
 import ru.vmestego.bll.services.invitations.InvitationResponse
 import ru.vmestego.bll.services.invitations.InvitationsService
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 
 class InvitationsTabViewModel(application: Application) : AndroidViewModel(application) {

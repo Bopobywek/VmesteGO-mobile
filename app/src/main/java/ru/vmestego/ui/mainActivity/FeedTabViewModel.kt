@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.friends.FriendsService
 import ru.vmestego.bll.services.friends.models.FriendsEventResponse
-import ru.vmestego.event.EventUi
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 
 class FeedTabViewModel(application: Application) : AndroidViewModel(application) {

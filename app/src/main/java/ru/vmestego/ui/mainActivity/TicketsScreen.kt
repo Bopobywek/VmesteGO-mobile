@@ -1,10 +1,8 @@
 package ru.vmestego.ui.mainActivity
 
 import android.annotation.SuppressLint
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
@@ -16,16 +14,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -60,23 +55,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
-import ru.vmestego.event.EventUi
 import ru.vmestego.ui.dialogs.YesNoDialog
-import ru.vmestego.ui.ticketActivity.EventDto
 import ru.vmestego.ui.ticketActivity.TicketActivity
-import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Calendar
 
 
 @Composable
