@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -166,15 +167,17 @@ fun EventScreen(
             ) {
 
                 Text(
-                    eventUi.eventName,
-                    Modifier
-
+                    text = eventUi.eventName,
+                    modifier = Modifier
                         .fillMaxWidth(),
                     color = Color.White,
                     fontSize = 36.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip
+                    maxLines = 5,
+                    softWrap = true,
+                    overflow = TextOverflow.Ellipsis,
+                    style = TextStyle(
+                        lineHeight = 44.sp
+                    )
                 )
             }
 
