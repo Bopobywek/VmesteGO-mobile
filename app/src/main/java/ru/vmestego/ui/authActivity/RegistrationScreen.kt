@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -66,14 +67,24 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
                 value = viewModel.login,
                 onValueChange = { viewModel.updateLogin(it) },
                 label = { Text("Логин") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = viewModel.loginHasErrors,
-                supportingText = {
-                    if (viewModel.loginHasErrors) {
-                        Text("Поле должно быть заполнено")
+                isError = viewModel.loginError != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            viewModel.loginFocusedOnce = true
+                            viewModel.validateLogin()
+                        }
                     }
-                }
             )
+            if (viewModel.loginError != null) {
+                Text(
+                    text = viewModel.loginError ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -81,14 +92,24 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
                 value = viewModel.email,
                 onValueChange = { viewModel.updateEmail(it) },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = viewModel.emailHasErrors,
-                supportingText = {
-                    if (viewModel.emailHasErrors) {
-                        Text("Incorrect email format.")
+                isError = viewModel.emailError != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            viewModel.emailFocusedOnce = true
+                            viewModel.validateEmail()
+                        }
                     }
-                }
             )
+            if (viewModel.emailError != null) {
+                Text(
+                    text = viewModel.emailError ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -97,20 +118,32 @@ fun RegistrationScreenContent(innerPadding: PaddingValues, viewModel: Registrati
                 onValueChange = { viewModel.updatePassword(it) },
                 label = { Text("Пароль") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                isError = viewModel.passwordHasErrors,
-                supportingText = {
-                    if (viewModel.passwordHasErrors) {
-                        Text("Слабый пароль")
+                isError = viewModel.passwordError != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            viewModel.passwordFocusedOnce = true
+                            viewModel.validatePassword()
+                        }
                     }
-                }
             )
+            if (viewModel.passwordError != null) {
+                Text(
+                    text = viewModel.passwordError ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             if (viewModel.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.padding(2.dp),
-                    color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(2.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else {
                 Button(
                     onClick = { viewModel.registerUser(onGoBackClick) },

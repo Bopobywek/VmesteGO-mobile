@@ -35,7 +35,10 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun loadDataFromDb() {
-        var userId = _tokenDataProvider.getUserIdFromToken()!!
+        var userId = _tokenDataProvider.getUserIdFromToken()
+        if (userId == null) {
+            return
+        }
 
         viewModelScope.launch { //this: CoroutineScope
             _ticketsRepository.getAllTicketsWithEvents(userId.toLong()).flowOn(Dispatchers.IO)

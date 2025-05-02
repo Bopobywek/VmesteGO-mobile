@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -30,7 +29,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -69,9 +67,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
-import ru.vmestego.ui.mainActivity.UserUi
 import ru.vmestego.ui.mainActivity.generateWarmSoftColor
-import ru.vmestego.utils.LocalDateFormatters
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.Duration
 import java.time.LocalDateTime
@@ -511,18 +507,20 @@ fun CommentItem(
             )
         }
 
-        IconButton(
-            onClick = {
-                remove(commentUi)
-                      },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = "Delete Comment",
-                tint = Color.Red
-            )
+        if (commentUi.isCurrentUserAvailableToDelete) {
+            IconButton(
+                onClick = {
+                    remove(commentUi)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete Comment",
+                    tint = Color.Red
+                )
+            }
         }
     }
 }

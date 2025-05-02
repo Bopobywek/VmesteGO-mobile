@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.vmestego.bll.services.comments.CommentsService
 import ru.vmestego.bll.services.comments.models.CommentResponse
 import ru.vmestego.bll.services.events.EventsService
@@ -67,12 +68,13 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
 
     private fun getAllComments() {
         val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
             val comments = _commentsService.getAllComments(token, _eventId)
             _comments.update {
                 comments.map {
-                    it.toCommentUi()
+                    it.toCommentUi(userId.toLong())
                 }
             }
         }
@@ -95,6 +97,8 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
 
     fun addComment(text: String) {
         val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()!!
+        val isAdmin = tokenDataProvider.isAdmin()
 
         viewModelScope.launch(Dispatchers.IO) {
             _commentsService.postComment(token, _eventId, text)
@@ -102,17 +106,25 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
             val comments = _commentsService.getAllComments(token, _eventId)
             _comments.update {
                 comments.map {
-                    it.toCommentUi()
+                    it.toCommentUi(userId.toLong(), isAdmin)
                 }
             }
         }
     }
 
     fun removeComment(commentUi: CommentUi) {
-        val c = _comments.value.toMutableList()
-        c -= commentUi
-        _comments.update {
-            c
+        val token = tokenDataProvider.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _commentsService.removeComment(token, commentUi.id)
+
+            withContext(Dispatchers.Default) {
+                val comment = _comments.value.toMutableList()
+                comment -= commentUi
+                _comments.update {
+                    comment
+                }
+            }
         }
     }
 
@@ -126,12 +138,13 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
     }
 }
 
-fun CommentResponse.toCommentUi(): CommentUi {
+fun CommentResponse.toCommentUi(userId: Long, isAdmin: Boolean = false): CommentUi {
     return CommentUi(
         this.id,
         this.authorUsername,
         this.text,
-        this.createdAt
+        this.createdAt,
+        this.authorId == userId || isAdmin
     )
 }
 
@@ -139,7 +152,8 @@ data class CommentUi(
     val id: Long,
     val username: String,
     val text: String,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val isCurrentUserAvailableToDelete: Boolean = false
 )
 
 data class UserWithStatusUi(

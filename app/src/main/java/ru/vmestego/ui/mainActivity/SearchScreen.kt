@@ -249,21 +249,21 @@ fun SearchScreen(
             }
             Spacer(Modifier.size(16.dp))
 
-            if (viewModel.isLoading) {
-                Box(Modifier.height(24.dp), contentAlignment = Alignment.CenterStart) {
-                    Row {
-                        Text("Загружаем события", color = Color.DarkGray)
-                        Spacer(Modifier.width(10.dp))
-                        Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.then(Modifier.size(16.dp))
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.size(16.dp))
-            }
+//            if (viewModel.isLoading) {
+//                Box(Modifier.height(24.dp), contentAlignment = Alignment.CenterStart) {
+//                    Row {
+//                        Text("Загружаем события", color = Color.DarkGray)
+//                        Spacer(Modifier.width(10.dp))
+//                        Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+//                            CircularProgressIndicator(
+//                                strokeWidth = 2.dp,
+//                                modifier = Modifier.then(Modifier.size(16.dp))
+//                            )
+//                        }
+//                    }
+//                }
+//                Spacer(Modifier.size(16.dp))
+//            }
 
             EventsList(viewModel, goToEvent, {})
         }
@@ -293,7 +293,7 @@ fun EventsList(
         state = state
     ) {
         val events by viewModel.events.collectAsState()
-        if (events.isEmpty()) {
+        if (events.isEmpty() && !viewModel.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center

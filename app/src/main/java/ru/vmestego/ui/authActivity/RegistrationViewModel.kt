@@ -31,16 +31,7 @@ import ru.vmestego.data.SecureStorage
 import ru.vmestego.utils.PasswordValidator
 
 class RegistrationViewModel(application: Application) : AndroidViewModel(application) {
-    var login by mutableStateOf("")
-        private set
-
     private val _application = application
-
-    var email by mutableStateOf("")
-        private set
-
-    var password by mutableStateOf("")
-        private set
 
     var isLoading by mutableStateOf(false)
         private set
@@ -49,26 +40,57 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
         email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    val emailHasErrors by derivedStateOf {
-        emailHasFormatError
-    }
-    var emailError by mutableStateOf("")
+    var login by mutableStateOf("")
         private set
 
-    val loginHasErrors by derivedStateOf {
-        login.isEmpty()
-    }
-    var loginError by mutableStateOf("")
+    var email by mutableStateOf("")
         private set
 
-    val passwordHasErrors by derivedStateOf {
-        !PasswordValidator.isValidPassword(password)
-    }
-    var passwordError by mutableStateOf("")
+    var password by mutableStateOf("")
         private set
 
-    val hasValidationErrors by derivedStateOf {
-        loginHasErrors && emailHasErrors && passwordHasErrors
+    var loginError by mutableStateOf<String?>(null)
+    var emailError by mutableStateOf<String?>(null)
+    var passwordError by mutableStateOf<String?>(null)
+
+    var loginFocusedOnce by mutableStateOf(false)
+    var emailFocusedOnce by mutableStateOf(false)
+    var passwordFocusedOnce by mutableStateOf(false)
+
+    val hasValidationErrors: Boolean
+        get() = login.isBlank() || email.isBlank() || password.isBlank() || emailHasFormatError
+
+    fun updateLogin(newLogin: String) {
+        login = newLogin
+        validateLogin()
+    }
+
+    fun updateEmail(newEmail: String) {
+        email = newEmail
+        validateEmail()
+    }
+
+    fun updatePassword(newPassword: String) {
+        password = newPassword
+        validatePassword()
+    }
+
+    fun validateLogin() {
+        loginError = if (login.isBlank() && loginFocusedOnce) "Логин не может быть пустым" else null
+    }
+
+    fun validateEmail() {
+        emailError = if (email.isBlank() && emailFocusedOnce) {
+            "Email не может быть пустым"
+        } else if (emailHasFormatError) {
+            "Email должен соответствовать формату"
+        } else {
+            null
+        }
+    }
+
+    fun validatePassword() {
+        passwordError = if (password.isBlank() && passwordFocusedOnce) "Пароль не может быть пустым" else null
     }
 
     private val client = HttpClient(Android) {
@@ -82,18 +104,6 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
 
     private val secureStorage = SecureStorage.getStorageInstance(application)
     private val authService = AuthService()
-
-    fun updateLogin(newLogin: String) {
-        login = newLogin
-    }
-
-    fun updateEmail(newEmail: String) {
-        email = newEmail
-    }
-
-    fun updatePassword(newPassword: String) {
-        password = newPassword
-    }
 
     fun registerUser(successCallback: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {

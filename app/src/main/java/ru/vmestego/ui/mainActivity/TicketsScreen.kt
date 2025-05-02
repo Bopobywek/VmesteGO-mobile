@@ -68,7 +68,9 @@ import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
 import ru.vmestego.event.EventUi
 import ru.vmestego.ui.dialogs.YesNoDialog
+import ru.vmestego.ui.ticketActivity.EventDto
 import ru.vmestego.ui.ticketActivity.TicketActivity
+import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
@@ -168,10 +170,10 @@ fun ActionIcon(
 // TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
 fun TicketList(ticketsViewModel: TicketsViewModel) {
+    val context = LocalContext.current
     val tickets = ticketsViewModel.tickets.collectAsState().value
     val grouped = tickets.groupBy { it.date.toLocalDate().withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
-    val context = LocalContext.current
 
     // https://stackoverflow.com/a/74227507
     val initialIndex = getCurrentMonthHeaderIndex(ordered)
@@ -203,6 +205,11 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                             ActionIcon(
                                 onClick = {
                                     showMenu = false
+                                    val intent = Intent(context, TicketActivity::class.java)
+                                    intent.setAction(Intent.ACTION_SEND)
+                                    intent.setType("application/pdf")
+                                    intent.putExtra(Intent.EXTRA_STREAM, ticket.ticketUri)
+                                    context.startActivity(intent)
                                 },
                                 backgroundColor = Color.Gray,
                                 icon = Icons.Default.Edit,
@@ -311,5 +318,5 @@ fun openCalendarWithEvent(context: Context, ticket: TicketUi) {
 }
 
 fun LocalDateTime.toMillis(): Long {
-    return this.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    return this.plusHours(3).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }

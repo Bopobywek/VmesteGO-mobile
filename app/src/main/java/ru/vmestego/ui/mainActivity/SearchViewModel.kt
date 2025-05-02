@@ -11,13 +11,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.search.SearchService
 import ru.vmestego.data.AppDatabase
 import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
+import java.lang.Thread.sleep
 import java.time.LocalDateTime
+import kotlin.collections.any
 
 class SearchViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenDataProvider = TokenDataProvider(application)
@@ -51,10 +54,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _eventsService = EventsService()
 
     init {
-        isLoading = true
         getAllEvents()
         getAllCategories()
-        isLoading = false
     }
 
     fun update() {
@@ -70,30 +71,38 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         startDateFilter = startDate
         endDateFilter = endDate
         viewModelScope.launch(Dispatchers.Default) {
-            val oldEvents = _events.value
+            filterByDate()
+        }
+    }
 
-            val newEvents = oldEvents.filter {
-                it.dateTime >= startDate && (endDate == null || it.dateTime < endDate)
-            }
+    private fun filterByDate() {
+        val oldEvents = _events.value
 
-            _events.update {
-                newEvents
-            }
+        val newEvents = oldEvents.filter {
+            it.dateTime >= startDateFilter && (endDateFilter == null || it.dateTime < endDateFilter)
+        }
+
+        _events.update {
+            newEvents
         }
     }
 
     fun applyCategoriesFilter(categories: List<CategoryUi>) {
         categoriesApplied = categories
         viewModelScope.launch(Dispatchers.Default) {
-            val oldEvents = _events.value
+            filterByCategory()
+        }
+    }
 
-            val newEvents = oldEvents.filter {
-                it.categories.any { oldEventCat -> categories.any { c -> c.id == oldEventCat.id }}
-            }
+    private fun filterByCategory() {
+        val oldEvents = _events.value
 
-            _events.update {
-                newEvents
-            }
+        val newEvents = oldEvents.filter {
+            it.categories.any { oldEventCat -> categoriesApplied.any { c -> c.id == oldEventCat.id }}
+        }
+
+        _events.update {
+            newEvents
         }
     }
 
@@ -110,7 +119,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun getAllEvents(query: String? = null) {
         val token = tokenDataProvider.getToken()!!
-
+        isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
 
             var response = searchService.getPrivateEvents(token, query)
@@ -146,6 +155,17 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 val updated = _events.value.toMutableList() + newVals
                 updated
             }
+
+            if (categoriesApplied.isNotEmpty()) {
+                filterByCategory()
+            }
+            if (startDateFilter != null ) {
+                filterByDate()
+            }
+
+            withContext(Dispatchers.Main) {
+                isLoading = false
+            }
         }
     }
 
@@ -165,13 +185,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     fun onSearch(query: String) {
         if (query.isEmpty()) {
             getAllEvents()
-            return
-        }
-
-        getAllEvents(query)
-        applyCategoriesFilter(categoriesApplied)
-        if (startDateFilter != null ) {
-            applyDateFilter(startDateFilter!!, endDateFilter)
+        } else {
+            getAllEvents(query)
         }
     }
 }

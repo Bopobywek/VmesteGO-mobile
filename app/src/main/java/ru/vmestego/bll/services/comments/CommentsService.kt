@@ -6,6 +6,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -55,6 +56,20 @@ class CommentsService {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 setBody(request)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    suspend fun removeComment(token: String, commentId: Long) {
+        val response: HttpResponse
+        try {
+            response = client.delete("http://10.0.2.2:8080/comments/${commentId}") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
