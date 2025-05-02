@@ -3,6 +3,10 @@ package ru.vmestego.data
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import java.util.UUID
 
 class SecureStorage(context: Context) {
     private val sharedPreferences = EncryptedSharedPreferences.create(

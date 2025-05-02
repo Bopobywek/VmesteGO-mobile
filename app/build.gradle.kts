@@ -89,4 +89,9 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.security.crypto.ktx)
     implementation(libs.androidx.material.icons.extended)
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.auth0:java-jwt:3.10.3")
+
+    implementation(awssdk.services.s3)
 }

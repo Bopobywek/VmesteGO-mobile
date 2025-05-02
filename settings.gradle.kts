@@ -9,6 +9,7 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+
     }
 }
 dependencyResolutionManagement {
@@ -16,6 +17,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+    }
+
+    versionCatalogs {
+        create("awssdk") {
+            from("aws.sdk.kotlin:version-catalog:1.3.98")
+        }
     }
 }
 

@@ -9,5 +9,6 @@ import java.time.LocalDate
 data class Ticket(
     @PrimaryKey(autoGenerate = true) val uid: Long = 0,
     @ColumnInfo(name = "event_id") val eventId: Long,
+    @ColumnInfo(name = "user_id") val userId: Long,
     @ColumnInfo(name = "file_uri") val uri: String
 )

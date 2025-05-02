@@ -4,15 +4,17 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
+// https://stackoverflow.com/a/75551419
 // https://developer.android.com/training/data-storage/room
 @Dao
 interface TicketDao {
     @Query("SELECT * FROM tickets")
-    suspend fun getAll(): List<Ticket>
+    fun getAll(): Flow<List<Ticket>>
 
-    @Query("SELECT * FROM tickets")
-    suspend fun getAllWithEvents(): List<TicketWithEvent>
+    @Query("SELECT * FROM tickets WHERE user_id = :userId")
+    fun getAllWithEvents(userId: Long): Flow<List<TicketWithEvent>>
 
     @Query("SELECT * FROM tickets WHERE uid = :id")
     suspend fun getWithEvent(id: Long): TicketWithEvent
@@ -23,6 +25,6 @@ interface TicketDao {
     @Insert
     suspend fun insert(ticket: Ticket): Long
 
-    @Delete
-    suspend fun delete(ticket: Ticket)
+    @Query("DELETE FROM tickets WHERE uid = :uid")
+    suspend fun delete(uid: Long)
 }
