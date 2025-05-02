@@ -166,10 +166,10 @@ fun FriendsList(goToUserScreen: (Long) -> Unit, users: List<UserUi>) {
                 Modifier
                     .padding(horizontal = 20.dp)
                     .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(15.dp))
-                    .padding(vertical = 10.dp)
                     .clickable {
                         goToUserScreen(user.id)
                     }
+                    .padding(vertical = 10.dp)
             ) {
                 Row(
                     modifier = Modifier

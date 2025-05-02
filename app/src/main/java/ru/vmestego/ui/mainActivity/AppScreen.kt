@@ -147,7 +147,14 @@ fun AppScreen() {
                     navController.navigate(User(it))
                 }
             }
-            composable<Profile> { ProfileScreen() }
+            composable<Profile> {
+                ProfileScreen {
+                    navController.navigate(Event(it.id)) {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
             composable<CustomEvent> {
                 EventFormScreen {
                     val viewModel =
@@ -195,7 +202,12 @@ fun AppScreen() {
                             route.id
                         )
                     )
-                OtherUserProfileScreenWrapper(viewModel)
+                OtherUserProfileScreenWrapper(viewModel) {
+                    navController.navigate(Event(it.id)) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             }
         }
     }

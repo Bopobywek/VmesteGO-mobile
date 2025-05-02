@@ -1,21 +1,16 @@
 package ru.vmestego.ui.mainActivity
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -32,10 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
+import ru.vmestego.ui.mainActivity.event.EventUi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherUserProfileScreenWrapper(viewModel: OtherUserProfileViewModel) {
+fun OtherUserProfileScreenWrapper(
+    viewModel: OtherUserProfileViewModel,
+    goToEvent: (EventUi) -> Unit) {
     val state = rememberPullToRefreshState()
 
     if (viewModel.isLoading) {
@@ -49,13 +47,15 @@ fun OtherUserProfileScreenWrapper(viewModel: OtherUserProfileViewModel) {
             onRefresh = viewModel::updateStatuses,
             state = state
         ) {
-            OtherUserProfileScreen(viewModel)
+            OtherUserProfileScreen(viewModel, goToEvent)
         }
     }
 }
 
 @Composable
-fun OtherUserProfileScreen(viewModel: OtherUserProfileViewModel) {
+fun OtherUserProfileScreen(
+    viewModel: OtherUserProfileViewModel,
+    goToEvent: (EventUi) -> Unit) {
     val userInfo by viewModel.userInfo.collectAsState()
 
     Column(
@@ -157,17 +157,17 @@ fun OtherUserProfileScreen(viewModel: OtherUserProfileViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         val wantToGoEvents by viewModel.wantToGoEvents.collectAsState()
-        EventSection("Хочет пойти", wantToGoEvents)
+        EventSection("Хочет пойти", wantToGoEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         val goingEvents by viewModel.goingToEvents.collectAsState()
-        EventSection("Идет", goingEvents)
+        EventSection("Идет", goingEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         val notGoingEvents by viewModel.notGoingToEvents.collectAsState()
-        EventSection("Не пойдет", notGoingEvents)
+        EventSection("Не пойдет", notGoingEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
     }

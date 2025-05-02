@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -42,12 +43,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -63,19 +67,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
 import coil.imageLoader
 import ru.vmestego.R
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.authActivity.AuthActivity
 import ru.vmestego.utils.LocalDateTimeFormatters
+import kotlin.math.min
 
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
+fun ProfileScreen(
+    viewModel: ProfileViewModel = viewModel(),
+    goToEvent: (EventUi) -> Unit) {
     val activity = LocalContext.current as Activity
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -86,7 +96,9 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         ) { showBottomSheet = false }
     }
 
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState())) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -192,34 +204,71 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(16.dp))
 
         val wantToGoEvents by viewModel.wantToGoEvents.collectAsState()
-        EventSection("Хочу пойти", wantToGoEvents)
+        EventSection("Хочу пойти", wantToGoEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         val goingEvents by viewModel.goingToEvents.collectAsState()
-        EventSection("Иду", goingEvents)
+        EventSection("Иду", goingEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         val notGoingEvents by viewModel.notGoingToEvents.collectAsState()
-        EventSection("Не пойду", notGoingEvents)
+        EventSection("Не пойду", notGoingEvents, goToEvent)
 
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-fun EventSection(title: String, events: List<EventUi>) {
-    Text(
-        text = title,
-        fontSize = 16.sp,
-        modifier = Modifier.padding(16.dp, 8.dp)
-    )
+fun EventSection(
+    title: String,
+    events: List<EventUi>,
+    goToEvent: (EventUi) -> Unit
+) {
+    var showBottomSheet = remember { mutableStateOf(false) }
+    val maxSize = 3
+
+    if (showBottomSheet.value) {
+        EventsListModal(showBottomSheet, events, goToEvent)
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            fontSize = 16.sp
+        )
+        if (events.size > maxSize) {
+            TextButton(onClick = {
+                showBottomSheet.value = true
+            }) {
+                Text(text = "Показать все (${events.size})")
+            }
+        }
+    }
+
     HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), thickness = 2.dp)
     Spacer(modifier = Modifier.height(8.dp))
 
-    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        for (it in events) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (events.isEmpty()) {
+            Text(
+                "Таких мероприятий пока нет",
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+            )
+        }
+        for (index in 0..min(events.size, maxSize) - 1) {
+            val it = events[index]
             Box(
                 Modifier.padding(horizontal = 20.dp)
             ) {
@@ -227,6 +276,9 @@ fun EventSection(title: String, events: List<EventUi>) {
                     modifier = Modifier
                         .heightIn(min = 100.dp)
                         .fillMaxWidth()
+                        .clickable {
+                            goToEvent(it)
+                        }
                 ) {
                     Column(
                         modifier = Modifier
@@ -324,6 +376,69 @@ fun NotificationsModalBottomSheet(
                         thickness = 2.dp
                     )
                     Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventsListModal(
+    showModal: MutableState<Boolean>,
+    events: List<EventUi>,
+    goToEvent: (EventUi) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = {
+            showModal.value = false
+        },
+        sheetState = sheetState
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(events) {
+                ElevatedCard(
+                    modifier = Modifier
+                        .heightIn(min = 100.dp)
+                        .padding(horizontal = 20.dp)
+                        .padding(top = 10.dp)
+                        .fillMaxWidth()
+                        .clickable {
+                            goToEvent(it)
+                        }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = it.eventName,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = LocalDateTimeFormatters.formatByDefault(it.dateTime),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Filled.Place, contentDescription = "Location")
+                            Text(
+                                text = it.locationName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
             }
         }
