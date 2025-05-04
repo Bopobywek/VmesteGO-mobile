@@ -146,7 +146,7 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
             )
 
             val timeFormatter =
-                DateTimeFormatter.ofPattern("hh:mm", Locale("ru"))
+                DateTimeFormatter.ofPattern("HH:mm", Locale("ru"))
             OutlinedTextField(
                 value = time.format(timeFormatter),
                 onValueChange = {

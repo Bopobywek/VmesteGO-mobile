@@ -22,12 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -60,7 +62,10 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
     var showBottomSheet = remember { mutableStateOf(false) }
 
     if (showBottomSheet.value) {
-        OutgoingInvitationsModal(showBottomSheet, viewModel.sentInvitations.collectAsState().value)
+        OutgoingInvitationsModal(
+            showBottomSheet,
+            viewModel.sentInvitations.collectAsState().value,
+            { viewModel.cancelInvitation(it) })
     }
     Column {
         Button(
@@ -111,7 +116,12 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
         if (pendingInvitations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
-                    Text("У вас пока нет приглашений", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        "У вас пока нет приглашений",
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
         } else {
@@ -124,7 +134,8 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
 fun InvitationsList(
     pendingInvitations: List<InvitationUi>,
     acceptInvite: (List<InvitationUi>) -> Unit,
-    rejectInvite: (List<InvitationUi>) -> Unit) {
+    rejectInvite: (List<InvitationUi>) -> Unit
+) {
     val profileImageSize = 32
     val boxContentPadding = 15
 
@@ -235,10 +246,10 @@ fun InvitationsList(
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     Spacer(Modifier.weight(1f))
-                    Button({acceptInvite(it.second)}) {
+                    Button({ acceptInvite(it.second) }) {
                         Text("Принять")
                     }
-                    OutlinedButton({rejectInvite(it.second)}) {
+                    OutlinedButton({ rejectInvite(it.second) }) {
                         Text("Отклонить")
                     }
                 }
@@ -255,7 +266,8 @@ fun InvitationsList(
 @Composable
 fun OutgoingInvitationsModal(
     showModal: MutableState<Boolean>,
-    sentInvitations: List<InvitationUi>
+    sentInvitations: List<InvitationUi>,
+    cancelInvitation: (InvitationUi) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -276,49 +288,60 @@ fun OutgoingInvitationsModal(
                         .padding(top = 10.dp)
                         .fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(15.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = invitation.event.eventName,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = LocalDateTimeFormatters.formatByDefault(invitation.event.dateTime),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-
-                        Spacer(Modifier.height(20.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    Box(Modifier.fillMaxSize()) {
+                        IconButton(
+                            onClick = { cancelInvitation(invitation) },
+                            modifier = Modifier.align(Alignment.TopEnd)
                         ) {
-                            Icon(Icons.Filled.Place, contentDescription = "Location")
-                            Text(
-                                text = invitation.event.locationName,
-                                style = MaterialTheme.typography.bodyMedium
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close"
                             )
                         }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = invitation.event.eventName,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = LocalDateTimeFormatters.formatByDefault(invitation.event.dateTime),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
 
-                        Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(20.dp))
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Отправлено пользователю",
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Filled.Place, contentDescription = "Location")
+                                Text(
+                                    text = invitation.event.locationName,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(Modifier.height(20.dp))
 
-                            Text(
-                                text = invitation.receiver.name,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Отправлено пользователю",
+                                )
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                Text(
+                                    text = invitation.receiver.name,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }

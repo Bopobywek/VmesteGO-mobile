@@ -80,6 +80,20 @@ class InvitationsTabViewModel(application: Application) : AndroidViewModel(appli
             }
         }
     }
+
+    fun cancelInvitation(invitationUi: InvitationUi) {
+        val token = _tokenDataHandler.getToken()!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _invitationsService.revokeInvitation(token, invitationUi.id)
+
+            _sentInvitations.update {
+                val updated = _sentInvitations.value.toMutableList()
+                updated -= invitationUi
+                updated
+            }
+        }
+    }
 }
 
 fun InvitationResponse.toInvitationUi(): InvitationUi {

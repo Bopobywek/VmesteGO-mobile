@@ -217,7 +217,7 @@ fun EventCreationScreen(onSave: (EventDto) -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
 
         val timeFormatter =
-            DateTimeFormatter.ofPattern("hh:mm", Locale("ru")) // Russian locale
+            DateTimeFormatter.ofPattern("HH:mm", Locale("ru")) // Russian locale
         OutlinedTextField(
             value = time.format(timeFormatter),
             onValueChange = {

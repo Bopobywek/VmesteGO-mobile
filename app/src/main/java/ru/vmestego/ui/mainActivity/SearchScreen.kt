@@ -376,7 +376,8 @@ fun DateRangePickerModal(
                         )
                     )
                     onDismiss()
-                }
+                },
+                enabled = dateRangePickerState.selectedStartDateMillis != null
             ) {
                 Text("OK")
             }
