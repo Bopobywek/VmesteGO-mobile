@@ -17,6 +17,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.comments.models.CommentResponse
 import ru.vmestego.bll.services.comments.models.PostCommentRequest
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class CommentsService {
     private val client = HttpClient(Android) {
@@ -33,7 +34,7 @@ class CommentsService {
     suspend fun getAllComments(token: String, eventId: Long) : List<CommentResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/comments/${eventId}") {
+            response = client.get("${API_BASE_ADDRESS}/comments/${eventId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
@@ -52,7 +53,7 @@ class CommentsService {
 
         val response: HttpResponse
         try {
-            response = client.post("http://10.0.2.2:8080/comments") {
+            response = client.post("${API_BASE_ADDRESS}/comments") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 setBody(request)
@@ -67,7 +68,7 @@ class CommentsService {
     suspend fun removeComment(token: String, commentId: Long) {
         val response: HttpResponse
         try {
-            response = client.delete("http://10.0.2.2:8080/comments/${commentId}") {
+            response = client.delete("${API_BASE_ADDRESS}/comments/${commentId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {

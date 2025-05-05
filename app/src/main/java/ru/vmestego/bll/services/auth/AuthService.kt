@@ -14,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import ru.vmestego.core.API_BASE_ADDRESS
 import ru.vmestego.ui.authActivity.models.LoginRequest
 import ru.vmestego.ui.authActivity.models.LoginResponse
 import ru.vmestego.ui.authActivity.models.RegisterRequest
@@ -32,7 +33,7 @@ class AuthService {
     }
 
     suspend fun authorizeUser(loginRequest: LoginRequest): LoginResponse {
-        val response: HttpResponse = client.post("http://10.0.2.2:8080/auth/login") {
+        val response: HttpResponse = client.post("${API_BASE_ADDRESS}/auth/login") {
             contentType(ContentType.Application.Json)
             setBody(loginRequest)
         }
@@ -41,7 +42,7 @@ class AuthService {
     }
 
     suspend fun registerUser(registerRequest: RegisterRequest): RegisterResponse {
-        val response: HttpResponse = client.post("http://10.0.2.2:8080/auth/register") {
+        val response: HttpResponse = client.post("${API_BASE_ADDRESS}/auth/register") {
             contentType(ContentType.Application.Json)
             setBody(registerRequest)
         }

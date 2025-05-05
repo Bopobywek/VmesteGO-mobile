@@ -22,6 +22,7 @@ import ru.vmestego.bll.services.friends.models.FriendResponse
 import ru.vmestego.bll.services.friends.models.FriendStatusResponse
 import ru.vmestego.bll.services.friends.models.FriendsEventResponse
 import ru.vmestego.bll.services.friends.models.SendRequestForUserRequest
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class FriendsService {
     private val client = HttpClient(Android) {
@@ -34,7 +35,7 @@ class FriendsService {
     }
 
     suspend fun getAllFriends(token: String): List<FriendResponse> {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
@@ -43,35 +44,35 @@ class FriendsService {
     }
 
     suspend fun acceptFriendRequest(token: String, requestId: Long) {
-        client.post("http://10.0.2.2:8080/friends/requests/${requestId}/accept") {
+        client.post("${API_BASE_ADDRESS}/friends/requests/${requestId}/accept") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
     }
 
     suspend fun rejectFriendRequest(token: String, requestId: Long) {
-        client.post("http://10.0.2.2:8080/friends/requests/${requestId}/reject") {
+        client.post("${API_BASE_ADDRESS}/friends/requests/${requestId}/reject") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
     }
 
     suspend fun cancelFriendRequest(token: String, requestId: Long) {
-        client.delete("http://10.0.2.2:8080/friends/requests/${requestId}") {
+        client.delete("${API_BASE_ADDRESS}/friends/requests/${requestId}") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
     }
 
     suspend fun removeFriend(token: String, userId: Long) {
-        client.post("http://10.0.2.2:8080/friends/${userId}") {
+        client.post("${API_BASE_ADDRESS}/friends/${userId}") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
     }
 
     suspend fun getFriendRequest(token: String, fromUserId: String, toUserId: String): FriendRequestResponse? {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/requests/users") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends/requests/users") {
             contentType(ContentType.Application.Json)
             parameter("fromUserId", fromUserId)
             parameter("toUserId", toUserId)
@@ -87,7 +88,7 @@ class FriendsService {
 
     suspend fun createFriendRequest(token: String, userId: String) {
         val request = SendRequestForUserRequest(userId.toLong())
-        client.post("http://10.0.2.2:8080/friends/requests") {
+        client.post("${API_BASE_ADDRESS}/friends/requests") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
             setBody(request)
@@ -95,7 +96,7 @@ class FriendsService {
     }
 
     suspend fun getSentFriendRequests(token: String): List<FriendRequestResponse> {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/requests/sent") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends/requests/sent") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
@@ -104,7 +105,7 @@ class FriendsService {
     }
 
     suspend fun getIncomingFriendRequests(token: String): List<FriendRequestResponse> {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/requests/pending") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends/requests/pending") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
@@ -113,7 +114,7 @@ class FriendsService {
     }
 
     suspend fun getFriendsEvents(token: String): List<FriendsEventResponse> {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/events") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends/events") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
@@ -122,7 +123,7 @@ class FriendsService {
     }
 
     suspend fun getFriendsStatusesForEvent(token: String, eventId: String): List<FriendStatusResponse> {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/friends/events/${eventId}") {
+        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/friends/events/${eventId}") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
         }
@@ -132,7 +133,7 @@ class FriendsService {
 
     suspend fun inviteFriendOnEvent(token: String, eventId: Long, userId: Long) {
         var request = CreateInvitationRequest(eventId, userId)
-        client.post("http://10.0.2.2:8080/events-invitations/invite") {
+        client.post("${API_BASE_ADDRESS}/events-invitations/invite") {
             contentType(ContentType.Application.Json)
             bearerAuth(token)
             setBody(request)

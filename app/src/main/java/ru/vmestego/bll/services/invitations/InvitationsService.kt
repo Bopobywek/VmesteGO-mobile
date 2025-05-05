@@ -17,6 +17,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.bll.services.users.models.UserResponse
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class InvitationsService {
     private val client = HttpClient(Android) {
@@ -33,7 +34,7 @@ class InvitationsService {
     suspend fun getPendingInvitations(token: String): List<InvitationResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events-invitations/pending") {
+            response = client.get("${API_BASE_ADDRESS}/events-invitations/pending") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -47,7 +48,7 @@ class InvitationsService {
     suspend fun getSentInvitations(token: String): List<InvitationResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events-invitations/sent") {
+            response = client.get("${API_BASE_ADDRESS}/events-invitations/sent") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -60,7 +61,7 @@ class InvitationsService {
 
     suspend fun acceptInvitation(token: String, inviteId: Long) {
         try {
-            client.post("http://10.0.2.2:8080/events-invitations/${inviteId}/accept") {
+            client.post("${API_BASE_ADDRESS}/events-invitations/${inviteId}/accept") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -70,7 +71,7 @@ class InvitationsService {
 
     suspend fun rejectInvitation(token: String, inviteId: Long) {
         try {
-            client.post("http://10.0.2.2:8080/events-invitations/${inviteId}/reject") {
+            client.post("${API_BASE_ADDRESS}/events-invitations/${inviteId}/reject") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -80,7 +81,7 @@ class InvitationsService {
 
     suspend fun revokeInvitation(token: String, inviteId: Long) {
         try {
-            client.delete("http://10.0.2.2:8080/events-invitations/${inviteId}") {
+            client.delete("${API_BASE_ADDRESS}/events-invitations/${inviteId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }

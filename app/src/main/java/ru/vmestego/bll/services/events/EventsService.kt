@@ -20,6 +20,7 @@ import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.bll.services.notifications.models.NotificationResponse
 import ru.vmestego.bll.services.notifications.models.NotificationsResponse
 import ru.vmestego.bll.services.shared.models.CategoryResponse
+import ru.vmestego.core.API_BASE_ADDRESS
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.ticketActivity.EventDto
 import ru.vmestego.utils.LocalDateTimeSerializer
@@ -40,7 +41,7 @@ class EventsService {
     suspend fun getEventsByStatus(token: String, userId: String?, eventStatus: EventStatus?) : List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events") {
+            response = client.get("${API_BASE_ADDRESS}/events") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 parameter("userId", userId)
@@ -59,7 +60,7 @@ class EventsService {
     suspend fun changeEventStatus(token: String, eventId: Long, eventStatus: EventStatus?) {
         val response: HttpResponse
         try {
-            response = client.post("http://10.0.2.2:8080/events/${eventId}/status") {
+            response = client.post("${API_BASE_ADDRESS}/events/${eventId}/status") {
                 contentType(ContentType.Application.Json)
                 setBody(eventStatus)
                 bearerAuth(token)
@@ -71,7 +72,7 @@ class EventsService {
     suspend fun getEventById(token: String, eventId: Long) : EventResponse? {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/${eventId}") {
+            response = client.get("${API_BASE_ADDRESS}/events/${eventId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
@@ -88,7 +89,7 @@ class EventsService {
     suspend fun getAllAvailableCategories(token: String): List<CategoryResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/categories") {
+            response = client.get("${API_BASE_ADDRESS}/events/categories") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
@@ -105,7 +106,7 @@ class EventsService {
     suspend fun createEvent(token: String, event: CreateEventRequest): EventResponse? {
         val response: HttpResponse
         try {
-            response = client.post("http://10.0.2.2:8080/events") {
+            response = client.post("${API_BASE_ADDRESS}/events") {
                 contentType(ContentType.Application.Json)
                 setBody(event)
                 bearerAuth(token)

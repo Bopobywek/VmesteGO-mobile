@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.shared.models.EventResponse
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class SearchService {
     private val client = HttpClient(Android) {
@@ -32,7 +33,7 @@ class SearchService {
 //    suspend fun searchEvents(query: String): SearchEventsResponse {
 //        val response: HttpResponse
 //        try {
-//            response = client.get("http://10.0.2.2:8080/search") {
+//            response = client.get("${API_BASE_ADDRESS}/search") {
 //                url {
 //                    parameters["q"] = query
 //                }
@@ -51,7 +52,7 @@ class SearchService {
     suspend fun getAllEvents(token: String): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events") {
+            response = client.get("${API_BASE_ADDRESS}/events") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
@@ -68,7 +69,7 @@ class SearchService {
     suspend fun getPublicEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/created-public") {
+            response = client.get("${API_BASE_ADDRESS}/events/created-public") {
                 contentType(ContentType.Application.Json)
                 parameter("q", query)
                 bearerAuth(token)
@@ -86,7 +87,7 @@ class SearchService {
     suspend fun getPrivateEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/created-private") {
+            response = client.get("${API_BASE_ADDRESS}/events/created-private") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 parameter("q", query)
@@ -104,7 +105,7 @@ class SearchService {
     suspend fun getJoinedPrivateEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/joined-private") {
+            response = client.get("${API_BASE_ADDRESS}/events/joined-private") {
                 contentType(ContentType.Application.Json)
                 parameter("q", query)
                 bearerAuth(token)
@@ -122,7 +123,7 @@ class SearchService {
     suspend fun getOtherAdminsPublicEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/other-admins-public") {
+            response = client.get("${API_BASE_ADDRESS}/events/other-admins-public") {
                 contentType(ContentType.Application.Json)
                 parameter("q", query)
                 bearerAuth(token)

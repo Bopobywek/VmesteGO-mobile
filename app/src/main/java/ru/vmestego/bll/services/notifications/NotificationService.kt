@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.notifications.models.NotificationResponse
 import ru.vmestego.bll.services.notifications.models.NotificationsResponse
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class NotificationService {
     private val client = HttpClient(Android) {
@@ -31,7 +32,7 @@ class NotificationService {
     suspend fun getAllNotifications(token: String): NotificationsResponse {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/notifications") {
+            response = client.get("${API_BASE_ADDRESS}/notifications") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
@@ -49,7 +50,7 @@ class NotificationService {
     suspend fun markAsRead(token: String, id: Long) {
         val response: HttpResponse
         try {
-            response = client.post("http://10.0.2.2:8080/notifications/${id}/read") {
+            response = client.post("${API_BASE_ADDRESS}/notifications/${id}/read") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
                 retry {
