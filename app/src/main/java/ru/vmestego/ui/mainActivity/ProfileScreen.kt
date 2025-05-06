@@ -142,12 +142,12 @@ fun ProfileScreen(
                 if (uri != null) {
                     photoUri.value = uri.encodedPath!!
                     Log.d("PhotoPicker", "Selected URI: $uri")
-                    if (Build.VERSION.SDK_INT >= 34) {
-                        context.contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                    }
+//                    if (Build.VERSION.SDK_INT >= 34) {
+//                        context.contentResolver.takePersistableUriPermission(
+//                            uri,
+//                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+//                        )
+//                    }
                     val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
                     viewModel.updateImage(bytes)
                     context.imageLoader.diskCache?.clear()

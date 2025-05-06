@@ -167,7 +167,7 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
                     }
             )
 
-            Text("Категории*", style = MaterialTheme.typography.titleMedium)
+            Text("Категории", style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 viewModel.categories.collectAsState().value.forEach { category ->
                     FilterChip(

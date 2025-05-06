@@ -118,18 +118,19 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
                 val response = authService.registerUser(registerRequest)
                 Log.i("Token", response.token)
                 secureStorage.saveToken(response.token)
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(_application, "Вы успешно зарегистрировались", Toast.LENGTH_SHORT).show()
+                    successCallback()
+                }
             } catch (e: Exception) {
+                Log.e("Registartion","Registration failed: ${e.message}")
                 withContext(Dispatchers.Main) {
                     Toast.makeText(_application, "Произошла ошибка", Toast.LENGTH_SHORT).show()
+                    successCallback()
                 }
-                Log.e("Registartion","Registration failed: ${e.message}")
             } finally {
                 isLoading = false
-            }
-
-            withContext(Dispatchers.Main) {
-                Toast.makeText(_application, "Вы успешно зарегистрировались", Toast.LENGTH_SHORT).show()
-                successCallback()
             }
         }
     }

@@ -119,12 +119,9 @@ fun FeedEventCard(event: FeedEventUi) {
     val profileImageSize = 32
     val boxContentPadding = 15
 
-    // TODO: вынести bottomSheet в отдельную функцию
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
-    // TODO: при рефаче важно учесть, что для каждого мероприятия будет создан свой bottomSheet,
-    // поэтому нельзя навесить общий viewModel
     if (showBottomSheet) {
         // https://www.youtube.com/watch?v=VxgWUdOKgtI
         ModalBottomSheet(
@@ -133,12 +130,10 @@ fun FeedEventCard(event: FeedEventUi) {
             },
             sheetState = sheetState
         ) {
-            // Sheet content
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
                 for (friend in event.users) {
-                    // content
                     Row(
                         modifier = Modifier
                             .padding(horizontal = 15.dp)
