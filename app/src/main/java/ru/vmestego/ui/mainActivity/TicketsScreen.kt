@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,18 +50,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
 import ru.vmestego.ui.dialogs.YesNoDialog
+import ru.vmestego.ui.theme.VmesteGOTheme
 import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
@@ -96,7 +100,7 @@ fun TicketCard(ticket: TicketUi) {
                 }
             }
         }
-        }
+    }
 }
 
 @Composable
@@ -157,7 +161,6 @@ fun ActionIcon(
 }
 
 // https://stackoverflow.com/questions/71195961/item-headers-not-displaying-correctly-in-lazy-column
-// TODO: a lot of sorting and O(n) algorithms, rewrite it late
 @Composable
 fun TicketList(ticketsViewModel: TicketsViewModel) {
     val context = LocalContext.current
@@ -288,6 +291,24 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
         },
         floatingActionButtonPosition = FabPosition.End
     ) {
+        if (ticketsViewModel.tickets.collectAsState().value.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Text(
+                        "Вы ещё не добавили",
+                        color = MaterialTheme.colorScheme.secondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "ни одного билета",
+                        color = MaterialTheme.colorScheme.secondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
         TicketList(ticketsViewModel)
     }
 }

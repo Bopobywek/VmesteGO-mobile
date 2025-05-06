@@ -146,7 +146,7 @@ fun EventScreen(
             Image(
                 painter = painterResource(R.drawable.ic_launcher_background),
                 contentDescription = "",
-                colorFilter = ColorFilter.tint(generateWarmSoftColor()),
+                colorFilter = ColorFilter.tint(Color.LightGray),
                 // https://developer.android.com/develop/ui/compose/graphics/images/customize
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
