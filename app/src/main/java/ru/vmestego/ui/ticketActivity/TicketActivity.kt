@@ -1,6 +1,6 @@
 package ru.vmestego.ui.ticketActivity
 
-import EventFormScreen
+import ru.vmestego.ui.mainActivity.eventForm.EventFormScreen
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context

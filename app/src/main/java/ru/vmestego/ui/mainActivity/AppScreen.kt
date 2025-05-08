@@ -1,6 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
-import EventFormScreen
+import ru.vmestego.ui.mainActivity.eventForm.EventFormScreen
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log

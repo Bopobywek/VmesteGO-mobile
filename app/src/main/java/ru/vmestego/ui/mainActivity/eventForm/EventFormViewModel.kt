@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.eventForm
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
@@ -9,10 +9,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.vmestego.bll.services.events.CreateEventRequest
+import ru.vmestego.bll.services.events.models.CreateEventRequest
 import ru.vmestego.bll.services.events.EventsService
+import ru.vmestego.ui.mainActivity.CategoryUi
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.mainActivity.toCategoryUi
+import ru.vmestego.ui.mainActivity.toEventUi
 import ru.vmestego.utils.TokenDataProvider
+import java.io.InvalidObjectException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -31,6 +35,10 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
     var selectedCategories = mutableStateOf(setOf<CategoryUi>())
     var isPrivate = mutableStateOf(true)
 
+    var titleError = mutableStateOf<String?>(null)
+    var locationError = mutableStateOf<String?>(null)
+    var descriptionError = mutableStateOf<String?>(null)
+
     private val _tokenDataProvider = TokenDataProvider(application)
     private val _eventsService = EventsService()
 
@@ -40,6 +48,42 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun isAdmin() : Boolean {
         return _tokenDataProvider.isAdmin()
+    }
+
+    private fun validateForm(): Boolean {
+        var isValid = true
+
+        titleError.value = if (title.value.isBlank()) {
+            isValid = false
+            "Название события должно быть заполнено"
+        } else null
+
+        locationError.value = if (location.value.isBlank()) {
+            isValid = false
+            "Место проведения должно быть заполнено"
+        } else null
+
+        descriptionError.value = if (description.value.isBlank()) {
+            isValid = false
+            "Описание должно быть заполнено"
+        } else null
+
+        return isValid
+    }
+
+    fun updateTitle(newValue: String) {
+        title.value = newValue
+        titleError.value = null
+    }
+
+    fun updateLocation(newValue: String) {
+        location.value = newValue
+        locationError.value = null
+    }
+
+    fun updateDescription(newValue: String) {
+        description.value = newValue
+        descriptionError.value = null
     }
 
     private fun getAllCategories() {
@@ -55,7 +99,11 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    suspend fun createEvent(): EventUi? {
+    suspend fun createEvent(): BlResult<EventUi> {
+        if (!validateForm()) {
+            return BlResult(null, ErrorType.FORM_VALIDATION)
+        }
+
         val token = _tokenDataProvider.getToken()!!
 
         val request = CreateEventRequest(
@@ -73,8 +121,34 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
 
         val response = _eventsService.createEvent(token, request)
         if (response != null) {
-            return response.toEventUi()
+            return return BlResult(response.toEventUi(), null)
         }
-        return null
+        return BlResult(null, ErrorType.API_ERROR)
     }
+}
+
+class BlResult<T>(
+    private val result: T?,
+    val error: ErrorType?
+) {
+    fun isError(): Boolean {
+        return error != null
+    }
+
+    fun isSuccess(): Boolean {
+        return error == null
+    }
+
+    fun getResultIfNotNull(): T {
+        if (result == null) {
+            throw InvalidObjectException("Result is null")
+        }
+
+        return result
+    }
+}
+
+enum class ErrorType {
+    FORM_VALIDATION,
+    API_ERROR
 }

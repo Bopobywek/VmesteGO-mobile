@@ -14,17 +14,12 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.services.events.models.CreateEventRequest
 import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.bll.services.notifications.models.NotificationResponse
-import ru.vmestego.bll.services.notifications.models.NotificationsResponse
 import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.core.API_BASE_ADDRESS
 import ru.vmestego.core.EventStatus
-import ru.vmestego.ui.ticketActivity.EventDto
-import ru.vmestego.utils.LocalDateTimeSerializer
-import java.time.LocalDateTime
 
 class EventsService {
     private val client = HttpClient(Android) {
@@ -38,7 +33,11 @@ class EventsService {
 
     private val retryNumber = 3
 
-    suspend fun getEventsByStatus(token: String, userId: String?, eventStatus: EventStatus?) : List<EventResponse> {
+    suspend fun getEventsByStatus(
+        token: String,
+        userId: String?,
+        eventStatus: EventStatus?
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events") {
@@ -50,11 +49,11 @@ class EventsService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<EventResponse>>()
         } catch (_: Exception) {
             return listOf()
         }
 
-        return response.body<List<EventResponse>>()
     }
 
     suspend fun changeEventStatus(token: String, eventId: Long, eventStatus: EventStatus?) {
@@ -69,7 +68,7 @@ class EventsService {
         }
     }
 
-    suspend fun getEventById(token: String, eventId: Long) : EventResponse? {
+    suspend fun getEventById(token: String, eventId: Long): EventResponse? {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events/${eventId}") {
@@ -79,11 +78,10 @@ class EventsService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<EventResponse>()
         } catch (_: Exception) {
             return null
         }
-
-        return response.body<EventResponse>()
     }
 
     suspend fun getAllAvailableCategories(token: String): List<CategoryResponse> {
@@ -96,11 +94,10 @@ class EventsService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<CategoryResponse>>()
         } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<CategoryResponse>>()
     }
 
     suspend fun createEvent(token: String, event: CreateEventRequest): EventResponse? {
@@ -114,24 +111,11 @@ class EventsService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<EventResponse>()
+
         } catch (_: Exception) {
             return null
         }
-
-        return response.body<EventResponse>()
     }
 }
 
-@Serializable
-data class CreateEventRequest(
-    val title: String,
-    @Serializable(with = LocalDateTimeSerializer::class) val dates: LocalDateTime,
-    val location: String,
-    val description: String,
-    val ageRestriction: Int,
-    val price: Double,
-    val isPrivate: Boolean,
-    val eventCategoryNames: List<String> = emptyList(),
-    val eventImages: List<String> = emptyList(),
-    val externalId: Int? = null
-)

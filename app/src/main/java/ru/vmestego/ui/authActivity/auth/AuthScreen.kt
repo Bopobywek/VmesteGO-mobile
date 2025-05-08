@@ -1,4 +1,4 @@
-package ru.vmestego.ui.authActivity
+package ru.vmestego.ui.authActivity.auth
 
 import android.app.Activity
 import android.content.Intent
@@ -61,7 +61,13 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
             OutlinedTextField(
                 value = viewModel.login,
                 onValueChange = { viewModel.updateLogin(it) },
-                label = { Text("Логин или email") },
+                label = { Text("Логин") },
+                supportingText = {
+                    if (viewModel.loginError != null) {
+                        Text(viewModel.loginError!!)
+                    }
+                },
+                isError = viewModel.loginError != null,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -71,6 +77,12 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
                 value = viewModel.password,
                 onValueChange = { viewModel.updatePassword(it) },
                 label = { Text("Пароль") },
+                supportingText = {
+                    if (viewModel.passwordError != null) {
+                        Text(viewModel.passwordError!!)
+                    }
+                },
+                isError = viewModel.passwordError != null,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )

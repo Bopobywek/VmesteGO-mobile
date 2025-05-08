@@ -1,8 +1,9 @@
-package ru.vmestego.ui.authActivity
+package ru.vmestego.ui.authActivity.registration
 
 
 import android.app.Application
 import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -11,14 +12,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,9 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.auth.AuthService
 import ru.vmestego.ui.authActivity.models.RegisterRequest
-import ru.vmestego.ui.authActivity.models.RegisterResponse
 import ru.vmestego.data.SecureStorage
-import ru.vmestego.utils.PasswordValidator
 
 class RegistrationViewModel(application: Application) : AndroidViewModel(application) {
     private val _application = application
@@ -37,7 +30,7 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
         private set
 
     private val emailHasFormatError by derivedStateOf {
-        email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     var login by mutableStateOf("")

@@ -1,5 +1,8 @@
 @file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 
+package ru.vmestego.ui.mainActivity.eventForm
+
+import android.widget.Toast
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
@@ -12,12 +15,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import ru.vmestego.ui.mainActivity.EventFormViewModel
 import ru.vmestego.ui.mainActivity.toSimpleDateString
 import ru.vmestego.ui.ticketActivity.DatePickerModalInput
 import ru.vmestego.ui.ticketActivity.EventDto
@@ -29,9 +32,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
+fun EventFormScreen(
+    viewModel: EventFormViewModel = viewModel(),
     onSubmit: (EventDto) -> Unit
 ) {
+    val context = LocalContext.current
     var date by viewModel.date
     var time by viewModel.time
     var title by viewModel.title
@@ -51,7 +56,12 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
             if (viewModel.isAdmin()) {
                 val options = listOf("Публичное", "Приватное")
 
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.padding(top=10.dp).padding(horizontal = 10.dp).fillMaxWidth()) {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .padding(top = 10.dp)
+                        .padding(horizontal = 10.dp)
+                        .fillMaxWidth()
+                ) {
                     options.forEachIndexed { index, label ->
                         SegmentedButton(
                             shape = SegmentedButtonDefaults.itemShape(
@@ -61,7 +71,7 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
                             onClick = {
                                 isPrivate = (index > 0)
                             },
-                            selected = index == if(isPrivate) 1 else 0,
+                            selected = index == if (isPrivate) 1 else 0,
                             label = { Text(label) }
                         )
                     }
@@ -72,9 +82,33 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
             Button(
                 onClick = {
                     scope.launch(Dispatchers.Main) {
-                        val event = viewModel.createEvent()!! // TODO: resolve null correctly
-                        onSubmit(EventDto(event.eventName, event.locationName, event.dateTime.toLocalDate(),
-                            LocalTime.of(event.dateTime.hour, event.dateTime.minute), event.id))
+                        val eventResult = viewModel.createEvent()
+                        if (eventResult.isError()) {
+                            when (eventResult.error) {
+                                ErrorType.FORM_VALIDATION -> Toast.makeText(
+                                    context,
+                                    "Проверьте заполнение формы",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                else -> Toast.makeText(
+                                    context,
+                                    "Попробуйте ещё раз",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            val event = eventResult.getResultIfNotNull()
+                            onSubmit(
+                                EventDto(
+                                    event.eventName,
+                                    event.locationName,
+                                    event.dateTime.toLocalDate(),
+                                    LocalTime.of(event.dateTime.hour, event.dateTime.minute),
+                                    event.id
+                                )
+                            )
+                        }
                     }
                 },
                 modifier = Modifier
@@ -95,22 +129,40 @@ fun EventFormScreen(viewModel: EventFormViewModel = viewModel(),
         ) {
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { viewModel.updateTitle(it) },
                 label = { Text("Название*") },
+                supportingText = {
+                    if (viewModel.titleError.value != null) {
+                        Text(viewModel.titleError.value!!)
+                    }
+                },
+                isError = viewModel.titleError.value != null,
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = location,
-                onValueChange = { location = it },
+                onValueChange = { viewModel.updateLocation(it) },
                 label = { Text("Локация*") },
+                supportingText = {
+                    if (viewModel.locationError.value != null) {
+                        Text(viewModel.locationError.value!!)
+                    }
+                },
+                isError = viewModel.locationError.value != null,
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = description,
-                onValueChange = { description = it },
-                label = { Text("Описание") },
+                onValueChange = { viewModel.updateDescription(it) },
+                label = { Text("Описание*") },
+                supportingText = {
+                    if (viewModel.descriptionError.value != null) {
+                        Text(viewModel.descriptionError.value!!)
+                    }
+                },
+                isError = viewModel.descriptionError.value != null,
                 modifier = Modifier.fillMaxWidth()
             )
 
