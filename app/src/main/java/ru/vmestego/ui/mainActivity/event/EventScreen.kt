@@ -77,7 +77,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun EventScreenWrapper(viewModel: EventViewModel, goBackToSearch: () -> Unit) {
+fun EventScreenWrapper(viewModel: EventViewModel, editEvent: (Long) -> Unit, goBackToSearch: () -> Unit) {
     val showBottomSheet = remember { mutableStateOf(false) }
     Scaffold(bottomBar = {
         Button(
@@ -120,7 +120,7 @@ fun EventScreenWrapper(viewModel: EventViewModel, goBackToSearch: () -> Unit) {
                 CircularProgressIndicator()
             }
         } else {
-            EventScreen(event!!, innerPadding, goBackToSearch, showBottomSheet, viewModel)
+            EventScreen(event!!, innerPadding, editEvent, goBackToSearch, showBottomSheet, viewModel)
         }
     }
 }
@@ -131,6 +131,7 @@ fun EventScreenWrapper(viewModel: EventViewModel, goBackToSearch: () -> Unit) {
 fun EventScreen(
     eventUi: EventUi,
     innerPadding: PaddingValues,
+    editEvent: (Long) -> Unit,
     goBackToSearch: () -> Unit,
     showBottomSheet: MutableState<Boolean>,
     viewModel: EventViewModel
@@ -201,7 +202,7 @@ fun EventScreen(
                         modifier = Modifier
                             .size(32.dp)
                             .clickable {
-                                goBackToSearch()
+                                editEvent(viewModel.event.value!!.id)
                             },
                         tint = { Color.White })
                     Icon(

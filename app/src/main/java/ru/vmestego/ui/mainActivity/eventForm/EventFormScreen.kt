@@ -34,6 +34,7 @@ import java.util.Locale
 @Composable
 fun EventFormScreen(
     viewModel: EventFormViewModel = viewModel(),
+    existingEventId: Long? = null,
     onSubmit: (EventDto) -> Unit
 ) {
     val context = LocalContext.current
@@ -51,6 +52,13 @@ fun EventFormScreen(
     var showTimeInput by remember { mutableStateOf(false) }
 
     var scope = rememberCoroutineScope()
+
+    if (existingEventId != null) {
+        LaunchedEffect(existingEventId) {
+            viewModel.loadExistingForEdit(existingEventId)
+        }
+    }
+
     Scaffold(
         topBar = {
             if (viewModel.isAdmin()) {

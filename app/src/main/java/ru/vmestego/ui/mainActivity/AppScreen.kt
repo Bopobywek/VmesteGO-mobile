@@ -71,7 +71,9 @@ object Friends
 object Profile
 
 @Serializable
-object CustomEvent
+data class CustomEvent(
+    val id: Long? = null
+)
 
 @Serializable
 data class Event(
@@ -156,22 +158,25 @@ fun AppScreen() {
                     }
                 }
             }
-            composable<CustomEvent> {
-                EventFormScreen {
-                    val viewModel =
-                        EventParametersViewModel(context.applicationContext as Application)
-                    scope.launch(Dispatchers.IO) {
-                        viewModel.addEvent(
-                            EventDataDto(
-                                it.title,
-                                it.location,
-                                LocalDateTime.of(it.date, it.time),
-                                it.externalId
+            composable<CustomEvent> { backStackEntry ->
+                if (backStackEntry.lifecycleIsResumed()) {
+                    val route = backStackEntry.toRoute<CustomEvent>()
+                    EventFormScreen(existingEventId = route.id) {
+                        val viewModel =
+                            EventParametersViewModel(context.applicationContext as Application)
+                        scope.launch(Dispatchers.IO) {
+                            viewModel.addEvent(
+                                EventDataDto(
+                                    it.title,
+                                    it.location,
+                                    LocalDateTime.of(it.date, it.time),
+                                    it.externalId
+                                )
                             )
-                        )
 
-                        withContext(Dispatchers.Main) {
-                            navController.popBackStack()
+                            withContext(Dispatchers.Main) {
+                                navController.popBackStack()
+                            }
                         }
                     }
                 }
@@ -186,7 +191,13 @@ fun AppScreen() {
                                 route.id
                             )
                         )
-                    EventScreenWrapper(viewModel) { navController.popBackStack() }
+                    EventScreenWrapper(viewModel,
+                        editEvent = {
+                            navController.navigate(CustomEvent(it)) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }) { navController.popBackStack() }
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()

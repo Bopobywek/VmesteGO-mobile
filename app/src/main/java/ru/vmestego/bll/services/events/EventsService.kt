@@ -10,6 +10,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
@@ -118,6 +119,24 @@ class EventsService {
         val response: HttpResponse
         try {
             response = client.post("${API_BASE_ADDRESS}/events") {
+                contentType(ContentType.Application.Json)
+                setBody(event)
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+            return response.body<EventResponse>()
+
+        } catch (_: Exception) {
+            return null
+        }
+    }
+
+    suspend fun updateEvent(token: String, eventId: Long, event: CreateEventRequest): EventResponse? {
+        val response: HttpResponse
+        try {
+            response = client.put("${API_BASE_ADDRESS}/events/${eventId}") {
                 contentType(ContentType.Application.Json)
                 setBody(event)
                 bearerAuth(token)

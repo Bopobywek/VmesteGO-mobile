@@ -2,6 +2,8 @@ package ru.vmestego.ui.mainActivity.eventForm
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.events.models.CreateEventRequest
 import ru.vmestego.bll.services.events.EventsService
+import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.ui.mainActivity.CategoryUi
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.mainActivity.toCategoryUi
@@ -25,6 +28,8 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
     private val _categories = MutableStateFlow<List<CategoryUi>>(listOf())
     val categories = _categories.asStateFlow()
 
+    var existingEventId by mutableStateOf<Long?>(null)
+        private set
     var date = mutableStateOf(LocalDate.now())
     var time = mutableStateOf(LocalTime.now())
     var title = mutableStateOf("")
@@ -44,6 +49,24 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         getAllCategories()
+    }
+
+    suspend fun loadExistingForEdit(eventId: Long) {
+        val token = _tokenDataProvider.getToken()!!
+
+        existingEventId = eventId
+        val event = _eventsService.getEventById(token, eventId)
+        // TODO handle null
+        if (event == null) {
+            return
+        }
+
+        title.value = event.title
+        location.value = event.location
+        description.value = event.description
+        date.value = event.dates.toLocalDate()
+        time.value = event.dates.toLocalTime()
+        selectedCategories.value = event.categories.map { it.toCategoryUi() }.toSet()
     }
 
     fun isAdmin() : Boolean {
@@ -119,7 +142,12 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
             externalId = null
         )
 
-        val response = _eventsService.createEvent(token, request)
+        val response = if (existingEventId != null) {
+            _eventsService.updateEvent(token, existingEventId!!, request)
+        } else {
+            _eventsService.createEvent(token, request)
+        }
+
         if (response != null) {
             return return BlResult(response.toEventUi(), null)
         }
