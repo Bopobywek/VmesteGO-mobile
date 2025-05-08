@@ -47,6 +47,7 @@ import ru.vmestego.ui.mainActivity.event.EventScreenWrapper
 import ru.vmestego.ui.mainActivity.event.EventViewModel
 import ru.vmestego.ui.mainActivity.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
+import ru.vmestego.ui.mainActivity.friends.FriendsScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
 import java.time.LocalDateTime
 

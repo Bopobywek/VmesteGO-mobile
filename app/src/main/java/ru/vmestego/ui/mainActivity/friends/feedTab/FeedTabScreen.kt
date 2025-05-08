@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends.feedTab
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -52,6 +52,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
+import ru.vmestego.ui.mainActivity.DateHeader
+import ru.vmestego.ui.mainActivity.getCurrentMonthHeaderIndex
+import ru.vmestego.ui.mainActivity.noRippleClickable
 import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 import kotlin.random.Random

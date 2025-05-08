@@ -13,6 +13,8 @@ import ru.vmestego.bll.services.notifications.NotificationService
 import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.models.NotificationUi
+import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
 import java.util.UUID
 

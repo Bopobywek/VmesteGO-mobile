@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.models
 
 import android.net.Uri
 import java.time.LocalDateTime

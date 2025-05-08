@@ -15,6 +15,7 @@ import ru.vmestego.data.AppDatabase
 import ru.vmestego.data.TicketWithEvent
 import ru.vmestego.data.TicketsRepository
 import ru.vmestego.data.TicketsRepositoryImpl
+import ru.vmestego.ui.models.TicketUi
 import ru.vmestego.utils.TokenDataProvider
 
 // https://stackoverflow.com/a/71147730

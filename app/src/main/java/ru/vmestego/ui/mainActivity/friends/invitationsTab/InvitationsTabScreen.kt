@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends.invitationsTab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.vmestego.R
+import ru.vmestego.ui.mainActivity.noRippleClickable
 import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 

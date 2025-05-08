@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.models
 
 data class UserUi(
     val imageUrl: String,

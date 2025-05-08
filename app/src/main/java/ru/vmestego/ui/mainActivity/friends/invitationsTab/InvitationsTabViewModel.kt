@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends.invitationsTab
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -11,7 +11,10 @@ import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.invitations.EventInvitationStatus
 import ru.vmestego.bll.services.invitations.InvitationResponse
 import ru.vmestego.bll.services.invitations.InvitationsService
+import ru.vmestego.ui.models.UserUi
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.mainActivity.toEventUi
+import ru.vmestego.ui.mainActivity.toUserUi
 import ru.vmestego.utils.TokenDataProvider
 
 class InvitationsTabViewModel(application: Application) : AndroidViewModel(application) {

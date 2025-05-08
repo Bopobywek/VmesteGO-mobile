@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
-import ru.vmestego.ui.mainActivity.generateWarmSoftColor
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.Duration
 import java.time.LocalDateTime

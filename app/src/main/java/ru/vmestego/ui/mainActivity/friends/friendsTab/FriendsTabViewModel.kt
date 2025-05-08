@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends.friendsTab
 
 import android.app.Application
 import androidx.compose.runtime.getValue
@@ -14,6 +14,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.vmestego.bll.services.friends.FriendsService
 import ru.vmestego.bll.services.users.UsersService
+import ru.vmestego.ui.mainActivity.FriendRequestUi
+import ru.vmestego.ui.models.UserUi
+import ru.vmestego.ui.mainActivity.toFriendRequestUi
+import ru.vmestego.ui.mainActivity.toUserUi
 import ru.vmestego.utils.TokenDataProvider
 
 class FriendsTabViewModel(application: Application) : AndroidViewModel(application) {

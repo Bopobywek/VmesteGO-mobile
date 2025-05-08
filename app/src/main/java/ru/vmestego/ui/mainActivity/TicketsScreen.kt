@@ -64,7 +64,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
 import ru.vmestego.ui.dialogs.YesNoDialog
-import ru.vmestego.ui.theme.VmesteGOTheme
+import ru.vmestego.ui.models.TicketUi
 import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters

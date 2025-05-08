@@ -1,6 +1,5 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends.friendsTab
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,6 +59,7 @@ import coil.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import ru.vmestego.R
 import ru.vmestego.routing.SecondaryLevelRoute
+import ru.vmestego.ui.models.UserUi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

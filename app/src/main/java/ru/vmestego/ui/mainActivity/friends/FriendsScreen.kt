@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.friends
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -21,6 +21,9 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 import ru.vmestego.R
 import ru.vmestego.routing.SecondaryLevelRoute
+import ru.vmestego.ui.mainActivity.friends.friendsTab.FriendsTabScreen
+import ru.vmestego.ui.mainActivity.friends.invitationsTab.InvitationsTabScreen
+import ru.vmestego.ui.mainActivity.friends.feedTab.FeedTabScreen
 
 @Serializable
 object FeedTab
@@ -50,7 +53,7 @@ fun FriendsScreen(goToUserScreen: (Long) -> Unit) {
             NavHost(
                 navController,
                 startDestination = FeedTab,
-                Modifier.padding(paddingValues)
+                Modifier.Companion.padding(paddingValues)
             ) {
                 composable<FeedTab> { FeedTabScreen() }
                 composable<FriendsTab> { FriendsTabScreen(goToUserScreen) }
@@ -67,7 +70,7 @@ fun TopBar(navController: NavHostController) {
     Column {
         TabRow(
             selectedTabIndex = tabIndex.intValue,
-            Modifier.padding(bottom = 15.dp)
+            Modifier.Companion.padding(bottom = 15.dp)
         ) {
             friendsPageRoutes.forEachIndexed { index, route ->
                 Tab(

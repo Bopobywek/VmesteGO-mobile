@@ -4,7 +4,6 @@ package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
 import android.content.Intent
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
