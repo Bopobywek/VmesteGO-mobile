@@ -138,7 +138,7 @@ fun AppScreen() {
                         }
                     },
                     createEvent = {
-                        navController.navigate(CustomEvent) {
+                        navController.navigate(CustomEvent()) {
                             launchSingleTop = true
                             restoreState = true
                         }
