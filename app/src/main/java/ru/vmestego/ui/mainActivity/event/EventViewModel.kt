@@ -1,6 +1,9 @@
 package ru.vmestego.ui.mainActivity.event
 
 import android.app.Application
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -25,6 +28,9 @@ import java.time.LocalDateTime
 class EventViewModel(application: Application, eventId: Long) : AndroidViewModel(application) {
     private val _eventId: Long = eventId
 
+    var isCurrentUserOwner by mutableStateOf(false)
+        private set
+
     private val _event = MutableStateFlow<EventUi?>(null)
     val event = _event.asStateFlow()
 
@@ -48,10 +54,30 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
 
     private fun getEvent() {
         val token = tokenDataProvider.getToken()!!
+        val userId = tokenDataProvider.getUserIdFromToken()
+        val isAdmin = tokenDataProvider.isAdmin()
+
         viewModelScope.launch(Dispatchers.IO) {
             val event = _eventsService.getEventById(token, _eventId)
             _event.update {
                 event?.toEventUi()
+            }
+
+            withContext(Dispatchers.Main) {
+                if (isAdmin || (event?.creatorId != null && event.creatorId == userId?.toLong())) {
+                    isCurrentUserOwner = true
+                }
+            }
+        }
+    }
+
+    fun deleteEvent(closeEventScreen: () -> Unit) {
+        val token = tokenDataProvider.getToken()!!
+        viewModelScope.launch(Dispatchers.IO) {
+            _eventsService.deleteEvent(token, _eventId)
+
+            withContext(Dispatchers.Main) {
+                closeEventScreen()
             }
         }
     }

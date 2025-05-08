@@ -6,6 +6,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -97,6 +98,19 @@ class EventsService {
             return response.body<List<CategoryResponse>>()
         } catch (_: Exception) {
             return listOf()
+        }
+    }
+
+    suspend fun deleteEvent(token: String, eventId: Long) {
+        val response: HttpResponse
+        try {
+            response = client.delete("${API_BASE_ADDRESS}/events/${eventId}") {
+                bearerAuth(token)
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
+            }
+        } catch (_: Exception) {
         }
     }
 

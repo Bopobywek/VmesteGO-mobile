@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
+import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.Duration
 import java.time.LocalDateTime
@@ -180,17 +183,47 @@ fun EventScreen(
                 )
             }
 
-            Icon(
-                rememberVectorPainter(image = Icons.Filled.Close),
-                contentDescription = "Localized description",
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(10.dp)
-                    .size(32.dp)
-                    .clickable {
-                        goBackToSearch()
-                    },
-                tint = { Color.White })
+            Row(Modifier
+                .padding(10.dp)
+                .align(Alignment.TopEnd), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                if (viewModel.isCurrentUserOwner) {
+                    val confirmEventDeleteDialogOpen = remember { mutableStateOf(false) }
+                    if (confirmEventDeleteDialogOpen.value) {
+                        YesNoDialog(
+                            confirmEventDeleteDialogOpen,
+                            { viewModel.deleteEvent { goBackToSearch() }},
+                            {})
+                    }
+
+                    Icon(
+                        rememberVectorPainter(image = Icons.Filled.Edit),
+                        contentDescription = "Localized description",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable {
+                                goBackToSearch()
+                            },
+                        tint = { Color.White })
+                    Icon(
+                        rememberVectorPainter(image = Icons.Filled.Delete),
+                        contentDescription = "Localized description",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable {
+                                confirmEventDeleteDialogOpen.value = true
+                            },
+                        tint = { Color.White })
+                }
+                Icon(
+                    rememberVectorPainter(image = Icons.Filled.Close),
+                    contentDescription = "Localized description",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable {
+                            goBackToSearch()
+                        },
+                    tint = { Color.White })
+            }
         }
 
         Column(

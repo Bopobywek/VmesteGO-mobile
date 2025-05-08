@@ -240,9 +240,11 @@ fun EventFormScreen(
             DatePickerModalInput(
                 onDismiss = { showDateInput = false },
                 onDateSelected = {
-                    date = Instant.ofEpochMilli(it!!).atZone(
-                        ZoneId.systemDefault()
-                    ).toLocalDate()
+                    if (it != null) {
+                        date = Instant.ofEpochMilli(it).atZone(
+                            ZoneId.systemDefault()
+                        ).toLocalDate()
+                    }
                     showDateInput = false
                 })
         }
