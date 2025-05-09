@@ -77,11 +77,10 @@ class SearchService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<EventResponse>>()
         } catch (e: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
     suspend fun getPrivateEvents(token: String, query: String? = null): List<EventResponse> {
@@ -95,11 +94,10 @@ class SearchService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<EventResponse>>()
         } catch (e: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
     suspend fun getJoinedPrivateEvents(token: String, query: String? = null): List<EventResponse> {
@@ -113,11 +111,10 @@ class SearchService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<EventResponse>>()
         } catch (e: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
     suspend fun getOtherAdminsPublicEvents(token: String, query: String? = null): List<EventResponse> {
@@ -131,10 +128,9 @@ class SearchService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<EventResponse>>()
         } catch (e: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 }

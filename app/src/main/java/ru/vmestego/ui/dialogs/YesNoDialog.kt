@@ -14,19 +14,23 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun YesNoDialog(
     isDialogOpen: MutableState<Boolean>,
+    title: String,
+    text: String,
+    confirmButtonText: String,
+    dismissButtonText: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = { isDialogOpen.value = false },
-        title = { Text(text = "Подтверждение действия") },
-        text = { Text("Вы действительно хотите удалить выбранный элемент?") },
+        title = { Text(text = title) },
+        text = { Text(text) },
         confirmButton = {
             Button({
                 isDialogOpen.value = false
                 onConfirm()
             }, border = BorderStroke(1.dp, Color.LightGray)) {
-                Text("Удалить", fontSize = 22.sp)
+                Text(confirmButtonText, fontSize = 18.sp)
             }
         },
         dismissButton = {
@@ -37,7 +41,7 @@ fun YesNoDialog(
                 },
                 border = BorderStroke(1.dp, Color.LightGray)
             ) {
-                Text("Отмена", fontSize = 22.sp)
+                Text(dismissButtonText, fontSize = 18.sp)
             }
         },
         containerColor = MaterialTheme.colorScheme.primaryContainer

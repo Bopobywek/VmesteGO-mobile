@@ -11,5 +11,6 @@ data class EventUi(
     val dateTime: LocalDateTime,
     val description: String,
     val eventStatus: EventStatus?,
-    val categories: List<CategoryUi>
+    val categories: List<CategoryUi>,
+    val imageUrl: String? = null
 )

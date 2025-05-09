@@ -11,6 +11,7 @@ fun EventResponse.toEventUi(): EventUi {
         dateTime = this.dates,
         description = this.description,
         eventStatus = this.eventStatus,
-        categories = categories.map { it.toCategoryUi() }
+        categories = categories.map { it.toCategoryUi() },
+        imageUrl = this.images.getOrNull(0)
     )
 }

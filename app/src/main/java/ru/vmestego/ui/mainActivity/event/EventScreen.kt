@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -72,6 +73,7 @@ import ru.vmestego.R
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.utils.LocalDateTimeFormatters
+import ru.vmestego.utils.rememberCachedImageLoader
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -146,10 +148,13 @@ fun EventScreen(
                 .fillMaxWidth()
                 .fillMaxHeight(0.3f)
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_launcher_background),
+            val imageLoader = rememberCachedImageLoader()
+            AsyncImage(
+                model = eventUi.imageUrl,
+                imageLoader = imageLoader,
                 contentDescription = "",
-                colorFilter = ColorFilter.tint(Color.LightGray),
+                placeholder = ColorPainter(Color.LightGray),
+                error = ColorPainter(Color.LightGray),
                 // https://developer.android.com/develop/ui/compose/graphics/images/customize
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -192,6 +197,10 @@ fun EventScreen(
                     if (confirmEventDeleteDialogOpen.value) {
                         YesNoDialog(
                             confirmEventDeleteDialogOpen,
+                            "Подтверждение действия",
+                            "Вы действительно хотите удалить выбранное мероприятие?",
+                            "Удалить",
+                            "Отмена",
                             { viewModel.deleteEvent { goBackToSearch() }},
                             {})
                     }

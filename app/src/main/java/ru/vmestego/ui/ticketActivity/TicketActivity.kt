@@ -8,6 +8,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -75,6 +77,7 @@ import ru.vmestego.data.EventDataDto
 import ru.vmestego.ui.mainActivity.EventsList
 import ru.vmestego.ui.mainActivity.MainActivity
 import ru.vmestego.ui.mainActivity.SearchViewModel
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.ui.theme.VmesteGOTheme
 import ru.vmestego.utils.IntentHelper
@@ -96,6 +99,7 @@ class TicketActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         var uri: Uri? = null
+        var params: TicketActivityParams? = null
         when {
             intent?.action == Intent.ACTION_SEND -> {
                 if (intent.type == "application/pdf") {
@@ -106,8 +110,19 @@ class TicketActivity : ComponentActivity() {
                     }
                 }
             }
+
+            intent?.action == "TICKET_FOR_EVENT" -> {
+                params = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM, TicketActivityParams::class.java)
+                } else {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM) as? TicketActivityParams
+                }
+
+                uri = params?.uri
+            }
         }
-        if (uri == null) {
+
+        if (uri == null ) {
             Log.w("TicketsActivity", "No uri provided for ticket, can't open activity")
             finish()
             return
@@ -120,11 +135,35 @@ class TicketActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 )
                 {
-                    TicketSettingsScreen(uri)
-
+                    TicketSettingsScreen(uri, params?.eventDto)
                 }
             }
         }
+    }
+}
+
+data class TicketActivityParams(
+    val uri: Uri,
+    val eventDto: EventRouteDto
+) : Parcelable {
+    override fun describeContents(): Int = 0
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeParcelable(uri, flags)
+        val json = Json.encodeToString(eventDto)
+        parcel.writeString(json)
+    }
+
+    companion object CREATOR : Parcelable.Creator<TicketActivityParams> {
+        override fun createFromParcel(parcel: Parcel): TicketActivityParams {
+            val uri = parcel.readParcelable<Uri>(Uri::class.java.classLoader)!!
+            val json = parcel.readString()!!
+            val eventDto = Json.decodeFromString<EventRouteDto>(json)
+            return TicketActivityParams(uri, eventDto)
+        }
+
+        override fun newArray(size: Int): Array<TicketActivityParams?> =
+            arrayOfNulls(size)
     }
 }
 
@@ -134,121 +173,13 @@ object EventParameters
 @Serializable
 object TicketParameters
 
-data class EventDto(val title: String, val location: String, val date: LocalDate, val time: LocalTime, val externalId: Long)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EventCreationScreen(onSave: (EventDto) -> Unit) {
-    // TODO: autocomplete https://stackoverflow.com/a/72586090
-    var title by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var time by remember { mutableStateOf(LocalTime.now()) }
-    var showDateInput by remember { mutableStateOf(false) }
-    var showTimeInput by remember { mutableStateOf(false) }
-
-    if (showDateInput) {
-        DatePickerModalInput(
-            onDismiss = { showDateInput = false },
-            onDateSelected = {
-                date = Instant.ofEpochMilli(it!!).atZone(
-                    ZoneId.systemDefault()
-                ).toLocalDate()
-                showDateInput = false
-            })
-    }
-
-    if (showTimeInput) {
-        TimePickerModalInput(
-            onDismiss = { showTimeInput = false },
-            onConfirm = {
-                time = it
-                showTimeInput = false
-            })
-    }
-
-    val focusManager = LocalFocusManager.current
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxHeight()
-    ) {
-        OutlinedTextField(
-            value = title,
-            placeholder = { Text("Название") },
-            onValueChange = { title = it },
-            label = { Text("Название") },
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            label = { Text("Место проведения") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = date.toString(),
-            onValueChange = {
-            },
-            readOnly = true,
-            label = { Text("Дата проведения") },
-            modifier = Modifier
-                .fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showDateInput = true
-                            }
-                        }
-                    }
-                }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        val timeFormatter =
-            DateTimeFormatter.ofPattern("HH:mm", Locale("ru")) // Russian locale
-        OutlinedTextField(
-            value = time.format(timeFormatter),
-            onValueChange = {
-            },
-            readOnly = true,
-            label = { Text("Время проведения") },
-            modifier = Modifier
-                .fillMaxWidth(),
-            interactionSource = remember { MutableInteractionSource() }
-                .also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                showTimeInput = true
-                            }
-                        }
-                    }
-                }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { onSave(EventDto(title, location, date, time, -1)) }, modifier = Modifier
-                .padding(horizontal = 15.dp)
-                .fillMaxWidth()
-        ) {
-            Text("Сохранить")
-        }
-    }
-}
+data class EventDto(
+    val title: String,
+    val location: String,
+    val date: LocalDate,
+    val time: LocalTime,
+    val externalId: Long
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,7 +248,12 @@ fun EventParametersScreen(
                         scope.launch(Dispatchers.Main) {
                             val receivedId =
                                 viewModel.addEvent(
-                                    EventDataDto(it.title, it.location, LocalDateTime.of(it.date, it.time), it.externalId)
+                                    EventDataDto(
+                                        it.title,
+                                        it.location,
+                                        LocalDateTime.of(it.date, it.time),
+                                        it.externalId
+                                    )
                                 )
                             navigateToTicketParams(
                                 EventRouteDto(
@@ -348,8 +284,7 @@ fun EventParametersScreen(
                         .fillMaxSize()
                 ) {
                     val scope = rememberCoroutineScope()
-                    EventsList(searchViewModel, {}, {
-                        e ->
+                    EventsList(searchViewModel, {}, { e ->
                         scope.launch(Dispatchers.Main) {
                             val receivedId =
                                 viewModel.addEvent(
@@ -479,7 +414,7 @@ fun TicketParametersScreen(
 
 // https://stackoverflow.com/a/79047721
 @Composable
-fun TicketSettingsScreen(uri: Uri) {
+fun TicketSettingsScreen(uri: Uri, eventUi: EventRouteDto?) {
     val navController = rememberNavController()
     val eventParamName = "event_dto"
     val scope = rememberCoroutineScope()
@@ -491,7 +426,14 @@ fun TicketSettingsScreen(uri: Uri) {
         composable<TicketParameters> { entry ->
             val serialized = entry.savedStateHandle.get<String>(eventParamName)
             val eventRouteDto =
-                if (serialized == null) null else Json.decodeFromString<EventRouteDto?>(serialized)
+                if (serialized == null && eventUi == null) {
+                    null
+                } else if (serialized == null && eventUi != null) {
+                   eventUi
+                }
+                else {
+                    Json.decodeFromString<EventRouteDto?>(serialized!!)
+                }
             TicketParametersScreen(uri, eventRouteDto, {
                 navController.navigate(
                     EventParameters
@@ -515,7 +457,7 @@ fun TicketSettingsScreen(uri: Uri) {
 @Preview(showBackground = true)
 @Composable
 fun Page() {
-    TicketSettingsScreen(Uri.parse("test"))
+    TicketSettingsScreen(Uri.parse("test"), null)
 }
 
 fun queryName(resolver: ContentResolver, uri: Uri): String {

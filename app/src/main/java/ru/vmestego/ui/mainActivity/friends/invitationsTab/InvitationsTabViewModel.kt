@@ -11,6 +11,10 @@ import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.invitations.EventInvitationStatus
 import ru.vmestego.bll.services.invitations.InvitationResponse
 import ru.vmestego.bll.services.invitations.InvitationsService
+import ru.vmestego.data.AppDatabase
+import ru.vmestego.data.Event
+import ru.vmestego.data.EventDataDto
+import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.mainActivity.toEventUi
@@ -26,6 +30,8 @@ class InvitationsTabViewModel(application: Application) : AndroidViewModel(appli
 
     private val _tokenDataHandler = TokenDataProvider(application)
     private val _invitationsService = InvitationsService()
+    private val _eventsRepository: EventsRepositoryImpl =
+        EventsRepositoryImpl(AppDatabase.getDatabase(application).eventDao())
 
     init {
         getPendingInvitations()
@@ -96,6 +102,30 @@ class InvitationsTabViewModel(application: Application) : AndroidViewModel(appli
                 updated
             }
         }
+    }
+
+    suspend fun addEvent(eventDto: EventDataDto): Long {
+        var existingEvent = getEventByExternalId(eventDto.externalId.toInt())
+        if (existingEvent != null) {
+            return existingEvent.uid.toLong()
+        }
+        return _eventsRepository.insert(
+            Event(
+                externalId = eventDto.externalId.toInt(),
+                title = eventDto.name,
+                location = eventDto.location,
+                startAt = eventDto.startAt.plusHours(3),
+                isSynchronized = false
+            )
+        )
+    }
+
+    suspend fun getEventByExternalId(externalId: Int): Event? {
+        val result = _eventsRepository.getByExternalId(externalId)
+        if (result.isEmpty()) {
+            return null
+        }
+        return result[0]
     }
 }
 

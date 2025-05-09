@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.utils.rememberCachedImageLoader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,8 +67,10 @@ fun OtherUserProfileScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val imageLoader = rememberCachedImageLoader()
             AsyncImage(
                 model = userInfo?.imageUrl,
+                imageLoader = imageLoader,
                 error = painterResource(id = R.drawable.ic_launcher_background),
                 contentDescription = "Profile Picture",
                 contentScale = ContentScale.Crop,

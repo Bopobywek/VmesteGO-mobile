@@ -1,6 +1,5 @@
 package ru.vmestego.ui.mainActivity
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -56,18 +55,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import ru.vmestego.R
 import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.LocalDateTimeFormatters
+import ru.vmestego.utils.rememberCachedImageLoader
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -246,23 +245,6 @@ fun SearchScreen(
                 }
             }
             Spacer(Modifier.size(16.dp))
-
-//            if (viewModel.isLoading) {
-//                Box(Modifier.height(24.dp), contentAlignment = Alignment.CenterStart) {
-//                    Row {
-//                        Text("Загружаем события", color = Color.DarkGray)
-//                        Spacer(Modifier.width(10.dp))
-//                        Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
-//                            CircularProgressIndicator(
-//                                strokeWidth = 2.dp,
-//                                modifier = Modifier.then(Modifier.size(16.dp))
-//                            )
-//                        }
-//                    }
-//                }
-//                Spacer(Modifier.size(16.dp))
-//            }
-
             EventsList(viewModel, goToEvent, {})
         }
     }
@@ -321,10 +303,13 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
                 goToEvent(eventUi)
             }
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_background),
+        val imageLoader = rememberCachedImageLoader()
+        AsyncImage(
+            model = eventUi.imageUrl,
+            imageLoader = imageLoader,
             contentDescription = "",
-            colorFilter = ColorFilter.tint(Color.LightGray),
+            placeholder = ColorPainter(Color.LightGray),
+            error = ColorPainter(Color.LightGray),
             // https://developer.android.com/develop/ui/compose/graphics/images/customize
             contentScale = ContentScale.Crop,
             modifier = Modifier

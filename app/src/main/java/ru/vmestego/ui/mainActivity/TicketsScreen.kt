@@ -243,6 +243,10 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                         if (confirmTicketDeleteDialogOpen.value) {
                             YesNoDialog(
                                 confirmTicketDeleteDialogOpen,
+                                "Подтверждение действия",
+                                "Вы действительно хотите удалить выбранный билет?",
+                                "Удалить",
+                                "Отмена",
                                 { ticketsViewModel.removeTicket(ticket) },
                                 {})
                         }
@@ -264,15 +268,7 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
             run {
                 Log.i("TicketsScreen", uri?.encodedPath.toString())
                 if (uri != null) {
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-
-                    val intent = Intent(context, TicketActivity::class.java)
-                    intent.setAction(Intent.ACTION_SEND)
-                    intent.setType("application/pdf")
-                    intent.putExtra(Intent.EXTRA_STREAM, uri)
+                    val intent = IntentHelper.createOpenTicketActivityIntent(context, uri)
                     context.startActivity(intent)
                 }
             }

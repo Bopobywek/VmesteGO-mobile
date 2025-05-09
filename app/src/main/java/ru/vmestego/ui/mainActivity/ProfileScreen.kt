@@ -77,6 +77,7 @@ import ru.vmestego.R
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.authActivity.AuthActivity
 import ru.vmestego.utils.LocalDateTimeFormatters
+import ru.vmestego.utils.rememberCachedImageLoader
 import kotlin.math.min
 
 
@@ -174,10 +175,12 @@ fun ProfileScreen(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
+                    val imageLoader = rememberCachedImageLoader()
                     AsyncImage(
                         model = userInfo!!.imageUrl,
                         error = painterResource(id = R.drawable.ic_launcher_background),
                         contentDescription = "Profile Picture",
+                        imageLoader = imageLoader,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(150.dp)

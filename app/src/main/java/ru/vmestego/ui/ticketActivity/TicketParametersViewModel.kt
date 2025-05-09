@@ -8,10 +8,13 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.vmestego.data.AppDatabase
+import ru.vmestego.data.Event
+import ru.vmestego.data.EventDataDto
 import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.data.Ticket
 import ru.vmestego.data.TicketsRepository
 import ru.vmestego.data.TicketsRepositoryImpl
+import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.utils.TokenDataProvider
 
 class TicketParametersViewModel(application: Application) : AndroidViewModel(application) {

@@ -1,5 +1,9 @@
 package ru.vmestego.ui.mainActivity.friends.invitationsTab
 
+import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,11 +45,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,14 +59,52 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.vmestego.R
+import ru.vmestego.data.EventDataDto
+import ru.vmestego.ui.dialogs.YesNoDialog
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.mainActivity.noRippleClickable
+import ru.vmestego.ui.models.UserUi
+import ru.vmestego.ui.ticketActivity.models.EventRouteDto
+import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
 import kotlin.math.min
 
 @Composable
 fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
     var showBottomSheet = remember { mutableStateOf(false) }
+    var eventForTicket = remember { mutableStateOf<EventUi?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            run {
+                scope.launch(Dispatchers.IO) {
+                    if (uri != null && eventForTicket.value != null) {
+                        val eventLocalId =
+                            viewModel.addEvent(eventForTicket.value!!.toEventDataDto())
+
+                        withContext(Dispatchers.Main) {
+                            val intent = IntentHelper.createOpenTicketWithEventActivityIntent(
+                                context,
+                                uri,
+                                EventRouteDto(
+                                    eventLocalId,
+                                    eventForTicket.value!!.eventName,
+                                    eventForTicket.value!!.locationName,
+                                    eventForTicket.value!!.dateTime
+                                )
+                            )
+                            context.startActivity(intent)
+                        }
+                    }
+                }
+
+            }
+        }
 
     if (showBottomSheet.value) {
         OutgoingInvitationsModal(
@@ -126,7 +170,13 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
                 }
             }
         } else {
-            InvitationsList(pendingInvitations, viewModel::acceptInvite, viewModel::rejectInvite)
+            InvitationsList(
+                pendingInvitations,
+                viewModel::acceptInvite,
+                viewModel::rejectInvite,
+                launcher,
+                eventForTicket
+            )
         }
     }
 }
@@ -135,11 +185,10 @@ fun InvitationsTabScreen(viewModel: InvitationsTabViewModel = viewModel()) {
 fun InvitationsList(
     pendingInvitations: List<InvitationUi>,
     acceptInvite: (List<InvitationUi>) -> Unit,
-    rejectInvite: (List<InvitationUi>) -> Unit
+    rejectInvite: (List<InvitationUi>) -> Unit,
+    launcher: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    eventForTicket: MutableState<EventUi?>
 ) {
-    val profileImageSize = 32
-    val boxContentPadding = 15
-
     val grouped = pendingInvitations.groupBy { it.event.id }.toList()
     LazyColumn(
         contentPadding = PaddingValues(vertical = 10.dp),
@@ -149,115 +198,158 @@ fun InvitationsList(
             val eventInfo = it.second[0].event
             val users = it.second.map { it.sender }
 
-            Column {
-                Box(
-                    Modifier.padding(15.dp)
-                ) {
-                    ElevatedCard(
-                        modifier = Modifier
-                            .heightIn(min = 100.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(15.dp)
-                        ) {
-                            Column {
-                                Text(
-                                    text = eventInfo.eventName,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = LocalDateTimeFormatters.formatByDefault(eventInfo.dateTime),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-
-                            Spacer(Modifier.height(20.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Filled.Place, contentDescription = "Location")
-                                Text(
-                                    text = eventInfo.locationName,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-
-                            Spacer(Modifier.height(20.dp))
-
-
-                        }
-                    }
-
-                    val maxImages = 5
-                    Row(
-                        modifier = Modifier
-                            .offset(x = boxContentPadding.dp, y = (profileImageSize / 2).dp)
-                            .align(Alignment.BottomStart)
-                            .clip(RoundedCornerShape(30.dp))
-                            .noRippleClickable { }
-                    ) {
-                        for (i in 0..min(users.size - 1, maxImages - 1)) {
-                            AsyncImage(
-                                model = users[i].imageUrl,
-                                error = painterResource(R.drawable.ic_launcher_background),
-                                contentDescription = "",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .offset(x = (-i * profileImageSize / 2).dp)
-                                    .size(profileImageSize.dp)
-                                    .clip(CircleShape)
-                            )
-                        }
-
-                        if (users.size >= maxImages) {
-                            val remain = users.size - maxImages
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = (-maxImages * profileImageSize / 2).dp)
-                                    .size(profileImageSize.dp)
-                                    .clip(CircleShape)
-                                    // fff5ee
-                                    .background(Color(1f, 0.9607843137254902f, 0.9333f, 1f))
-                            ) {
-                                Text(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    text = "+$remain",
-                                    fontSize = 14.sp,
-                                    // 696969
-                                    color = Color(
-                                        0.4117647058823529f,
-                                        0.4117647058823529f,
-                                        0.4117647058823529f
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Spacer(Modifier.weight(1f))
-                    Button({ acceptInvite(it.second) }) {
-                        Text("Принять")
-                    }
-                    OutlinedButton({ rejectInvite(it.second) }) {
-                        Text("Отклонить")
-                    }
-                }
-            }
+            Invitation(
+                it.second,
+                eventInfo,
+                users,
+                acceptInvite,
+                rejectInvite,
+                launcher,
+                eventForTicket
+            )
 
             Spacer(Modifier.height(10.dp))
             HorizontalDivider(Modifier.padding(horizontal = 30.dp), thickness = 2.dp)
+        }
+    }
+}
+
+@Composable
+fun Invitation(
+    invitationsUi: List<InvitationUi>,
+    eventInfo: EventUi,
+    users: List<UserUi>,
+    acceptInvite: (List<InvitationUi>) -> Unit,
+    rejectInvite: (List<InvitationUi>) -> Unit,
+    launcher: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    eventForTicket: MutableState<EventUi?>
+) {
+    val profileImageSize = 32
+    val boxContentPadding = 15
+
+    Column {
+        Box(
+            Modifier.padding(15.dp)
+        ) {
+            ElevatedCard(
+                modifier = Modifier
+                    .heightIn(min = 100.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(15.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = eventInfo.eventName,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = LocalDateTimeFormatters.formatByDefault(eventInfo.dateTime),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Place, contentDescription = "Location")
+                        Text(
+                            text = eventInfo.locationName,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+
+                }
+            }
+
+            val maxImages = 5
+            Row(
+                modifier = Modifier
+                    .offset(x = boxContentPadding.dp, y = (profileImageSize / 2).dp)
+                    .align(Alignment.BottomStart)
+                    .clip(RoundedCornerShape(30.dp))
+                    .noRippleClickable { }
+            ) {
+                for (i in 0..min(users.size - 1, maxImages - 1)) {
+                    AsyncImage(
+                        model = users[i].imageUrl,
+                        error = painterResource(R.drawable.ic_launcher_background),
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .offset(x = (-i * profileImageSize / 2).dp)
+                            .size(profileImageSize.dp)
+                            .clip(CircleShape)
+                    )
+                }
+
+                if (users.size >= maxImages) {
+                    val remain = users.size - maxImages
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (-maxImages * profileImageSize / 2).dp)
+                            .size(profileImageSize.dp)
+                            .clip(CircleShape)
+                            // fff5ee
+                            .background(Color(1f, 0.9607843137254902f, 0.9333f, 1f))
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = "+$remain",
+                            fontSize = 14.sp,
+                            // 696969
+                            color = Color(
+                                0.4117647058823529f,
+                                0.4117647058823529f,
+                                0.4117647058823529f
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 15.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            val addTicketDialogOpen = remember { mutableStateOf(false) }
+            if (addTicketDialogOpen.value) {
+                YesNoDialog(
+                    addTicketDialogOpen,
+                    "Добавьте билет",
+                    "Хотите добавить билет для этого мероприятия прямо сейчас?",
+                    "Да",
+                    "Добавлю позже",
+                    {
+                        eventForTicket.value = eventInfo
+                        acceptInvite(invitationsUi)
+                        launcher.launch(arrayOf("application/pdf"))
+                    },
+                    {})
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            Button({
+                addTicketDialogOpen.value = true
+            }) {
+                Text("Принять")
+            }
+            OutlinedButton({ rejectInvite(invitationsUi) }) {
+                Text("Отклонить")
+            }
         }
     }
 }
@@ -350,5 +442,15 @@ fun OutgoingInvitationsModal(
             }
         }
     }
+}
+
+
+fun EventUi.toEventDataDto(): EventDataDto {
+    return EventDataDto(
+        eventName,
+        locationName,
+        dateTime,
+        id
+    )
 }
 
