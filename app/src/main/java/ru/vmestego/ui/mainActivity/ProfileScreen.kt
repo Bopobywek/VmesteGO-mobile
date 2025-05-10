@@ -4,9 +4,9 @@ package ru.vmestego.ui.mainActivity
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -74,10 +74,9 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
 import coil.imageLoader
 import ru.vmestego.R
-import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.authActivity.AuthActivity
+import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.LocalDateTimeFormatters
-import ru.vmestego.utils.rememberCachedImageLoader
 import kotlin.math.min
 
 
@@ -137,23 +136,19 @@ fun ProfileScreen(
         val context = LocalContext.current
         val photoUri =
             remember { mutableStateOf<String>("https://storage.yandexcloud.net/vmestego/photo_1_2025-04-08_01-10-21.jpg") }
-        val pickMedia =
-            rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-                if (uri != null) {
-                    photoUri.value = uri.encodedPath!!
-                    Log.d("PhotoPicker", "Selected URI: $uri")
-//                    if (Build.VERSION.SDK_INT >= 34) {
-//                        context.contentResolver.takePersistableUriPermission(
-//                            uri,
-//                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-//                        )
-//                    }
-                    val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
-                    viewModel.updateImage(bytes)
-                    context.imageLoader.diskCache?.clear()
-                    context.imageLoader.memoryCache?.clear()
-                } else {
-                    Log.d("PhotoPicker", "No media selected")
+        val launcher =
+            rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+                run {
+                    if (uri != null) {
+                        photoUri.value = uri.encodedPath!!
+                        Log.d("PhotoPicker", "Selected URI: $uri")
+                        val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
+                        viewModel.updateImage(bytes)
+                        context.imageLoader.diskCache?.clear()
+                        context.imageLoader.memoryCache?.clear()
+                    } else {
+                        Log.d("PhotoPicker", "No media selected")
+                    }
                 }
             }
 
@@ -175,19 +170,17 @@ fun ProfileScreen(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    val imageLoader = rememberCachedImageLoader()
                     AsyncImage(
                         model = userInfo!!.imageUrl,
                         error = painterResource(id = R.drawable.ic_launcher_background),
                         contentDescription = "Profile Picture",
-                        imageLoader = imageLoader,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(150.dp)
                             .clip(CircleShape)
                             .border(BorderStroke(2.dp, Color.DarkGray), CircleShape)
                             .clickable {
-                                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                launcher.launch(arrayOf("image/*"))
                             }
                     )
                 }
