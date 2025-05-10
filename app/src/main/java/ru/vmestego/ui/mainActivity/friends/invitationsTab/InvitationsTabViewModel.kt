@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.vmestego.bll.services.invitations.EventInvitationStatus
-import ru.vmestego.bll.services.invitations.InvitationResponse
+import ru.vmestego.bll.services.invitations.models.EventInvitationStatus
+import ru.vmestego.bll.services.invitations.models.InvitationResponse
 import ru.vmestego.bll.services.invitations.InvitationsService
 import ru.vmestego.data.AppDatabase
 import ru.vmestego.data.Event

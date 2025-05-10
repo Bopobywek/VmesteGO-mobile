@@ -1,7 +1,5 @@
 package ru.vmestego.bll.services.search
 
-import android.widget.Toast
-import androidx.room.Query
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -28,43 +26,7 @@ class SearchService {
         }
     }
 
-    private val retryNumber = 3;
-
-//    suspend fun searchEvents(query: String): SearchEventsResponse {
-//        val response: HttpResponse
-//        try {
-//            response = client.get("${API_BASE_ADDRESS}/search") {
-//                url {
-//                    parameters["q"] = query
-//                }
-//                contentType(ContentType.Application.Json)
-//                retry {
-//                    retryOnExceptionOrServerErrors(retryNumber)
-//                }
-//            }
-//        } catch (_: Exception) {
-//            return SearchEventsResponse(listOf())
-//        }
-//
-//        return response.body<SearchEventsResponse>()
-//    }
-
-    suspend fun getAllEvents(token: String): List<EventResponse> {
-        val response: HttpResponse
-        try {
-            response = client.get("${API_BASE_ADDRESS}/events") {
-                contentType(ContentType.Application.Json)
-                bearerAuth(token)
-                retry {
-                    retryOnExceptionOrServerErrors(retryNumber)
-                }
-            }
-        } catch (e: Exception) {
-            return listOf()
-        }
-
-        return response.body<List<EventResponse>>()
-    }
+    private val retryNumber = 3
 
     suspend fun getPublicEvents(token: String, query: String? = null): List<EventResponse> {
         val response: HttpResponse
@@ -78,7 +40,7 @@ class SearchService {
                 }
             }
             return response.body<List<EventResponse>>()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return listOf()
         }
     }
@@ -95,7 +57,7 @@ class SearchService {
                 }
             }
             return response.body<List<EventResponse>>()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return listOf()
         }
     }
@@ -112,7 +74,7 @@ class SearchService {
                 }
             }
             return response.body<List<EventResponse>>()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return listOf()
         }
     }
@@ -129,7 +91,7 @@ class SearchService {
                 }
             }
             return response.body<List<EventResponse>>()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return listOf()
         }
     }
