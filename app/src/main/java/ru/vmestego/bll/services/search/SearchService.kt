@@ -27,13 +27,24 @@ class SearchService {
     }
 
     private val retryNumber = 3
+    private val defaultPageSize = 10
 
-    suspend fun getPublicEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getPublicEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events/created-public") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
@@ -45,13 +56,23 @@ class SearchService {
         }
     }
 
-    suspend fun getPrivateEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getPrivateEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events/created-private") {
                 contentType(ContentType.Application.Json)
-                bearerAuth(token)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
+                bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
@@ -62,12 +83,22 @@ class SearchService {
         }
     }
 
-    suspend fun getJoinedPrivateEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getJoinedPrivateEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events/joined-private") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
@@ -79,12 +110,22 @@ class SearchService {
         }
     }
 
-    suspend fun getOtherAdminsPublicEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getOtherAdminsPublicEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
             response = client.get("${API_BASE_ADDRESS}/events/other-admins-public") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)

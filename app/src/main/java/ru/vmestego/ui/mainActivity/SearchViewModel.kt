@@ -6,24 +6,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import ru.vmestego.bll.datasources.EventsPagingDataSource
 import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.search.SearchService
-import ru.vmestego.data.AppDatabase
-import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.TokenDataProvider
 import java.time.LocalDateTime
-import kotlin.collections.any
 
 class SearchViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenDataProvider = TokenDataProvider(application)
-    private val _eventsRepository : EventsRepositoryImpl = EventsRepositoryImpl(AppDatabase.getDatabase(application).eventDao())
 
     var searchText by mutableStateOf("")
         private set
@@ -37,16 +35,22 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     var categoriesApplied by mutableStateOf<List<CategoryUi>>(listOf())
         private set
 
-    private val _events = MutableStateFlow<List<EventUi>>(listOf())
-    val events = _events.asStateFlow()
-
     private val _categories = MutableStateFlow<List<CategoryUi>>(listOf())
     val categories = _categories.asStateFlow()
 
-    var isLoading by mutableStateOf(false)
+    var privateEventsPager = mutableStateOf<Pager<Int, EventUi>?>(null)
         private set
 
-    var isRefreshing by mutableStateOf(false)
+    var joinedPrivateEventsPager = mutableStateOf<Pager<Int, EventUi>?>(null)
+        private set
+
+    var publicEventsPager = mutableStateOf<Pager<Int, EventUi>?>(null)
+        private set
+
+    var createdPublicEventsPager = mutableStateOf<Pager<Int, EventUi>?>(null)
+        private set
+
+    var isLoading by mutableStateOf(false)
         private set
 
     private val searchService = SearchService()
@@ -69,40 +73,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     fun applyDateFilter(startDate: LocalDateTime, endDate: LocalDateTime?) {
         startDateFilter = startDate
         endDateFilter = endDate
-        viewModelScope.launch(Dispatchers.Default) {
-            filterByDate()
-        }
+        getAllEvents(searchText)
     }
 
-    private fun filterByDate() {
-        val oldEvents = _events.value
-
-        val newEvents = oldEvents.filter {
-            it.dateTime >= startDateFilter && (endDateFilter == null || it.dateTime < endDateFilter)
-        }
-
-        _events.update {
-            newEvents
-        }
-    }
 
     fun applyCategoriesFilter(categories: List<CategoryUi>) {
         categoriesApplied = categories
-        viewModelScope.launch(Dispatchers.Default) {
-            filterByCategory()
-        }
-    }
-
-    private fun filterByCategory() {
-        val oldEvents = _events.value
-
-        val newEvents = oldEvents.filter {
-            it.categories.any { oldEventCat -> categoriesApplied.any { c -> c.id == oldEventCat.id }}
-        }
-
-        _events.update {
-            newEvents
-        }
+        getAllEvents(searchText)
     }
 
     fun resetDateFilters() {
@@ -118,53 +95,41 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun getAllEvents(query: String? = null) {
         val token = tokenDataProvider.getToken()!!
-        isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
-
-            var response = searchService.getPrivateEvents(token, query)
-            _events.update {
-                response.map {
-                    it.toEventUi()
-                }
-            }
-
-            response = searchService.getPublicEvents(token, query)
-            _events.update {
-                val newVals = response.map {
-                    it.toEventUi()
-                }
-                val updated = _events.value.toMutableList() + newVals
-                updated
-            }
-
-            response = searchService.getJoinedPrivateEvents(token, query)
-            _events.update {
-                val newVals = response.map {
-                    it.toEventUi()
-                }
-                val updated = _events.value.toMutableList() + newVals
-                updated
-            }
-
-            response = searchService.getOtherAdminsPublicEvents(token, query)
-            _events.update {
-                val newVals = response.map {
-                    it.toEventUi()
-                }
-                val updated = _events.value.toMutableList() + newVals
-                updated
-            }
-
-            if (categoriesApplied.isNotEmpty()) {
-                filterByCategory()
-            }
-            if (startDateFilter != null ) {
-                filterByDate()
-            }
-
-            withContext(Dispatchers.Main) {
-                isLoading = false
-            }
+        publicEventsPager.value = Pager(
+            PagingConfig(pageSize = 10)
+        ) {
+            EventsPagingDataSource(
+                searchService::getOtherAdminsPublicEvents,
+                token,
+                query,
+                categoriesApplied.map { it.id.toString() })
+        }
+        createdPublicEventsPager.value = Pager(
+            PagingConfig(pageSize = 10)
+        ) {
+            EventsPagingDataSource(
+                searchService::getPublicEvents,
+                token,
+                query,
+                categoriesApplied.map { it.id.toString() })
+        }
+        joinedPrivateEventsPager.value = Pager(
+            PagingConfig(pageSize = 10)
+        ) {
+            EventsPagingDataSource(
+                searchService::getJoinedPrivateEvents,
+                token,
+                query,
+                categoriesApplied.map { it.id.toString() })
+        }
+        privateEventsPager.value = Pager(
+            PagingConfig(pageSize = 10)
+        ) {
+            EventsPagingDataSource(
+                searchService::getPrivateEvents,
+                token,
+                query,
+                categoriesApplied.map { it.id.toString() })
         }
     }
 

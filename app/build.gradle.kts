@@ -94,4 +94,6 @@ dependencies {
     implementation("com.auth0:java-jwt:3.10.3")
 
     implementation(awssdk.services.s3)
+    implementation("androidx.paging:paging-runtime-ktx:3.3.6")
+    implementation("androidx.paging:paging-compose:3.3.6")
 }

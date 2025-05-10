@@ -1,5 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -19,17 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ElevatedCard
@@ -49,8 +45,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,9 +55,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import coil.compose.SubcomposeAsyncImage
 import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.shared.models.CategoryResponse
+import ru.vmestego.ui.dialogs.MultiSelectDialog
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.LocalDateTimeFormatters
 import ru.vmestego.utils.rememberCachedImageLoader
@@ -163,7 +160,6 @@ fun SearchScreen(
             val scrollState = rememberScrollState()
             Row(
                 Modifier
-                    .padding()
                     .horizontalScroll(scrollState)
             ) {
                 Button(
@@ -245,7 +241,7 @@ fun SearchScreen(
                 }
             }
             Spacer(Modifier.size(16.dp))
-            EventsList(viewModel, goToEvent, {})
+            EventsList(viewModel, goToEvent) {}
         }
     }
 }
@@ -260,6 +256,18 @@ fun EventsList(
     val state = rememberPullToRefreshState()
     val coroutineScope = rememberCoroutineScope()
     var isRefreshing = remember { mutableStateOf(false) }
+
+    if (viewModel.publicEventsPager.value == null) {
+        return
+    }
+
+    val lazyPagingPublicItems = viewModel.publicEventsPager.value!!.flow.collectAsLazyPagingItems()
+    val lazyPagingPublicCreatedItems = viewModel.createdPublicEventsPager.value!!.flow.collectAsLazyPagingItems()
+    val lazyPagingPrivateItems =
+        viewModel.privateEventsPager.value!!.flow.collectAsLazyPagingItems()
+    val lazyPagingJoinedPrivateItems =
+        viewModel.joinedPrivateEventsPager.value!!.flow.collectAsLazyPagingItems()
+
     PullToRefreshBox(
         isRefreshing = isRefreshing.value,
         onRefresh = {
@@ -272,21 +280,48 @@ fun EventsList(
         },
         state = state
     ) {
-        val events by viewModel.events.collectAsState()
-        if (events.isEmpty() && !viewModel.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Не удалось найти мероприятия", color = Color.LightGray)
-            }
-        }
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 10.dp)
         ) {
-            items(events) {
-                EventCard(it, goToEvent, onEventClick)
+            items(lazyPagingPrivateItems.itemCount,
+                key = lazyPagingPrivateItems.itemKey { it.id }) { index ->
+                val event = lazyPagingPrivateItems[index]
+                if (event != null) {
+                    EventCard(event, goToEvent, onEventClick)
+                } else {
+                    EventCardPlaceholder()
+                }
+            }
+
+            items(lazyPagingPublicCreatedItems.itemCount,
+                key = lazyPagingPublicCreatedItems.itemKey { it.id }) { index ->
+                val event = lazyPagingPublicCreatedItems[index]
+                if (event != null) {
+                    EventCard(event, goToEvent, onEventClick)
+                } else {
+                    EventCardPlaceholder()
+                }
+            }
+
+            items(lazyPagingJoinedPrivateItems.itemCount,
+                key = lazyPagingJoinedPrivateItems.itemKey { it.id }) { index ->
+                val event = lazyPagingJoinedPrivateItems[index]
+                if (event != null) {
+                    EventCard(event, goToEvent, onEventClick)
+                } else {
+                    EventCardPlaceholder()
+                }
+            }
+
+            items(lazyPagingPublicItems.itemCount,
+                key = lazyPagingPublicItems.itemKey { it.id }) { index ->
+                val event = lazyPagingPublicItems[index]
+                if (event != null) {
+                    EventCard(event, goToEvent, onEventClick)
+                } else {
+                    EventCardPlaceholder()
+                }
             }
         }
     }
@@ -304,12 +339,16 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
             }
     ) {
         val imageLoader = rememberCachedImageLoader()
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = eventUi.imageUrl,
             imageLoader = imageLoader,
             contentDescription = "",
-            placeholder = ColorPainter(Color.LightGray),
-            error = ColorPainter(Color.LightGray),
+            loading = {
+                Box(modifier = Modifier.shimmerLoading()) {}
+            },
+            error = {
+                Box(modifier = Modifier.background(Color.LightGray)) {}
+            },
             // https://developer.android.com/develop/ui/compose/graphics/images/customize
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -321,6 +360,30 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
                 Text(eventUi.eventName, fontSize = 20.sp)
                 Text(eventUi.locationName, fontSize = 16.sp)
                 Text(LocalDateTimeFormatters.formatByDefault(eventUi.dateTime), fontSize = 16.sp)
+            }
+        }
+    }
+}
+
+@Composable
+fun EventCardPlaceholder() {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 150.dp)
+    ) {
+        Image(
+            painter = ColorPainter(Color.LightGray),
+            contentDescription = "",
+            // https://developer.android.com/develop/ui/compose/graphics/images/customize
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+        )
+        Box(Modifier.padding(10.dp)) {
+            Column {
+                Text("Загрузка...", fontSize = 20.sp)
             }
         }
     }
@@ -400,61 +463,3 @@ fun CategoryResponse.toCategoryUi(): CategoryUi {
 }
 
 
-@Composable
-fun <T> MultiSelectDialog(
-    title: String = "Выбор",
-    options: List<T>,
-    initiallySelected: List<T> = emptyList(),
-    optionLabel: (T) -> String = { it.toString() },
-    onDismiss: () -> Unit,
-    onDone: (List<T>) -> Unit
-) {
-    val selectedItems = remember { mutableStateListOf<T>().apply { addAll(initiallySelected) } }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDone(selectedItems)
-                onDismiss()
-            }) {
-                Text("Готово")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Отмена")
-            }
-        },
-        title = {
-            Text(text = title)
-        },
-        text = {
-            Column {
-                options.forEach { item ->
-                    val isSelected = item in selectedItems
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .toggleable(
-                                value = isSelected,
-                                onValueChange = {
-                                    if (isSelected) selectedItems.remove(item)
-                                    else selectedItems.add(item)
-                                }
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = isSelected,
-                            onCheckedChange = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(optionLabel(item))
-                    }
-                }
-            }
-        }
-    )
-}
