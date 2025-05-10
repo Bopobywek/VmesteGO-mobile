@@ -23,9 +23,13 @@ import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
+import ru.vmestego.utils.showShortToast
 
-class OtherUserProfileViewModel(application: Application, userId: Long) : AndroidViewModel(application) {
+class OtherUserProfileViewModel(application: Application, userId: Long) :
+    AndroidViewModel(application) {
     val currentUserId = userId
+
+    private val _application = application
 
     private val _outgoingRequestStatus = MutableStateFlow(FriendRequestStatusUi.None)
     val outgoingRequestStatus = _outgoingRequestStatus.asStateFlow()
@@ -72,10 +76,14 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = _usersService.getUserInfoById(currentUserId.toString(), token)
+            try {
+                val response = _usersService.getUserInfoById(currentUserId.toString(), token)
 
-            _userInfo.update {
-                response.toUserUi()
+                _userInfo.update {
+                    response.toUserUi()
+                }
+            } catch (_: Exception) {
+                _application.showShortToast("Не удалось получить информацию об аккаунте, попробуйте позже")
             }
         }
     }
@@ -87,7 +95,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
         if (_outgoingRequestStatus.value == FriendRequestStatusUi.None) {
             viewModelScope.launch(Dispatchers.IO) {
                 _friendsService.createFriendRequest(token, currentUserId.toString())
-                val friendRequest = _friendsService.getFriendRequest(token, userId, currentUserId.toString())
+                val friendRequest =
+                    _friendsService.getFriendRequest(token, userId, currentUserId.toString())
                 _friendRequest.update {
                     friendRequest!!.toFriendRequestUi()
                 }
@@ -99,7 +108,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
 
         if (_outgoingRequestStatus.value == FriendRequestStatusUi.Pending
             || _outgoingRequestStatus.value == FriendRequestStatusUi.Rejected
-            || _outgoingRequestStatus.value == FriendRequestStatusUi.Done ) {
+            || _outgoingRequestStatus.value == FriendRequestStatusUi.Done
+        ) {
             viewModelScope.launch(Dispatchers.IO) {
                 _friendsService.cancelFriendRequest(token, _friendRequest.value!!.id)
                 _outgoingRequestStatus.update {
@@ -153,7 +163,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
         val userId = tokenDataProvider.getUserIdFromToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            val friendRequest = _friendsService.getFriendRequest(token, userId, currentUserId.toString())
+            val friendRequest =
+                _friendsService.getFriendRequest(token, userId, currentUserId.toString())
 
             if (friendRequest == null) {
                 _outgoingRequestStatus.update {
@@ -180,7 +191,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
         val userId = tokenDataProvider.getUserIdFromToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            val friendRequest = _friendsService.getFriendRequest(token, currentUserId.toString(), userId)
+            val friendRequest =
+                _friendsService.getFriendRequest(token, currentUserId.toString(), userId)
 
             if (friendRequest == null) {
                 _incomingRequestStatus.update {
@@ -206,7 +218,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
         val token = tokenDataProvider.getToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            var events = _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.WantToGo)
+            var events =
+                _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.WantToGo)
             _wantToGoEvents.update {
                 events.map {
                     it.toEventUi()
@@ -220,7 +233,8 @@ class OtherUserProfileViewModel(application: Application, userId: Long) : Androi
                 }
             }
 
-            events = _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.NotGoing)
+            events =
+                _eventsService.getEventsByStatus(token, currentUserIdString, EventStatus.NotGoing)
             _notGoingToEvents.update {
                 events.map {
                     it.toEventUi()
@@ -244,9 +258,11 @@ fun FriendRequestStatus.toFriendRequestStatusUi(): FriendRequestStatusUi {
         this == FriendRequestStatus.Accepted -> {
             return FriendRequestStatusUi.Done
         }
+
         this == FriendRequestStatus.Pending -> {
             return FriendRequestStatusUi.Pending
         }
+
         this == FriendRequestStatus.Rejected -> {
             return FriendRequestStatusUi.Rejected
         }
@@ -255,7 +271,8 @@ fun FriendRequestStatus.toFriendRequestStatusUi(): FriendRequestStatusUi {
     return FriendRequestStatusUi.None
 }
 
-class OtherUserProfileViewModelFactory(val application: Application, val userId: Long): ViewModelProvider.AndroidViewModelFactory(application) {
+class OtherUserProfileViewModelFactory(val application: Application, val userId: Long) :
+    ViewModelProvider.AndroidViewModelFactory(application) {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return OtherUserProfileViewModel(
             application, userId

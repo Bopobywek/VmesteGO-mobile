@@ -16,9 +16,12 @@ import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.models.NotificationUi
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
+import ru.vmestego.utils.showShortToast
 import java.util.UUID
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val _application = application
+
     private val tokenDataProvider = TokenDataProvider(application)
 
     private val _userInfo = MutableStateFlow<UserUi?>(null)
@@ -80,7 +83,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-     private fun getUserInfo() {
+    private fun getUserInfo() {
         val userId = tokenDataProvider.getUserIdFromToken()
         val token = tokenDataProvider.getToken()!!
 
@@ -89,10 +92,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = _usersService.getUserInfoById(userId, token)
+            try {
+                val response = _usersService.getUserInfoById(userId, token)
 
-            _userInfo.update {
-                response.toUserUi()
+                _userInfo.update {
+                    response.toUserUi()
+                }
+            } catch (_: Exception) {
+                _application.showShortToast("Не удалось получить информацию об аккаунте, попробуйте позже")
             }
         }
     }
@@ -106,13 +113,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val url = _usersService.getUploadImageUrl(userId, token)
-            _usersService.putImage(url.uploadUrl, imageBytes)
-            val userInfoResponse = _usersService.confirmImageUpload(userId, token, url.key)
-            _userInfo.update {
-                userInfoResponse.toUserUi()
+            try {
+                val url = _usersService.getUploadImageUrl(userId, token)
+                _usersService.putImage(url.uploadUrl, imageBytes)
+                val userInfoResponse = _usersService.confirmImageUpload(userId, token, url.key)
+                _userInfo.update {
+                    userInfoResponse.toUserUi()
+                }
+                _imageState.update { UUID.randomUUID() }
+            } catch (_: Exception) {
+                _application.showShortToast("Попробуйте позже")
             }
-            _imageState.update { UUID.randomUUID() }
         }
     }
 
@@ -120,22 +131,27 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         val token = tokenDataProvider.getToken()!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            val old = _notifications.value
-            val new: MutableList<NotificationUi> = mutableListOf()
-            old.forEachIndexed { index, n ->
-                if (ids.contains(index)) {
-                    _notificationsService.markAsRead(token, old[index].id)
-                    new.add(old[index].copy(isRead = true))
-                } else {
-                    new.add(old[index])
+            try {
+
+                val old = _notifications.value
+                val new: MutableList<NotificationUi> = mutableListOf()
+                old.forEachIndexed { index, n ->
+                    if (ids.contains(index)) {
+                        _notificationsService.markAsRead(token, old[index].id)
+                        new.add(old[index].copy(isRead = true))
+                    } else {
+                        new.add(old[index])
+                    }
                 }
-            }
 
-            _notifications.update {
-                new
-            }
+                _notifications.update {
+                    new
+                }
 
-            _hasUnreadNotifications.update { new.any { !it.isRead } }
+                _hasUnreadNotifications.update { new.any { !it.isRead } }
+            } catch (_: Exception) {
+                _application.showShortToast("Не смогли получить уведомления")
+            }
         }
     }
 

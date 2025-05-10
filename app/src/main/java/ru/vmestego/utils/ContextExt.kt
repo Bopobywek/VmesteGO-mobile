@@ -2,8 +2,13 @@ package ru.vmestego.utils
 
 import android.content.Context
 import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-fun Context.showShortToast(text: String) {
-    val toast = Toast.makeText(this, text, Toast.LENGTH_SHORT)
-    toast.show()
+suspend fun Context.showShortToast(text: String) {
+    val context = this
+    withContext(Dispatchers.Main) {
+        val toast = Toast.makeText(context, text, Toast.LENGTH_SHORT)
+        toast.show()
+    }
 }
