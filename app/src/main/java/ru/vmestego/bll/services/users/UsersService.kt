@@ -74,13 +74,13 @@ class UsersService {
         }
     }
 
-    suspend fun findUsers(token: String, query: String): List<UserResponse> {
+    suspend fun findUsers(token: String, query: String, page: Int = 1): List<UserResponse> {
         try {
             val response: HttpResponse = client.get("${API_BASE_ADDRESS}/users/search") {
                 bearerAuth(token)
                 contentType(ContentType.Application.Json)
                 parameter("username", query)
-                parameter("page", "1")
+                parameter("page", page)
                 parameter("pageSize", "50")
             }
 

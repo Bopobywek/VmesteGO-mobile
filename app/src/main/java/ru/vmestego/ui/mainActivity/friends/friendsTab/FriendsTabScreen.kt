@@ -34,10 +34,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +55,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import ru.vmestego.R
@@ -80,8 +82,7 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
             Row(verticalAlignment = Alignment.CenterVertically) {
 
                 Box(
-                    Modifier.fillMaxWidth(0.9f),
-                    contentAlignment = Alignment.CenterStart
+                    Modifier.fillMaxWidth(0.9f), contentAlignment = Alignment.CenterStart
                 ) {
                     Text("Заявки")
                 }
@@ -142,13 +143,22 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
         } else if (users.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
-                    Text("Тут пока пусто", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
-                    Text("Скорее добавьте друзей", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        "Тут пока пусто",
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        "Скорее добавьте друзей",
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
-        }
-        else {
-            FriendsList(goToUserScreen, users)
+        } else {
+            FriendsList(goToUserScreen, viewModel)
         }
     }
 
@@ -156,48 +166,73 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
 }
 
 @Composable
-fun FriendsList(goToUserScreen: (Long) -> Unit, users: List<UserUi>) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        items(users) { user ->
-            Box(
-                Modifier
-                    .padding(horizontal = 20.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(15.dp))
-                    .clickable {
-                        goToUserScreen(user.id)
-                    }
-                    .padding(vertical = 10.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 15.dp)
-                        .fillMaxWidth()
-                ) {
-                    AsyncImage(
-                        model = user.imageUrl,
-                        error = painterResource(R.drawable.ic_launcher_background),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            .clip(CircleShape)
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Text(
-                        text = user.name,
-                        fontWeight = FontWeight.W400,
-                        fontSize = 20.sp,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
+fun FriendsList(
+    goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewModel
+) {
+
+    val users by viewModel.users.collectAsState()
+    val lazyPagingItems = viewModel.usersPager.value?.flow?.collectAsLazyPagingItems()
+    if (viewModel.searchText.isNotEmpty() && lazyPagingItems != null) {
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(lazyPagingItems.itemCount, key = lazyPagingItems.itemKey { it.id }) { index ->
+                val user = lazyPagingItems[index]
+                if (user != null) {
+                    FriendItem(user, goToUserScreen)
+                } else {
+                    CircularProgressIndicator()
                 }
+            }
+        }
+    } else {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(users) {
+                FriendItem(it, goToUserScreen)
             }
         }
     }
 }
 
+@Composable
+fun FriendItem(user: UserUi, goToUserScreen: (Long) -> Unit) {
+    Box(Modifier
+        .padding(horizontal = 20.dp)
+        .background(
+            MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(15.dp)
+        )
+        .clickable {
+            goToUserScreen(user.id)
+        }
+        .padding(vertical = 10.dp)) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 15.dp)
+                .fillMaxWidth()
+        ) {
+            AsyncImage(
+                model = user.imageUrl,
+                error = painterResource(R.drawable.ic_launcher_background),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(42.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = user.name,
+                fontWeight = FontWeight.W400,
+                fontSize = 20.sp,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+        }
+    }
+}
 
 @Serializable
 object IncomingFriendsRequests
@@ -232,45 +267,37 @@ fun FriendsRequestsModalSheet(
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet.value = false
-            },
-            sheetState = sheetState,
-            containerColor = Color.White
+            }, sheetState = sheetState, containerColor = Color.White
         ) {
             val navController = rememberNavController()
 
-            Scaffold(
-                topBar = {
-                    FriendsRequestsTopBar(navController)
-                },
-                content = { paddingValues ->
-                    NavHost(
-                        navController,
-                        startDestination = IncomingFriendsRequests,
-                        Modifier.padding(paddingValues)
-                    ) {
-                        composable<IncomingFriendsRequests> {
-                            FriendsIncomingRequestsScreen(
-                                viewModel,
-                                goToUserScreen
-                            )
-                        }
-                        composable<OutcomingFriendsRequests> {
-                            FriendsOutcomingRequestsScreen(
-                                viewModel,
-                                goToUserScreen
-                            )
-                        }
+            Scaffold(topBar = {
+                FriendsRequestsTopBar(navController)
+            }, content = { paddingValues ->
+                NavHost(
+                    navController,
+                    startDestination = IncomingFriendsRequests,
+                    Modifier.padding(paddingValues)
+                ) {
+                    composable<IncomingFriendsRequests> {
+                        FriendsIncomingRequestsScreen(
+                            viewModel, goToUserScreen
+                        )
+                    }
+                    composable<OutcomingFriendsRequests> {
+                        FriendsOutcomingRequestsScreen(
+                            viewModel, goToUserScreen
+                        )
                     }
                 }
-            )
+            })
         }
     }
 }
 
 @Composable
 fun FriendsIncomingRequestsScreen(
-    viewModel: FriendsTabViewModel,
-    goToUserScreen: (Long) -> Unit
+    viewModel: FriendsTabViewModel, goToUserScreen: (Long) -> Unit
 ) {
     val incomingRequests by viewModel.incomingFriendsRequests.collectAsState()
     LazyColumn(Modifier.padding(top = 15.dp)) {
@@ -335,13 +362,11 @@ fun FriendsIncomingRequestsScreen(
 
 @Composable
 fun FriendsOutcomingRequestsScreen(
-    viewModel: FriendsTabViewModel,
-    goToUserScreen: (Long) -> Unit
+    viewModel: FriendsTabViewModel, goToUserScreen: (Long) -> Unit
 ) {
     val outgoingRequests by viewModel.outgoingFriendsRequests.collectAsState()
     LazyColumn(
-        modifier = Modifier
-            .padding(top = 15.dp)
+        modifier = Modifier.padding(top = 15.dp)
     ) {
         items(outgoingRequests) { request ->
             Row(
@@ -350,8 +375,7 @@ fun FriendsOutcomingRequestsScreen(
                     .fillMaxWidth()
                     .clickable {
                         goToUserScreen(request.to.id)
-                    },
-                verticalAlignment = Alignment.CenterVertically
+                    }, verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
                     model = request.to.imageUrl,
@@ -397,26 +421,22 @@ fun FriendsRequestsTopBar(navController: NavHostController) {
             selectedTabIndex = tabIndex.intValue,
         ) {
             friendsRequestsRoutes.forEachIndexed { index, route ->
-                Tab(
-                    selected = tabIndex.intValue == index,
-                    onClick = {
-                        tabIndex.intValue = index
-                        navController.navigate(route.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = false
-                            }
-                            launchSingleTop = true
-                            restoreState = false
+                Tab(selected = tabIndex.intValue == index, onClick = {
+                    tabIndex.intValue = index
+                    navController.navigate(route.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = false
                         }
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(route.localizedNameResourceId),
-                            maxLines = 1,
-                            softWrap = false
-                        )
+                        launchSingleTop = true
+                        restoreState = false
                     }
-                )
+                }, text = {
+                    Text(
+                        text = stringResource(route.localizedNameResourceId),
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                })
             }
         }
     }

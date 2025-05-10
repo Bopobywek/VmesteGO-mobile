@@ -6,18 +6,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.vmestego.bll.datasources.UsersPagingDataSource
 import ru.vmestego.bll.services.friends.FriendsService
-import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.ui.mainActivity.FriendRequestUi
-import ru.vmestego.ui.models.UserUi
 import ru.vmestego.ui.mainActivity.toFriendRequestUi
-import ru.vmestego.ui.mainActivity.toUserUi
+import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
 
 class FriendsTabViewModel(application: Application) : AndroidViewModel(application) {
@@ -33,11 +34,13 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
     private val _outgoingFriendsRequests = MutableStateFlow<List<FriendRequestUi>>(listOf())
     val outgoingFriendsRequests = _outgoingFriendsRequests.asStateFlow()
 
+    var usersPager = mutableStateOf<Pager<Int, UserUi>?>(null)
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
     private val tokenDataProvider = TokenDataProvider(application)
-    private val usersService = UsersService()
     private val friendsService = FriendsService()
 
     init {
@@ -115,7 +118,7 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
         isLoading = true
         val token = tokenDataProvider.getToken()!!
         viewModelScope.launch(Dispatchers.IO) {
-            val response  = friendsService.getAllFriends(token)
+            val response = friendsService.getAllFriends(token)
 
             _users.update {
                 response.map {
@@ -139,20 +142,14 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
-        isLoading = true
         val token = tokenDataProvider.getToken()!!
-        viewModelScope.launch(Dispatchers.IO) {
-            val responseData = usersService.findUsers(token, query)
-
-            _users.update {
-                responseData.map {
-                    it.toUserUi()
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                isLoading = false
-            }
+        usersPager.value = Pager(
+            PagingConfig(pageSize = 50)
+        ) {
+            UsersPagingDataSource(
+                token,
+                query
+            )
         }
     }
 }
