@@ -1,7 +1,6 @@
 package ru.vmestego.ui.mainActivity.event
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,8 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -69,9 +66,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.dialogs.YesNoDialog
+import ru.vmestego.ui.mainActivity.shimmerLoading
 import ru.vmestego.utils.LocalDateTimeFormatters
 import ru.vmestego.utils.rememberCachedImageLoader
 import java.time.Duration
@@ -149,12 +148,16 @@ fun EventScreen(
                 .fillMaxHeight(0.3f)
         ) {
             val imageLoader = rememberCachedImageLoader()
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = eventUi.imageUrl,
                 imageLoader = imageLoader,
                 contentDescription = "",
-                placeholder = ColorPainter(Color.LightGray),
-                error = ColorPainter(Color.LightGray),
+                loading = {
+                    Box(modifier = Modifier.shimmerLoading()) {}
+                },
+                error = {
+                    Box(modifier = Modifier.background(Color.LightGray)) {}
+                },
                 // https://developer.android.com/develop/ui/compose/graphics/images/customize
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
