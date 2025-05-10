@@ -15,6 +15,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.exceptions.HttpServiceException
 import ru.vmestego.bll.services.users.models.ConfirmImageUploadRequest
 import ru.vmestego.bll.services.users.models.GetUploadImageUrlResponse
 import ru.vmestego.bll.services.users.models.UserResponse
@@ -31,12 +32,17 @@ class UsersService {
     }
 
     suspend fun getUploadImageUrl(userId: String, token: String): GetUploadImageUrlResponse {
-        val response: HttpResponse = client.get("${API_BASE_ADDRESS}/users/${userId}/images-upload") {
-            contentType(ContentType.Application.Json)
-            bearerAuth(token)
-        }
+        try {
+            val response: HttpResponse =
+                client.get("${API_BASE_ADDRESS}/users/${userId}/images-upload") {
+                    contentType(ContentType.Application.Json)
+                    bearerAuth(token)
+                }
 
-        return response.body<GetUploadImageUrlResponse>();
+            return response.body<GetUploadImageUrlResponse>()
+        } catch (_: Exception) {
+            throw HttpServiceException(null, "Unhandled exception")
+        }
     }
 
     suspend fun putImage(signedUrl: String, imageBytes: ByteArray) {
@@ -53,7 +59,7 @@ class UsersService {
             setBody(ConfirmImageUploadRequest(key))
         }
 
-        return response.body<UserResponse>();
+        return response.body<UserResponse>()
     }
 
     suspend fun findUsers(token: String, query: String): List<UserResponse> {
@@ -65,7 +71,7 @@ class UsersService {
             parameter("pageSize", "50")
         }
 
-        return response.body<List<UserResponse>>();
+        return response.body<List<UserResponse>>()
     }
 
     suspend fun getUserInfoById(userId: String, token: String): UserResponse {
@@ -74,7 +80,7 @@ class UsersService {
             bearerAuth(token)
         }
 
-        return response.body<UserResponse>();
+        return response.body<UserResponse>()
     }
 }
 

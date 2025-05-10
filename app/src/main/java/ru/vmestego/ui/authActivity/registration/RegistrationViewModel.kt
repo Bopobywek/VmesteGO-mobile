@@ -11,17 +11,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
+import ru.vmestego.bll.exceptions.HttpServiceException
 import ru.vmestego.bll.services.auth.AuthService
 import ru.vmestego.ui.authActivity.models.RegisterRequest
 import ru.vmestego.data.SecureStorage
+import ru.vmestego.utils.showShortToast
 
 class RegistrationViewModel(application: Application) : AndroidViewModel(application) {
     private val _application = application
@@ -86,15 +84,6 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
         passwordError = if (password.isBlank() && passwordFocusedOnce) "Пароль не может быть пустым" else null
     }
 
-    private val client = HttpClient(Android) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-            })
-        }
-    }
-
     private val secureStorage = SecureStorage.getStorageInstance(application)
     private val authService = AuthService()
 
@@ -116,11 +105,18 @@ class RegistrationViewModel(application: Application) : AndroidViewModel(applica
                     Toast.makeText(_application, "Вы успешно зарегистрировались", Toast.LENGTH_SHORT).show()
                     successCallback()
                 }
+            } catch (httpEx: HttpServiceException) {
+                withContext(Dispatchers.Main) {
+                    if (httpEx.statusCode == HttpStatusCode.BadRequest) {
+                        _application.showShortToast("Пользователь с таким именем уже существует")
+                    } else {
+                        _application.showShortToast("Произошла ошибка, попробуйте позже")
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("Registartion","Registration failed: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(_application, "Произошла ошибка", Toast.LENGTH_SHORT).show()
-                    successCallback()
+                    _application.showShortToast("Произошла ошибка, попробуйте позже")
                 }
             } finally {
                 isLoading = false

@@ -2,19 +2,19 @@ package ru.vmestego.ui.authActivity.auth
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.vmestego.bll.exceptions.HttpServiceException
 import ru.vmestego.bll.services.auth.AuthService
-import ru.vmestego.ui.authActivity.models.LoginRequest
 import ru.vmestego.data.SecureStorage
-import ru.vmestego.utils.PasswordValidator
+import ru.vmestego.ui.authActivity.models.LoginRequest
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     var login by mutableStateOf("")
@@ -79,9 +79,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 isSuccess = true
                 Log.i("Token", response.token)
                 secureStorage.saveToken(response.token)
+            } catch (httpEx: HttpServiceException) {
+                authorizeError = if (httpEx.statusCode == HttpStatusCode.BadRequest) {
+                    "Неправильный логин или пароль"
+                } else {
+                    "Не удалось войти, попробуйте ещё раз"
+                }
             } catch (e: Exception) {
                 authorizeError = "Не удалось войти, попробуйте ещё раз"
-                Log.e("Login","Registration failed: ${e.message}")
+                Log.e("Login","Login failed: ${e.message}")
             } finally {
                 isLoading = false
             }

@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,7 +64,6 @@ import ru.vmestego.R
 import ru.vmestego.SwipeableItemWithActions
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.ui.models.TicketUi
-import ru.vmestego.ui.ticketActivity.TicketActivity
 import ru.vmestego.utils.IntentHelper
 import ru.vmestego.utils.LocalDateTimeFormatters
 import java.time.LocalDate
@@ -82,7 +80,6 @@ fun TicketCard(ticket: TicketUi) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                Log.i("Main", "hello")
                 // https://stackoverflow.com/a/48950071
                 val intent = IntentHelper.createOpenPdfIntent(ticket.ticketUri)
                 context.startActivity(intent)
@@ -195,19 +192,6 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                     }
                     SwipeableItemWithActions(
                         actions = {
-                            ActionIcon(
-                                onClick = {
-                                    showMenu = false
-                                    val intent = Intent(context, TicketActivity::class.java)
-                                    intent.setAction(Intent.ACTION_SEND)
-                                    intent.setType("application/pdf")
-                                    intent.putExtra(Intent.EXTRA_STREAM, ticket.ticketUri)
-                                    context.startActivity(intent)
-                                },
-                                backgroundColor = Color.Gray,
-                                icon = Icons.Default.Edit,
-                                modifier = Modifier.fillMaxHeight()
-                            )
                             ActionIcon(
                                 onClick = {
 //                                    val builder = CalendarContract.CONTENT_URI.buildUpon()

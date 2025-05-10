@@ -29,7 +29,7 @@ class CommentsService {
         }
     }
 
-    private val retryNumber = 3;
+    private val retryNumber = 3
 
     suspend fun getAllComments(token: String, eventId: Long) : List<CommentResponse> {
         val response: HttpResponse
@@ -41,11 +41,10 @@ class CommentsService {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
+            return response.body<List<CommentResponse>>()
         } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<CommentResponse>>()
     }
 
     suspend fun postComment(token: String, eventId: Long, text: String) {

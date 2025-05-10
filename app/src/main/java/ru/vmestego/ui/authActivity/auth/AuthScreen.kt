@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -89,18 +90,24 @@ fun AuthScreen(viewModel: AuthViewModel = viewModel(), onRegistrationClick: () -
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    viewModel.authorizeUser {
-                        activity.startActivity(Intent(activity, MainActivity::class.java))
-                        activity.finish()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(text = "Войти", fontWeight = FontWeight.Bold)
+            if (!viewModel.isLoading) {
+                Button(
+                    onClick = {
+                        viewModel.authorizeUser {
+                            activity.startActivity(Intent(activity, MainActivity::class.java))
+                            activity.finish()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text(text = "Войти", fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
