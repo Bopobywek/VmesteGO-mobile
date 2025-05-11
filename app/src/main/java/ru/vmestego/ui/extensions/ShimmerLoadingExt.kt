@@ -35,7 +35,7 @@ fun Modifier.shimmerLoading(
         drawContent()
 
         drawRect(
-            color = Color.DarkGray.copy(alpha = alpha)
+            color = Color.LightGray.copy(alpha = alpha)
         )
     }
 }
