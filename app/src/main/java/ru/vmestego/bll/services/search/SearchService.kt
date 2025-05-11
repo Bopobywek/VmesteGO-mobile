@@ -1,7 +1,5 @@
 package ru.vmestego.bll.services.search
 
-import android.widget.Toast
-import androidx.room.Query
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -16,6 +14,8 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.shared.models.EventResponse
+import ru.vmestego.core.API_BASE_ADDRESS
+import java.time.LocalDate
 
 class SearchService {
     private val client = HttpClient(Android) {
@@ -27,113 +27,130 @@ class SearchService {
         }
     }
 
-    private val retryNumber = 3;
+    private val retryNumber = 3
+    private val defaultPageSize = 10
 
-//    suspend fun searchEvents(query: String): SearchEventsResponse {
-//        val response: HttpResponse
-//        try {
-//            response = client.get("http://10.0.2.2:8080/search") {
-//                url {
-//                    parameters["q"] = query
-//                }
-//                contentType(ContentType.Application.Json)
-//                retry {
-//                    retryOnExceptionOrServerErrors(retryNumber)
-//                }
-//            }
-//        } catch (_: Exception) {
-//            return SearchEventsResponse(listOf())
-//        }
-//
-//        return response.body<SearchEventsResponse>()
-//    }
-
-    suspend fun getAllEvents(token: String): List<EventResponse> {
+    suspend fun getPublicEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events") {
+            response = client.get("${API_BASE_ADDRESS}/events/created-public") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
+                parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
-        } catch (e: Exception) {
+            return response.body<List<EventResponse>>()
+        } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
-    suspend fun getPublicEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getPrivateEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/created-public") {
+            response = client.get("${API_BASE_ADDRESS}/events/created-private") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
-        } catch (e: Exception) {
+            return response.body<List<EventResponse>>()
+        } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
-    suspend fun getPrivateEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getJoinedPrivateEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/created-private") {
+            response = client.get("${API_BASE_ADDRESS}/events/joined-private") {
                 contentType(ContentType.Application.Json)
-                bearerAuth(token)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
+                bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
-        } catch (e: Exception) {
+            return response.body<List<EventResponse>>()
+        } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
     }
 
-    suspend fun getJoinedPrivateEvents(token: String, query: String? = null): List<EventResponse> {
+    suspend fun getOtherAdminsPublicEvents(
+        token: String,
+        query: String? = null,
+        categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int = 1
+    ): List<EventResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events/joined-private") {
+            response = client.get("${API_BASE_ADDRESS}/events/other-admins-public") {
                 contentType(ContentType.Application.Json)
+                parameter("limit", defaultPageSize)
+                parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
+                for (categoryId in categoriesIds) {
+                    parameter("categoryIds", categoryId)
+                }
                 bearerAuth(token)
                 retry {
                     retryOnExceptionOrServerErrors(retryNumber)
                 }
             }
-        } catch (e: Exception) {
+            return response.body<List<EventResponse>>()
+        } catch (_: Exception) {
             return listOf()
         }
-
-        return response.body<List<EventResponse>>()
-    }
-
-    suspend fun getOtherAdminsPublicEvents(token: String, query: String? = null): List<EventResponse> {
-        val response: HttpResponse
-        try {
-            response = client.get("http://10.0.2.2:8080/events/other-admins-public") {
-                contentType(ContentType.Application.Json)
-                parameter("q", query)
-                bearerAuth(token)
-                retry {
-                    retryOnExceptionOrServerErrors(retryNumber)
-                }
-            }
-        } catch (e: Exception) {
-            return listOf()
-        }
-
-        return response.body<List<EventResponse>>()
     }
 }

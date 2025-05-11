@@ -1,6 +1,6 @@
 package ru.vmestego.ui.mainActivity
 
-import EventFormScreen
+import ru.vmestego.ui.mainActivity.eventForm.EventFormScreen
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
@@ -22,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.asIntState
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,14 +43,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import ru.vmestego.data.EventDataDto
-import ru.vmestego.event.EventScreenWrapper
-import ru.vmestego.event.EventViewModel
-import ru.vmestego.event.EventViewModelFactory
+import ru.vmestego.ui.mainActivity.event.EventScreenWrapper
+import ru.vmestego.ui.mainActivity.event.EventViewModel
+import ru.vmestego.ui.mainActivity.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
-import ru.vmestego.ui.ticketActivity.EventCreationScreen
+import ru.vmestego.ui.mainActivity.friends.FriendsScreen
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileScreenWrapper
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileViewModel
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileViewModelFactory
+import ru.vmestego.ui.mainActivity.profile.ProfileScreen
+import ru.vmestego.ui.mainActivity.search.SearchScreen
+import ru.vmestego.ui.mainActivity.tickets.TicketsScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
-import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 val iconizedRoutes = listOf(
@@ -74,7 +77,9 @@ object Friends
 object Profile
 
 @Serializable
-object CustomEvent
+data class CustomEvent(
+    val id: Long? = null
+)
 
 @Serializable
 data class Event(
@@ -139,7 +144,7 @@ fun AppScreen() {
                         }
                     },
                     createEvent = {
-                        navController.navigate(CustomEvent) {
+                        navController.navigate(CustomEvent()) {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -151,23 +156,33 @@ fun AppScreen() {
                     navController.navigate(User(it))
                 }
             }
-            composable<Profile> { ProfileScreen() }
-            composable<CustomEvent> {
-                EventFormScreen {
-                    val viewModel =
-                        EventParametersViewModel(context.applicationContext as Application)
-                    scope.launch(Dispatchers.IO) {
-                        viewModel.addEvent(
-                            EventDataDto(
-                                it.title,
-                                it.location,
-                                LocalDateTime.of(it.date, it.time),
-                                it.externalId
+            composable<Profile> {
+                ProfileScreen {
+                    navController.navigate(Event(it.id)) {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+            composable<CustomEvent> { backStackEntry ->
+                if (backStackEntry.lifecycleIsResumed()) {
+                    val route = backStackEntry.toRoute<CustomEvent>()
+                    EventFormScreen(existingEventId = route.id) {
+                        val viewModel =
+                            EventParametersViewModel(context.applicationContext as Application)
+                        scope.launch(Dispatchers.IO) {
+                            viewModel.addEvent(
+                                EventDataDto(
+                                    it.title,
+                                    it.location,
+                                    LocalDateTime.of(it.date, it.time),
+                                    it.externalId
+                                )
                             )
-                        )
 
-                        withContext(Dispatchers.Main) {
-                            navController.popBackStack()
+                            withContext(Dispatchers.Main) {
+                                navController.popBackStack()
+                            }
                         }
                     }
                 }
@@ -182,7 +197,13 @@ fun AppScreen() {
                                 route.id
                             )
                         )
-                    EventScreenWrapper(viewModel) { navController.popBackStack() }
+                    EventScreenWrapper(viewModel,
+                        editEvent = {
+                            navController.navigate(CustomEvent(it)) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }) { navController.popBackStack() }
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -199,7 +220,12 @@ fun AppScreen() {
                             route.id
                         )
                     )
-                OtherUserProfileScreenWrapper(viewModel)
+                OtherUserProfileScreenWrapper(viewModel) {
+                    navController.navigate(Event(it.id)) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             }
         }
     }

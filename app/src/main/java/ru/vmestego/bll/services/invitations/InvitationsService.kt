@@ -13,10 +13,9 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.bll.services.users.models.UserResponse
+import ru.vmestego.bll.services.invitations.models.InvitationResponse
+import ru.vmestego.core.API_BASE_ADDRESS
 
 class InvitationsService {
     private val client = HttpClient(Android) {
@@ -33,7 +32,10 @@ class InvitationsService {
     suspend fun getPendingInvitations(token: String): List<InvitationResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events-invitations/pending") {
+            response = client.get("${API_BASE_ADDRESS}/events-invitations/pending") {
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -47,20 +49,26 @@ class InvitationsService {
     suspend fun getSentInvitations(token: String): List<InvitationResponse> {
         val response: HttpResponse
         try {
-            response = client.get("http://10.0.2.2:8080/events-invitations/sent") {
+            response = client.get("${API_BASE_ADDRESS}/events-invitations/sent") {
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
-        } catch (_: Exception) {
-            return listOf()
-        }
+            return response.body<List<InvitationResponse>>()
 
-        return response.body<List<InvitationResponse>>()
+        } catch (_: Exception) {
+            return emptyList()
+        }
     }
 
     suspend fun acceptInvitation(token: String, inviteId: Long) {
         try {
-            client.post("http://10.0.2.2:8080/events-invitations/${inviteId}/accept") {
+            client.post("${API_BASE_ADDRESS}/events-invitations/${inviteId}/accept") {
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -70,7 +78,10 @@ class InvitationsService {
 
     suspend fun rejectInvitation(token: String, inviteId: Long) {
         try {
-            client.post("http://10.0.2.2:8080/events-invitations/${inviteId}/reject") {
+            client.post("${API_BASE_ADDRESS}/events-invitations/${inviteId}/reject") {
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -80,7 +91,10 @@ class InvitationsService {
 
     suspend fun revokeInvitation(token: String, inviteId: Long) {
         try {
-            client.delete("http://10.0.2.2:8080/events-invitations/${inviteId}") {
+            client.delete("${API_BASE_ADDRESS}/events-invitations/${inviteId}") {
+                retry {
+                    retryOnExceptionOrServerErrors(retryNumber)
+                }
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }
@@ -89,18 +103,3 @@ class InvitationsService {
     }
 }
 
-@Serializable
-data class InvitationResponse(
-    val id: Long,
-    val event: EventResponse,
-    val sender: UserResponse,
-    val receiver: UserResponse,
-    val status: EventInvitationStatus
-)
-
-@Serializable
-enum class EventInvitationStatus {
-    Pending,
-    Accepted,
-    Rejected
-}

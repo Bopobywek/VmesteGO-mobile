@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
+import ru.vmestego.ui.authActivity.auth.AuthScreen
+import ru.vmestego.ui.authActivity.registration.RegistrationScreen
 
 @Serializable
 object Authorization
