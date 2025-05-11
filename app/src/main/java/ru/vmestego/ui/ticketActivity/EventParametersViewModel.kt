@@ -26,7 +26,7 @@ class EventParametersViewModel(application: Application) : AndroidViewModel(appl
                 externalId = eventDto.externalId.toInt(),
                 title = eventDto.name,
                 location = eventDto.location,
-                startAt = eventDto.startAt.plusHours(3),
+                startAt = eventDto.startAt,
                 isSynchronized = false
             )
         )

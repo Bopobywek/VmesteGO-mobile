@@ -114,7 +114,7 @@ class InvitationsTabViewModel(application: Application) : AndroidViewModel(appli
                 externalId = eventDto.externalId.toInt(),
                 title = eventDto.name,
                 location = eventDto.location,
-                startAt = eventDto.startAt.plusHours(3),
+                startAt = eventDto.startAt,
                 isSynchronized = false
             )
         )

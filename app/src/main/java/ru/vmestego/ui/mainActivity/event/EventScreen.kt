@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -78,7 +79,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun EventScreenWrapper(viewModel: EventViewModel, editEvent: (Long) -> Unit, goBackToSearch: () -> Unit) {
+fun EventScreenWrapper(
+    viewModel: EventViewModel,
+    editEvent: (Long) -> Unit,
+    goBackToSearch: () -> Unit
+) {
     val showBottomSheet = remember { mutableStateOf(false) }
     Scaffold(bottomBar = {
         Button(
@@ -121,7 +126,14 @@ fun EventScreenWrapper(viewModel: EventViewModel, editEvent: (Long) -> Unit, goB
                 CircularProgressIndicator()
             }
         } else {
-            EventScreen(event!!, innerPadding, editEvent, goBackToSearch, showBottomSheet, viewModel)
+            EventScreen(
+                event!!,
+                innerPadding,
+                editEvent,
+                goBackToSearch,
+                showBottomSheet,
+                viewModel
+            )
         }
     }
 }
@@ -192,9 +204,11 @@ fun EventScreen(
                 )
             }
 
-            Row(Modifier
-                .padding(10.dp)
-                .align(Alignment.TopEnd), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Row(
+                Modifier
+                    .padding(10.dp)
+                    .align(Alignment.TopEnd), horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
                 if (viewModel.isCurrentUserOwner) {
                     val confirmEventDeleteDialogOpen = remember { mutableStateOf(false) }
                     if (confirmEventDeleteDialogOpen.value) {
@@ -204,7 +218,7 @@ fun EventScreen(
                             "Вы действительно хотите удалить выбранное мероприятие?",
                             "Удалить",
                             "Отмена",
-                            { viewModel.deleteEvent { goBackToSearch() }},
+                            { viewModel.deleteEvent { goBackToSearch() } },
                             {})
                     }
 
@@ -244,15 +258,26 @@ fun EventScreen(
                 .padding(horizontal = 15.dp)
                 .padding(top = 10.dp)
         ) {
-            Text(LocalDateTimeFormatters.formatByDefault(eventUi.dateTime), fontSize = 16.sp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Icon(rememberVectorPainter(image = Icons.Filled.AccessTime),
+                    contentDescription = "Localized description",
+                    tint = { Color.Gray })
+                Text(LocalDateTimeFormatters.formatByDefault(eventUi.dateTime), fontSize = 18.sp)
+            }
 
             Spacer(Modifier.height(10.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(eventUi.locationName, fontSize = 24.sp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
                 Icon(rememberVectorPainter(image = Icons.Filled.LocationOn),
                     contentDescription = "Localized description",
                     tint = { Color.Gray })
+                Text(eventUi.locationName, fontSize = 18.sp)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -343,8 +368,18 @@ fun FriendsModal(
         if (friends.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
-                    Text("Ваш список друзей пуст", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
-                    Text("Скорее добавьте кого-нибудь", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        "Ваш список друзей пуст",
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        "Скорее добавьте кого-нибудь",
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
         }

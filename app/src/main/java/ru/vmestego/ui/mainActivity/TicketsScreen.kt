@@ -309,5 +309,5 @@ fun openCalendarWithEvent(context: Context, ticket: TicketUi) {
 }
 
 fun LocalDateTime.toMillis(): Long {
-    return this.plusHours(3).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    return this.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }
