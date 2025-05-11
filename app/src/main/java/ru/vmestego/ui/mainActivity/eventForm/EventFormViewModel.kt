@@ -13,11 +13,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.events.models.CreateEventRequest
 import ru.vmestego.bll.services.events.EventsService
-import ru.vmestego.bll.services.shared.models.EventResponse
-import ru.vmestego.ui.mainActivity.CategoryUi
+import ru.vmestego.ui.mainActivity.search.CategoryUi
 import ru.vmestego.ui.mainActivity.event.EventUi
-import ru.vmestego.ui.mainActivity.toCategoryUi
-import ru.vmestego.ui.mainActivity.toEventUi
+import ru.vmestego.ui.mainActivity.search.toCategoryUi
+import ru.vmestego.ui.extensions.toEventUi
 import ru.vmestego.utils.TokenDataProvider
 import java.io.InvalidObjectException
 import java.time.LocalDate

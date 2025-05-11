@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.extensions
 
 import ru.vmestego.bll.services.users.models.UserResponse
 import ru.vmestego.ui.models.UserUi

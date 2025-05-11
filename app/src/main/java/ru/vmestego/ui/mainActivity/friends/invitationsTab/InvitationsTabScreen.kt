@@ -66,7 +66,7 @@ import ru.vmestego.R
 import ru.vmestego.data.EventDataDto
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.ui.mainActivity.event.EventUi
-import ru.vmestego.ui.mainActivity.noRippleClickable
+import ru.vmestego.ui.extensions.noRippleClickable
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.utils.IntentHelper

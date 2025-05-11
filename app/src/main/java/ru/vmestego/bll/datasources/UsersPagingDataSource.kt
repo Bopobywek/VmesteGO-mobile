@@ -3,7 +3,7 @@ package ru.vmestego.bll.datasources
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import ru.vmestego.bll.services.users.UsersService
-import ru.vmestego.ui.mainActivity.toUserUi
+import ru.vmestego.ui.extensions.toUserUi
 import ru.vmestego.ui.models.UserUi
 
 class UsersPagingDataSource(

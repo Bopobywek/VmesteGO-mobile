@@ -1,8 +1,7 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.tickets
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers

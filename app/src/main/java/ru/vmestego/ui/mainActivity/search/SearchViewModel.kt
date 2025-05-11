@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.search
 
 import android.app.Application
 import androidx.compose.runtime.getValue

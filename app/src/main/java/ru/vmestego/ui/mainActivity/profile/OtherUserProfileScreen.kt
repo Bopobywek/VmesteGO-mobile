@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.profile
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import ru.vmestego.R
+import ru.vmestego.ui.models.FriendRequestStatusUi
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.utils.rememberCachedImageLoader
 

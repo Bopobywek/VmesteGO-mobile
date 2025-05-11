@@ -17,8 +17,8 @@ import ru.vmestego.data.EventDataDto
 import ru.vmestego.data.EventsRepositoryImpl
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.ui.mainActivity.event.EventUi
-import ru.vmestego.ui.mainActivity.toEventUi
-import ru.vmestego.ui.mainActivity.toUserUi
+import ru.vmestego.ui.extensions.toEventUi
+import ru.vmestego.ui.extensions.toUserUi
 import ru.vmestego.utils.TokenDataProvider
 
 class InvitationsTabViewModel(application: Application) : AndroidViewModel(application) {

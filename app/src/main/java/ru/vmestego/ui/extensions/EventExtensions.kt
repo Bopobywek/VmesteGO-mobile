@@ -1,7 +1,8 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.extensions
 
 import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.mainActivity.search.toCategoryUi
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset

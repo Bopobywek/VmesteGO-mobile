@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.search
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 import ru.vmestego.bll.services.shared.models.CategoryResponse
 import ru.vmestego.ui.dialogs.MultiSelectDialog
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.extensions.shimmerLoading
 import ru.vmestego.utils.LocalDateTimeFormatters
 import ru.vmestego.utils.rememberCachedImageLoader
 import java.time.Instant
@@ -364,7 +365,7 @@ fun EventCard(eventUi: EventUi, goToEvent: (EventUi) -> Unit, onEventClick: (Eve
             imageLoader = imageLoader,
             contentDescription = "",
             loading = {
-                Box(modifier = Modifier.shimmerLoading()) {}
+                Box(modifier = Modifier.Companion.shimmerLoading()) {}
             },
             error = {
                 Box(modifier = Modifier.background(Color.LightGray)) {}

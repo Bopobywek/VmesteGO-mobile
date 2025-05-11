@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.profile
 
 import android.app.Activity
 import android.content.Intent

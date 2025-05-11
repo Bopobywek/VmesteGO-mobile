@@ -71,7 +71,7 @@ import coil.compose.SubcomposeAsyncImage
 import ru.vmestego.R
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.dialogs.YesNoDialog
-import ru.vmestego.ui.mainActivity.shimmerLoading
+import ru.vmestego.ui.extensions.shimmerLoading
 import ru.vmestego.utils.LocalDateTimeFormatters
 import ru.vmestego.utils.rememberCachedImageLoader
 import java.time.Duration

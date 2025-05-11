@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import ru.vmestego.ui.mainActivity.toSimpleDateString
+import ru.vmestego.ui.mainActivity.search.toSimpleDateString
 import ru.vmestego.ui.ticketActivity.DatePickerModalInput
 import ru.vmestego.ui.ticketActivity.EventDto
 import ru.vmestego.ui.ticketActivity.TimePickerModalInput

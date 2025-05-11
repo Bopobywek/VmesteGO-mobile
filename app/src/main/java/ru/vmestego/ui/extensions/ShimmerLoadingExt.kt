@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.extensions
 
 import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.RepeatMode

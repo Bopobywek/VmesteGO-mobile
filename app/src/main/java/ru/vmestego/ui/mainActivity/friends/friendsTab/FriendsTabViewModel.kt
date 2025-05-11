@@ -16,8 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.vmestego.bll.datasources.UsersPagingDataSource
 import ru.vmestego.bll.services.friends.FriendsService
-import ru.vmestego.ui.mainActivity.FriendRequestUi
-import ru.vmestego.ui.mainActivity.toFriendRequestUi
+import ru.vmestego.ui.models.FriendRequestUi
+import ru.vmestego.ui.mainActivity.profile.toFriendRequestUi
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
 

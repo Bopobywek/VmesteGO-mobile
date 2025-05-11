@@ -1,6 +1,4 @@
-package ru.vmestego.ui.mainActivity
-
-import ru.vmestego.ui.models.UserUi
+package ru.vmestego.ui.models
 
 data class FriendRequestUi(
     val from: UserUi,

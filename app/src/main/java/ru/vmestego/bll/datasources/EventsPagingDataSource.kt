@@ -4,7 +4,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.ui.mainActivity.event.EventUi
-import ru.vmestego.ui.mainActivity.toEventUi
+import ru.vmestego.ui.extensions.toEventUi
 import java.time.LocalDate
 import kotlin.String
 import kotlin.collections.emptyList

@@ -48,6 +48,12 @@ import ru.vmestego.ui.mainActivity.event.EventViewModel
 import ru.vmestego.ui.mainActivity.event.EventViewModelFactory
 import ru.vmestego.routing.IconizedRoute
 import ru.vmestego.ui.mainActivity.friends.FriendsScreen
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileScreenWrapper
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileViewModel
+import ru.vmestego.ui.mainActivity.profile.OtherUserProfileViewModelFactory
+import ru.vmestego.ui.mainActivity.profile.ProfileScreen
+import ru.vmestego.ui.mainActivity.search.SearchScreen
+import ru.vmestego.ui.mainActivity.tickets.TicketsScreen
 import ru.vmestego.ui.ticketActivity.EventParametersViewModel
 import java.time.LocalDateTime
 

@@ -20,8 +20,8 @@ import ru.vmestego.bll.services.events.EventsService
 import ru.vmestego.bll.services.friends.FriendsService
 import ru.vmestego.core.EventStatus
 import ru.vmestego.ui.models.UserUi
-import ru.vmestego.ui.mainActivity.toEventUi
-import ru.vmestego.ui.mainActivity.toUserUi
+import ru.vmestego.ui.extensions.toEventUi
+import ru.vmestego.ui.extensions.toUserUi
 import ru.vmestego.utils.TokenDataProvider
 import java.time.LocalDateTime
 

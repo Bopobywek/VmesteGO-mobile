@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.tickets
 
 import android.annotation.SuppressLint
 import android.content.Context

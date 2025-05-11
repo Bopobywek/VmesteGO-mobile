@@ -61,6 +61,7 @@ import coil.compose.AsyncImage
 import kotlinx.serialization.Serializable
 import ru.vmestego.R
 import ru.vmestego.routing.SecondaryLevelRoute
+import ru.vmestego.ui.models.FriendRequestUi
 import ru.vmestego.ui.models.UserUi
 
 @OptIn(ExperimentalMaterial3Api::class)

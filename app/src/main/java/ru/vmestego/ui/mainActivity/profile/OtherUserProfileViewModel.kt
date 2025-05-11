@@ -1,4 +1,4 @@
-package ru.vmestego.ui.mainActivity
+package ru.vmestego.ui.mainActivity.profile
 
 import android.app.Application
 import androidx.compose.runtime.getValue
@@ -20,7 +20,11 @@ import ru.vmestego.bll.services.friends.models.FriendRequestResponse
 import ru.vmestego.bll.services.friends.models.FriendRequestStatus
 import ru.vmestego.bll.services.users.UsersService
 import ru.vmestego.core.EventStatus
+import ru.vmestego.ui.models.FriendRequestStatusUi
+import ru.vmestego.ui.models.FriendRequestUi
 import ru.vmestego.ui.mainActivity.event.EventUi
+import ru.vmestego.ui.extensions.toEventUi
+import ru.vmestego.ui.extensions.toUserUi
 import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
 import ru.vmestego.utils.showShortToast
