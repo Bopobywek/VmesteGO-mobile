@@ -140,12 +140,15 @@ fun ProfileScreen(
             rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
                 run {
                     if (uri != null) {
-                        photoUri.value = uri.encodedPath!!
-                        Log.d("PhotoPicker", "Selected URI: $uri")
-                        val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
-                        viewModel.updateImage(bytes)
-                        context.imageLoader.diskCache?.clear()
-                        context.imageLoader.memoryCache?.clear()
+                        try {
+
+                            photoUri.value = uri.encodedPath!!
+                            Log.d("PhotoPicker", "Selected URI: $uri")
+                            val bytes = context.contentResolver.openInputStream(uri)!!.readBytes()
+                            viewModel.updateImage(bytes)
+                            context.imageLoader.diskCache?.clear()
+                            context.imageLoader.memoryCache?.clear()
+                        } catch (_: Exception) {}
                     } else {
                         Log.d("PhotoPicker", "No media selected")
                     }

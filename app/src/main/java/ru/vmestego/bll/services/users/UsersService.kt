@@ -52,7 +52,7 @@ class UsersService {
     suspend fun putImage(signedUrl: String, imageBytes: ByteArray) {
         try {
             client.put(signedUrl) {
-                contentType(ContentType.Image.JPEG)
+                contentType(ContentType.Image.Any)
                 setBody(imageBytes)
             }
         } catch (_: Exception) {

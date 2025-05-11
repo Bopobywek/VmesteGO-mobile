@@ -17,15 +17,25 @@ import ru.vmestego.ui.mainActivity.search.CategoryUi
 import ru.vmestego.ui.mainActivity.event.EventUi
 import ru.vmestego.ui.mainActivity.search.toCategoryUi
 import ru.vmestego.ui.extensions.toEventUi
+import ru.vmestego.ui.extensions.toUserUi
+import ru.vmestego.ui.models.UserUi
 import ru.vmestego.utils.TokenDataProvider
+import ru.vmestego.utils.showShortToast
 import java.io.InvalidObjectException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.UUID
 
 class EventFormViewModel(application: Application) : AndroidViewModel(application) {
     private val _categories = MutableStateFlow<List<CategoryUi>>(listOf())
     val categories = _categories.asStateFlow()
+
+    private val _imageUrl = MutableStateFlow<String?>(null)
+    val imageUrl = _imageUrl.asStateFlow()
+
+    private val _image = MutableStateFlow<ByteArray?>(null)
+    val image = _image.asStateFlow()
 
     var existingEventId by mutableStateOf<Long?>(null)
         private set
@@ -66,9 +76,10 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
         date.value = event.dates.toLocalDate()
         time.value = event.dates.toLocalTime()
         selectedCategories.value = event.categories.map { it.toCategoryUi() }.toSet()
+        _imageUrl.update { event.images.getOrNull(0) }
     }
 
-    fun isAdmin() : Boolean {
+    fun isAdmin(): Boolean {
         return _tokenDataProvider.isAdmin()
     }
 
@@ -137,7 +148,15 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
             price = price.value.toDoubleOrNull() ?: 0.0,
             isPrivate = isPrivate.value,
             eventCategoryNames = selectedCategories.value.map { it.name },
-            eventImages = emptyList(),
+            eventImages = if (_imageUrl.value == null) {
+                emptyList()
+            } else {
+                listOf(
+                    extractKeyFromUrl(
+                        _imageUrl.value!!
+                    )
+                )
+            },
             externalId = null
         )
 
@@ -147,10 +166,49 @@ class EventFormViewModel(application: Application) : AndroidViewModel(applicatio
             _eventsService.createEvent(token, request)
         }
 
+        if (response != null && _image.value != null) {
+            val key = uploadImage(response.id)
+            if (existingEventId != null && key != null) {
+                _eventsService.updateEvent(
+                    token,
+                    existingEventId!!,
+                    request.copy(eventImages = listOf(key))
+                )
+            }
+        }
+
         if (response != null) {
-            return return BlResult(response.toEventUi(), null)
+            return BlResult(response.toEventUi(), null)
         }
         return BlResult(null, ErrorType.API_ERROR)
+    }
+
+    suspend fun uploadImage(eventId: Long): String? {
+        if (_image.value == null) {
+            return null
+        }
+
+        val userId = _tokenDataProvider.getUserIdFromToken()
+        val token = _tokenDataProvider.getToken()!!
+
+        if (userId == null) {
+            return null
+        }
+
+        try {
+            val url = _eventsService.getUploadImageUrl(eventId, token)
+            _eventsService.putImage(url.uploadUrl, _image.value!!)
+            _eventsService.confirmImageUpload(eventId, token, url.key)
+            return url.key
+        } catch (_: Exception) {
+        }
+
+        return null
+    }
+
+    fun updateImage(imageBytes: ByteArray) {
+        _image.update { imageBytes }
+
     }
 }
 
@@ -178,4 +236,11 @@ class BlResult<T>(
 enum class ErrorType {
     FORM_VALIDATION,
     API_ERROR
+}
+
+fun extractKeyFromUrl(url: String): String {
+    return url.substringAfter("events/", missingDelimiterValue = "").takeIf { it.isNotEmpty() }
+        ?.let {
+            "events/$it"
+        }.toString()
 }

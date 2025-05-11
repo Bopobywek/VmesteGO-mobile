@@ -17,9 +17,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import ru.vmestego.bll.exceptions.HttpServiceException
+import ru.vmestego.bll.services.events.models.ConfirmEventImageUploadRequest
 import ru.vmestego.bll.services.events.models.CreateEventRequest
-import ru.vmestego.bll.services.shared.models.EventResponse
+import ru.vmestego.bll.services.events.models.GetEventUploadImageUrlResponse
 import ru.vmestego.bll.services.shared.models.CategoryResponse
+import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.core.API_BASE_ADDRESS
 import ru.vmestego.core.EventStatus
 
@@ -148,6 +151,47 @@ class EventsService {
 
         } catch (_: Exception) {
             return null
+        }
+    }
+
+    suspend fun getUploadImageUrl(eventId: Long, token: String): GetEventUploadImageUrlResponse {
+        try {
+            val response: HttpResponse =
+                client.get("${API_BASE_ADDRESS}/events/${eventId}/images-upload/url") {
+                    contentType(ContentType.Application.Json)
+                    retry {
+                        retryOnExceptionOrServerErrors(retryNumber)
+                    }
+                    bearerAuth(token)
+                }
+
+            return response.body<GetEventUploadImageUrlResponse>()
+        } catch (_: Exception) {
+            throw HttpServiceException(null, "Unhandled exception")
+        }
+    }
+
+    suspend fun putImage(signedUrl: String, imageBytes: ByteArray) {
+        try {
+            client.put(signedUrl) {
+                contentType(ContentType.Image.Any)
+                setBody(imageBytes)
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    suspend fun confirmImageUpload(eventId: Long, token: String, key: String) {
+        try {
+            val response = client.post("${API_BASE_ADDRESS}/events/${eventId}/images-upload/confirm") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(token)
+                setBody(ConfirmEventImageUploadRequest(key, 0))
+            }
+
+            response.status
+        } catch (_: Exception) {
+            throw HttpServiceException(null, "Unhandled exception")
         }
     }
 }
