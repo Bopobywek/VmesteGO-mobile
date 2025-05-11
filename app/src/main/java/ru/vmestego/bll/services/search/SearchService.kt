@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import ru.vmestego.bll.services.shared.models.EventResponse
 import ru.vmestego.core.API_BASE_ADDRESS
+import java.time.LocalDate
 
 class SearchService {
     private val client = HttpClient(Android) {
@@ -33,6 +34,8 @@ class SearchService {
         token: String,
         query: String? = null,
         categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
         page: Int = 1
     ): List<EventResponse> {
         val response: HttpResponse
@@ -41,6 +44,8 @@ class SearchService {
                 contentType(ContentType.Application.Json)
                 parameter("limit", defaultPageSize)
                 parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
                 for (categoryId in categoriesIds) {
                     parameter("categoryIds", categoryId)
@@ -60,6 +65,8 @@ class SearchService {
         token: String,
         query: String? = null,
         categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
         page: Int = 1
     ): List<EventResponse> {
         val response: HttpResponse
@@ -68,6 +75,8 @@ class SearchService {
                 contentType(ContentType.Application.Json)
                 parameter("limit", defaultPageSize)
                 parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
                 for (categoryId in categoriesIds) {
                     parameter("categoryIds", categoryId)
@@ -87,6 +96,8 @@ class SearchService {
         token: String,
         query: String? = null,
         categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
         page: Int = 1
     ): List<EventResponse> {
         val response: HttpResponse
@@ -95,6 +106,8 @@ class SearchService {
                 contentType(ContentType.Application.Json)
                 parameter("limit", defaultPageSize)
                 parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
                 for (categoryId in categoriesIds) {
                     parameter("categoryIds", categoryId)
@@ -114,6 +127,8 @@ class SearchService {
         token: String,
         query: String? = null,
         categoriesIds: List<String> = emptyList<String>(),
+        from: LocalDate?,
+        to: LocalDate?,
         page: Int = 1
     ): List<EventResponse> {
         val response: HttpResponse
@@ -122,6 +137,8 @@ class SearchService {
                 contentType(ContentType.Application.Json)
                 parameter("limit", defaultPageSize)
                 parameter("offset", (page - 1) * defaultPageSize)
+                parameter("from", from)
+                parameter("to", to)
                 parameter("q", query)
                 for (categoryId in categoriesIds) {
                     parameter("categoryIds", categoryId)

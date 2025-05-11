@@ -35,6 +35,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     var categoriesApplied by mutableStateOf<List<CategoryUi>>(listOf())
         private set
 
+    var visibility by mutableStateOf<Int>(0)
+        private set
+
     private val _categories = MutableStateFlow<List<CategoryUi>>(listOf())
     val categories = _categories.asStateFlow()
 
@@ -61,6 +64,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         getAllCategories()
     }
 
+    fun changeVisibility() {
+        visibility = visibility.plus(1).mod(3)
+    }
+
     fun update() {
         onSearch(searchText)
     }
@@ -75,7 +82,6 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         endDateFilter = endDate
         getAllEvents(searchText)
     }
-
 
     fun applyCategoriesFilter(categories: List<CategoryUi>) {
         categoriesApplied = categories
@@ -95,6 +101,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun getAllEvents(query: String? = null) {
         val token = tokenDataProvider.getToken()!!
+        val from = startDateFilter?.toLocalDate()
+        val to = endDateFilter?.toLocalDate()
+
         publicEventsPager.value = Pager(
             PagingConfig(pageSize = 10)
         ) {
@@ -102,7 +111,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 searchService::getOtherAdminsPublicEvents,
                 token,
                 query,
-                categoriesApplied.map { it.id.toString() })
+                categoriesApplied.map { it.id.toString() },
+                from,
+                to)
         }
         createdPublicEventsPager.value = Pager(
             PagingConfig(pageSize = 10)
@@ -111,7 +122,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 searchService::getPublicEvents,
                 token,
                 query,
-                categoriesApplied.map { it.id.toString() })
+                categoriesApplied.map { it.id.toString() },
+                from,
+                to)
         }
         joinedPrivateEventsPager.value = Pager(
             PagingConfig(pageSize = 10)
@@ -120,7 +133,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 searchService::getJoinedPrivateEvents,
                 token,
                 query,
-                categoriesApplied.map { it.id.toString() })
+                categoriesApplied.map { it.id.toString() },
+                from,
+                to)
         }
         privateEventsPager.value = Pager(
             PagingConfig(pageSize = 10)
@@ -129,7 +144,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 searchService::getPrivateEvents,
                 token,
                 query,
-                categoriesApplied.map { it.id.toString() })
+                categoriesApplied.map { it.id.toString() },
+                from,
+                to)
         }
     }
 

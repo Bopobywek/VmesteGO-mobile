@@ -167,6 +167,20 @@ fun SearchScreen(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(15.dp),
+                    onClick = { viewModel.changeVisibility() }
+                ) {
+                    when (viewModel.visibility) {
+                        0 -> Text("Все")
+                        1 -> Text("Мои")
+                        2 -> Text("Публичные")
+                    }
+                }
+                Spacer(Modifier.size(10.dp))
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(15.dp),
                     onClick = { isUserSelectDate.value = true }
                 ) {
                     Row(
@@ -284,13 +298,15 @@ fun EventsList(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 10.dp)
         ) {
-            items(lazyPagingPrivateItems.itemCount,
-                key = lazyPagingPrivateItems.itemKey { it.id }) { index ->
-                val event = lazyPagingPrivateItems[index]
-                if (event != null) {
-                    EventCard(event, goToEvent, onEventClick)
-                } else {
-                    EventCardPlaceholder()
+            if (viewModel.visibility != 2) { // visibility != Public
+                items(lazyPagingPrivateItems.itemCount,
+                    key = lazyPagingPrivateItems.itemKey { it.id }) { index ->
+                    val event = lazyPagingPrivateItems[index]
+                    if (event != null) {
+                        EventCard(event, goToEvent, onEventClick)
+                    } else {
+                        EventCardPlaceholder()
+                    }
                 }
             }
 
@@ -304,23 +320,27 @@ fun EventsList(
                 }
             }
 
-            items(lazyPagingJoinedPrivateItems.itemCount,
-                key = lazyPagingJoinedPrivateItems.itemKey { it.id }) { index ->
-                val event = lazyPagingJoinedPrivateItems[index]
-                if (event != null) {
-                    EventCard(event, goToEvent, onEventClick)
-                } else {
-                    EventCardPlaceholder()
+            if (viewModel.visibility != 2) {
+                items(lazyPagingJoinedPrivateItems.itemCount,
+                    key = lazyPagingJoinedPrivateItems.itemKey { it.id }) { index ->
+                    val event = lazyPagingJoinedPrivateItems[index]
+                    if (event != null) {
+                        EventCard(event, goToEvent, onEventClick)
+                    } else {
+                        EventCardPlaceholder()
+                    }
                 }
             }
 
-            items(lazyPagingPublicItems.itemCount,
-                key = lazyPagingPublicItems.itemKey { it.id }) { index ->
-                val event = lazyPagingPublicItems[index]
-                if (event != null) {
-                    EventCard(event, goToEvent, onEventClick)
-                } else {
-                    EventCardPlaceholder()
+            if (viewModel.visibility != 1) { // visibility != My
+                items(lazyPagingPublicItems.itemCount,
+                    key = lazyPagingPublicItems.itemKey { it.id }) { index ->
+                    val event = lazyPagingPublicItems[index]
+                    if (event != null) {
+                        EventCard(event, goToEvent, onEventClick)
+                    } else {
+                        EventCardPlaceholder()
+                    }
                 }
             }
         }
