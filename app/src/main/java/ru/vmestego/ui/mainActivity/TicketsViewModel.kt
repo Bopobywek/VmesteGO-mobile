@@ -21,7 +21,7 @@ import ru.vmestego.utils.TokenDataProvider
 // https://stackoverflow.com/a/71147730
 // https://stackoverflow.com/a/67252955
 class TicketsViewModel(application: Application) : AndroidViewModel(application) {
-    private val _tickets = MutableStateFlow(emptyList<TicketUi>())
+    private val _tickets = MutableStateFlow<List<TicketUi>?>(null)
     val tickets = _tickets.asStateFlow()
 
     private val _ticketsRepository: TicketsRepository =
@@ -29,9 +29,7 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
 
     private val _tokenDataProvider = TokenDataProvider(application)
 
-    // TODO: может ли быть такая ситуация, что мы в UI уже забрали список, который не успел прогрузиться в init
     init {
-        Log.i("TicketsViewModelInit", "init")
         loadDataFromDb()
     }
 
@@ -41,7 +39,7 @@ class TicketsViewModel(application: Application) : AndroidViewModel(application)
             return
         }
 
-        viewModelScope.launch { //this: CoroutineScope
+        viewModelScope.launch(Dispatchers.IO) { //this: CoroutineScope
             _ticketsRepository.getAllTicketsWithEvents(userId.toLong()).flowOn(Dispatchers.IO)
                 .collect { tickets: List<TicketWithEvent> ->
                     val ticketsUi = tickets.map {

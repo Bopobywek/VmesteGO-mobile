@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -161,7 +162,7 @@ fun ActionIcon(
 @Composable
 fun TicketList(ticketsViewModel: TicketsViewModel) {
     val context = LocalContext.current
-    val tickets = ticketsViewModel.tickets.collectAsState().value
+    val tickets = ticketsViewModel.tickets.collectAsState().value!!
     val grouped = tickets.groupBy { it.date.toLocalDate().withDayOfMonth(1) }
     val ordered = grouped.toSortedMap()
 
@@ -194,14 +195,6 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
                         actions = {
                             ActionIcon(
                                 onClick = {
-//                                    val builder = CalendarContract.CONTENT_URI.buildUpon()
-//                                    builder.appendPath("time")
-//                                    ContentUris.appendId(
-//                                        builder,
-//                                        Calendar.getInstance().timeInMillis
-//                                    )
-//                                    val intent = Intent(Intent.ACTION_VIEW)
-//                                        .setData(builder.build())
                                     openCalendarWithEvent(context, ticket)
                                     showMenu = false
                                 },
@@ -244,7 +237,6 @@ fun TicketList(ticketsViewModel: TicketsViewModel) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
-
     // https://commonsware.com/blog/2020/08/08/uri-access-lifetime-still-shorter-than-you-might-think.html
     val context = LocalContext.current
     val launcher =
@@ -271,7 +263,12 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
         },
         floatingActionButtonPosition = FabPosition.End
     ) {
-        if (ticketsViewModel.tickets.collectAsState().value.isEmpty()) {
+        val tickets = ticketsViewModel.tickets.collectAsState().value
+        if (tickets == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (tickets.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
                     Text(
@@ -288,8 +285,9 @@ fun TicketsScreen(ticketsViewModel: TicketsViewModel = viewModel()) {
                     )
                 }
             }
+        } else {
+            TicketList(ticketsViewModel)
         }
-        TicketList(ticketsViewModel)
     }
 }
 
@@ -304,7 +302,8 @@ fun openCalendarWithEvent(context: Context, ticket: TicketUi) {
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
     } else {
-        Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Не получилось найти приложение календарь", Toast.LENGTH_SHORT)
+            .show()
     }
 }
 
