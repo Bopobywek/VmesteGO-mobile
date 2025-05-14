@@ -107,6 +107,8 @@ class FriendsTabViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
         }
+
+        onSearch(searchText)
     }
 
     fun onQueryChanged(newQuery: String) {

@@ -95,12 +95,13 @@ class EventViewModel(application: Application, eventId: Long) : AndroidViewModel
     private fun getAllComments() {
         val token = tokenDataProvider.getToken()!!
         val userId = tokenDataProvider.getUserIdFromToken()!!
+        val isAdmin = tokenDataProvider.isAdmin()
 
         viewModelScope.launch(Dispatchers.IO) {
             val comments = _commentsService.getAllComments(token, _eventId)
             _comments.update {
                 comments.map {
-                    it.toCommentUi(userId.toLong())
+                    it.toCommentUi(userId.toLong(), isAdmin)
                 }
             }
         }

@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,7 +65,7 @@ fun OtherUserProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-//        .verticalScroll(rememberScrollState())  TODO: fix, add limit 3 and modal bottom sheet to view all
+            .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 

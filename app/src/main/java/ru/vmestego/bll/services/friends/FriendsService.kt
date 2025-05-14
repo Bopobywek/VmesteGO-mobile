@@ -82,7 +82,7 @@ class FriendsService {
 
     suspend fun removeFriend(token: String, userId: Long) {
         try {
-            client.post("${API_BASE_ADDRESS}/friends/${userId}") {
+            client.delete("${API_BASE_ADDRESS}/friends/${userId}") {
                 contentType(ContentType.Application.Json)
                 bearerAuth(token)
             }

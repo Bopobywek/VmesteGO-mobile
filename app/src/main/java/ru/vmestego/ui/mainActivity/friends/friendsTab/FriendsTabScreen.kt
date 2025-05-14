@@ -141,7 +141,7 @@ fun FriendsTabScreen(goToUserScreen: (Long) -> Unit, viewModel: FriendsTabViewMo
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        } else if (users.isEmpty()) {
+        } else if (users.isEmpty() && viewModel.searchText.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
                     Text(
