@@ -1,4 +1,4 @@
-package ru.vmestego
+package ru.vmestego.ui.mainActivity.tickets
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -16,10 +16,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +34,7 @@ import kotlin.math.roundToInt
 fun SwipeableItemWithActions(
     isRevealed: Boolean,
     actions: @Composable RowScope.() -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.Companion,
     onExpanded: () -> Unit = {},
     onCollapsed: () -> Unit = {},
     content: @Composable () -> Unit
@@ -65,17 +65,17 @@ fun SwipeableItemWithActions(
             .height(IntrinsicSize.Min)
     ) {
         Row(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .onSizeChanged {
                     actionsWidth = it.width.toFloat()
                 },
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Companion.CenterVertically,
         ) {
             Spacer(
-                Modifier
+                Modifier.Companion
                     .weight(1f)
                     .fillMaxHeight()
-                    .background(Color.Green)
+                    .background(Color.Companion.Green)
                     .onSizeChanged {
                         spacerMenuWidth = it.width.toFloat()
                     })
@@ -84,7 +84,7 @@ fun SwipeableItemWithActions(
 
         menuWidth = actionsWidth - spacerMenuWidth
         Surface(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxSize()
                 .offset { -IntOffset(offset.value.roundToInt(), 0) }
                 .pointerInput(menuWidth) {

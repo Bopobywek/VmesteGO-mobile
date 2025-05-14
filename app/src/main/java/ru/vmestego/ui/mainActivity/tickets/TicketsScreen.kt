@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.vmestego.R
-import ru.vmestego.SwipeableItemWithActions
+import ru.vmestego.ui.mainActivity.tickets.SwipeableItemWithActions
 import ru.vmestego.ui.dialogs.YesNoDialog
 import ru.vmestego.ui.models.TicketUi
 import ru.vmestego.utils.IntentHelper
