@@ -67,12 +67,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ru.vmestego.data.EventDataDto
+import ru.vmestego.ui.authActivity.AuthActivity
 import ru.vmestego.ui.mainActivity.search.EventsList
 import ru.vmestego.ui.mainActivity.MainActivity
 import ru.vmestego.ui.mainActivity.search.SearchViewModel
 import ru.vmestego.ui.ticketActivity.models.EventRouteDto
 import ru.vmestego.ui.theme.VmesteGOTheme
 import ru.vmestego.utils.IntentHelper
+import ru.vmestego.utils.TokenDataProvider
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
@@ -85,6 +87,13 @@ import java.util.Calendar
 class TicketActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val tokenDataProvider = TokenDataProvider(application)
+        if (tokenDataProvider.getToken() == null) {
+            startActivity(Intent(this, AuthActivity::class.java))
+            finish()
+            return
+        }
 
         var uri: Uri? = null
         var params: TicketActivityParams? = null
